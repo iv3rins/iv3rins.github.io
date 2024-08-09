@@ -1,2 +1,2 @@
-* [炼狱小镇](/inferno.md)
-* [荒漠迷城](/mirage.md)
+* [炼狱小镇](/grenades/inferno.md)
+* [荒漠迷城](/grenades/mirage.md)
