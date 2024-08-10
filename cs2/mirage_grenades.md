@@ -92,11 +92,11 @@
 
 #### **瞄点**
 
-![](images/mirage/stairsch.jpg '这根天线的顶端')
+![](images/mirage/stairsch2.jpg '两条木棍的延长线的交点')
 
 #### **效果**
 
-![](images/mirage/stairsresult.jpg '满封跳台，同时防止三明治藏人')
+![](images/mirage/stairs2result.jpg '满封跳台，同时防止三明治藏人')
 
 <!-- tabs:end -->
 
@@ -219,5 +219,47 @@
 #### **效果**
 
 ![](images/mirage/whiteresult.jpg '白车下面完全满烧')
+
+<!-- tabs:end -->
+
+### B包点内全白闪
+
+**出手时机:** 进攻B区的时候可以丢这个闪
+
+**作用:** B包点内的人基本全白
+
+**投掷方法:** W加左键跳投
+
+<!-- tabs:start -->
+
+#### **站位**
+
+![](images/mirage/bflashp.jpg '贴住这面墙')
+
+#### **瞄点**
+
+![](images/mirage/bflashch.jpg '瞄准这里')
+
+<!-- tabs:end -->
+
+### B包点进攻出窗口闪
+
+**出手时机:** 进攻B区的时候可以丢这个闪
+
+**作用:** 架窗口的人基本全白
+
+**投掷方法:** 走两到三步直接左键投掷
+
+<!-- tabs:start -->
+
+#### **站位**
+
+![](images/mirage/windowp.jpg '贴住这面墙')
+
+#### **瞄点**
+
+![](images/mirage/windowfch.jpg '瞄准这里')
+
+![](images/mirage/windowech.jpg '走到这一片范围直接投掷')
 
 <!-- tabs:end -->
