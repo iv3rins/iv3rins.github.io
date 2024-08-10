@@ -138,7 +138,8 @@
       tabs: {
         tabComments: true,
         tabHeadings: true,
-        sync: false
+        sync: false,
+        theme: 'material'
       },
       darkMode: {
         dark: {
@@ -188,6 +189,7 @@
   <!-- Docsify v4 -->
   <script src="//fastly.jsdelivr.net/npm/docsify@4"></script>
   <!-- ↑ 此为 Docsify 本体组件 ↑ -->
+  <script src="https://cdn.jsdelivr.net/gh/h-hg/docsify-image-caption/dist/docsify-image-caption.min.js"></script>
   <script src="//fastly.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
   <!-- ↑ 此为 Doscify 搜索拓展组件 ↑-->
   <script src="//fastly.jsdelivr.net/npm/docsify/lib/plugins/zoom-image.min.js"></script>
@@ -216,6 +218,8 @@
   <script src="//fastly.jsdelivr.net/npm/prismjs@1/components/prism-kotlin.min.js"></script>
   <script src="//fastly.jsdelivr.net/npm/prismjs@1/components/prism-xml-doc.min.js"></script>
   <!-- ↑ 此为 Docsify 自定义提示框组件 ↑ -->
+  <script src="//cdn.jsdelivr.net/npm/docsify-chat/lib/docsify-chat.min.js"></script>
+  <!-- ↑ 此为 Docsify 聊天组件 ↑ -->
   <script>
     Prism.languages['hocon'] = {
         'number': {
