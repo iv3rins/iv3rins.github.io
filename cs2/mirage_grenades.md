@@ -75,3 +75,51 @@
 ![](images/mirage/stairsresult.jpg '满封跳台，同时防止三明治藏人')
 
 <!-- tabs:end -->
+
+### 跳台烟
+
+**出手时机:** 建议集合爆弹打A时使用
+
+**作用:** 可以遮挡跳台的视野，同时三明治下也很难藏人
+
+**投掷方法:** 左键跳投
+
+<!-- tabs:start -->
+
+#### **站位**
+
+![](images/mirage/trash.jpg '垃圾桶内侧贴死')
+
+#### **瞄点**
+
+![](images/mirage/stairsch.jpg '这根天线的顶端')
+
+#### **效果**
+
+![](images/mirage/stairsresult.jpg '满封跳台，同时防止三明治藏人')
+
+<!-- tabs:end -->
+
+### Jungle烟
+
+**出手时机:** 建议集合爆弹打A时使用
+
+**作用:** 可以遮挡VIP的视野，并且这个烟还能防止Jungle人混出来
+
+**投掷方法:** 左键跳投
+
+<!-- tabs:start -->
+
+#### **站位**
+
+![](images/mirage/junglep.jpg '贴住标点的木棍')
+
+#### **瞄点**
+
+![](images/mirage/junglech.jpg '这根天线的顶端')
+
+#### **效果**
+
+![](images/mirage/jungleresult.jpg '满封jungle，而且还能防止混烟')
+
+<!-- tabs:end -->
