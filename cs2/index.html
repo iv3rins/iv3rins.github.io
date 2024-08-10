@@ -1,10 +1,48 @@
 <!DOCTYPE html>
+  <!-- README.md
+    本维基基于 Docsify，使用了多种插件，致力给各位阅读本文档的用户以最好的体验
+    内部版本号: 1.0.3
+  -->
+  <!-- changelog.md
+    1.0.1:
+      增加自定义提示框
+    1.0.2:
+      增加 toc 拓展
+      修改两个 css 文件使其符合内容
+      将右上角的样式修改为 shields.io 的徽章
+    1.0.3:
+      修改 toc 拓展的样式
+      将 `docsify-footnote` 的版本升级至 1.0.7
+    1.0.4:
+      增加“回到顶部”按钮
+      代码清理，去除了多余的 /css 文件夹
+    1.0.5:
+      增加右上角毛玻璃 Github 图标
+      修改了加载界面的图标
+      修复了侧边栏展开消失的问题
+      将 cdn.jsdelivr.net 更换为了 fastly.jsdelivr.net 以优化脚本加载速度
+    1.0.6:
+      增加了维基内页面跳转的按钮样式。
+      略微修改了回到顶部按钮的样式。
+      更新 FontAwesome 拓展组件。
+    1.0.7:
+      略微修改了 `docsify-tabs` 的样式，使其更加适配维基。
+      修复了侧边栏的宽度遮挡滚动条的问题。
+      对代码块的部分内容进行了优化。
+    1.0.8:
+      优化了导航栏，引入自行修改的爱发电按钮样式。
+      对代码块部分内容进行二次优化。
+    1.0.9:
+      紧急修复代码框不能横向滚动的问题。
+      优化代码框及加载页面的样式。
+      修复加载界面出现黑色圆点的问题。
+  -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Counter-Strike 2 手册</title>
+  <title>CS2手册</title>
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-  <meta name="description" content="Counter-Strike 2 Manual For Newbie">
+  <meta name="description" content="CS2新手帮助手册">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
   <link rel="stylesheet" href="//fastly.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
   <link rel="stylesheet" href="//fastly.jsdelivr.net/npm/docsify-dark-mode@latest/dist/style.min.css" />
@@ -35,51 +73,10 @@
       overflow-y: auto;
       max-height: 500px;
       white-space: pre-wrap;
-      min-height: 42px;
-    }
-
-    .sidebar h1 {
-      font-size: 1.7rem;
-    }
-
-    .sidebar ul li a:hover {
-      text-decoration: unset;
-      background-color: #f4f4f4;
-      border-radius: 5px;
-      transition-duration: 0.2s;
-    }
-
-    .sidebar ul li a {
-      padding: 3px 3px 0 10px;
-      margin: 0 0 5px 0;
-      transition-duration: 0.2s;
-      font-size: 16px;
-      left: -10px;
-      position: relative;
-    }
-
-    .sidebar sidebar-nav {
-      list-style: none;
-      padding-left: 0;
-    }
-
-    .sidebar ul li ul {
-      padding-left: unset;
-    }
-
-    .sidebar ul, .sidebar ul li {
-      font-size: 16px;
-      font-weight: 500;
-    }
-
-    .sidebar ul li.active > a {
-      border-right: unset;
-      border-radius: 5px;
-      background-color: #f4f4f4;
     }
 
     .markdown-section > :not(h1):not(h2):not(h3):not(h4):not(h5):not(h6) code {
-      overflow: unset;
+    overflow: unset;
     }
 
     .docsify-copy-code-button:focus, pre:hover .docsify-copy-code-button {
@@ -100,8 +97,6 @@
       border-radius: 5px;
     }
   </style>
-  <!-- ↓ 搞了个图标 -->
-  <link rel="icon" href="cs2.ico">
 </head>
 <body>
   <div id="app">
@@ -111,17 +106,7 @@
   </div>
   <script>
     window.$docsify = {
-      name: '<b>Counter-Strike2 手册</b>',
-      loadSidebar: true,
-      loadNavbar: true,
-      subMaxLevel: 2,
-      pagination: {
-        previousText: '上一章节',
-        // or
-        nextText: '下一章节',
-        crossChapter: true,
-        crossChapterText: true,
-      },
+      name: 'CounterStrike2 手册',
       search: {
         maxAge: 86400000,
         paths: 'auto',
@@ -129,12 +114,20 @@
         noData: '无结果',
         depth: 4
       },
-      scrollToTop: {
-        auto: true,
-        text: '↑',
-        right: 12,
-        bottom: 52,
-        offset: 25
+      loadSidebar: true,
+      sidebarDisplayLevel: 1,
+      loadNavbar: true,
+      pagination: {
+        previousText: {
+          '/en/': 'PREVIOUS',
+          '/': '上一章节'
+        },
+        nextText: {
+          '/en/': 'NEXT',
+          '/': '下一章节'
+        },
+        crossChapter: true,
+        crossChapterText: true,
       },
       copyCode: {
         buttonText: '📄',
@@ -156,7 +149,38 @@
           background: "white",
           toggleBtnBg: "#c9c9c9",
           textColor: "var(--theme-color)"
+        },
+      hideCode: {
+          scroll: true, // Enable scrolling
+          height: 300 // Max height
+        },
+      'flexible-alerts': {
+          style: 'flat',
+          note: {
+            label: '笔记'
+          },
+          tip: {
+            label: '提示'
+          },
+          warning: {
+            label: '警告'
+          },
+          attention: {
+            label: '注意'
+          }
         }
+      },
+      toc: {
+        tocMaxLevel: 3,
+        target: 'h2, h3, h4, h5, h6',
+        ignoreHeaders:  ['<!-- {docsify-ignore} -->', '<!-- {docsify-ignore-all} -->']
+      },
+      scrollToTop: {
+        auto: true,
+        text: '↑',
+        right: 12,
+        bottom: 52,
+        offset: 25
       }
     }
   </script>
@@ -191,6 +215,36 @@
   <script src="//fastly.jsdelivr.net/npm/prismjs@1/components/prism-kotlin.min.js"></script>
   <script src="//fastly.jsdelivr.net/npm/prismjs@1/components/prism-xml-doc.min.js"></script>
   <!-- ↑ 此为 Docsify 自定义提示框组件 ↑ -->
+  <script>
+    Prism.languages['hocon'] = {
+        'number': {
+            pattern: /(?<![^\s\u00a0\u2007\u202f\ufeff$"{}\[\]:=,+#`^?!@*&])(-?(0|[1-9]\d*)((\.\d+)?([eE][+-]?\d+)?)?)(?![^\s\u00a0\u2007\u202f\ufeff$"{}\[\]:=,+#`^?!@*&])/i,
+        },
+        'punctuation': /[{}[\]]/,
+        'property': {
+            pattern: /(^|[^\\])"?(?:\\.-|[^\\"\r\n])*"?(?=\s*=)/,
+            lookbehind: true,
+            greedy: true
+        },
+        'string': {
+            pattern: /(")(([^"\\n]|\\["\\bfnrt/]|\\u[0-9a-fA-F]{4})*)(")/,
+        },
+        'comment': {
+            pattern: /(#|\/\/).*/
+        },
+        'boolean': /(?<![^\\s\u00a0\u2007\u202f\ufeff$"{}\[\]:=,+#`^?!@*&])(include|true|false|yes|no|on|off)(?![^\s\u00a0\u2007\u202f\ufeff$"{}\[\]:=,+#`^?!@*&])/,
+        'operator': {
+            pattern: /[=:]/,
+            lookbehind: true
+        },
+        'null': {
+            pattern: /\bnull\b/,
+            alias: 'keyword'
+        }
+    }
+  </script>
+  <!-- ↑ 此为引自 AstralFlow 维基的 HOCON 语法高亮 ↑ -->
+  <!-- 详细内容请见 https://github.com/kalculos/AstralFlow/blob/main/docs/index.html -->
   <script src="https://fastly.jsdelivr.net/npm/docsify-plugin-toc@1.3.1/dist/docsify-plugin-toc.min.js"></script>
   <!-- ↑ 此为 Docsify 本章目录拓展组件 ↑ -->
   <script src="//fastly.jsdelivr.net/npm/docsify-scroll-to-top@latest/dist/docsify-scroll-to-top.min.js"></script>
