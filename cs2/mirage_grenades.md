@@ -88,7 +88,7 @@
 
 #### **站位**
 
-![](images/mirage/trash.jpg '垃圾桶内侧贴死')
+![](images/mirage/wood.jpg '贴住木板边')
 
 #### **瞄点**
 
@@ -121,5 +121,103 @@
 #### **效果**
 
 ![](images/mirage/jungleresult.jpg '满封jungle，而且还能防止混烟')
+
+<!-- tabs:end -->
+
+### 沙袋补封VIP烟
+
+**出手时机:** 回合中期，前期的VIP烟散去的时候可以补一个
+
+**作用:** 遮挡VIP的视野，更好地控制中路，拿到地图图权
+
+**投掷方法:** 蹲下来左键投掷
+
+<!-- tabs:start -->
+
+#### **站位**
+
+![](images/mirage/car.jpg '贴住沙袋与车轮之间的夹角')
+
+#### **瞄点**
+
+![](images/mirage/midch.jpg '蹲下来瞄准箱子的尖尖就行了')
+
+#### **效果**
+
+![](images/mirage/midresult.jpg '满封VIP，但是小心对面炸烟')
+
+<!-- tabs:end -->
+
+### 拱门内侧烟
+
+**出手时机:** 回合前期，一般可以用来提速打B小时使用
+
+**作用:** 遮挡拱门的视野，可以比较安全的上B小
+
+**投掷方法:** 静步跳投
+
+<!-- tabs:start -->
+
+#### **站位**
+
+![](images/mirage/doorp.jpg '贴住底角')
+
+#### **瞄点**
+
+![](images/mirage/doorfch.jpg '先瞄准这里')
+
+![](images/mirage/doorech.jpg '静步走到这里的时候跳投')
+
+#### **效果**
+
+![](images/mirage/doorresult.jpg '满封拱门内侧，而且你也可以选择混烟上跳台')
+
+<!-- tabs:end -->
+
+### 超市窗口烟
+
+**出手时机:** 前期集合打B的时候可以丢这个烟
+
+**作用:** 遮挡超市窗口的视角，烟边薄的同时还能防对面混烟
+
+**投掷方法:** 左键跳投
+
+<!-- tabs:start -->
+
+#### **站位**
+
+![](images/mirage/marketp.jpg '贴住底角')
+
+#### **瞄点**
+
+![](images/mirage/marketch.jpg '瞄准这里')
+
+#### **效果**
+
+![](images/mirage/marketresult.jpg '满封超市窗口，对面混烟也容易观察到')
+
+<!-- tabs:end -->
+
+### 白车火
+
+**出手时机:** 前期集合打B的时候，或者中期要推进B点的时候
+
+**作用:** 烧出白车下面的老六，但要记得搜二楼的右手边
+
+**投掷方法:** 蹲下来直接投掷
+
+<!-- tabs:start -->
+
+#### **站位**
+
+![](images/mirage/whitep.jpg '贴住这面墙')
+
+#### **瞄点**
+
+![](images/mirage/whitech.jpg '瞄准这里')
+
+#### **效果**
+
+![](images/mirage/whiteresult.jpg '白车下面完全满烧')
 
 <!-- tabs:end -->
