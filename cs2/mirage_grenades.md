@@ -12,12 +12,12 @@
 
 #### 站位
 
-[垃圾桶外侧贴死](/images/mirage/trashout.jpg)
+![垃圾桶外侧贴死](images/mirage/trashout.jpg)
 
 #### 瞄点
 
-[大致点位都可以](/images/mirage/vipch.jpg)
+![大致点位都可以](images/mirage/vipch.jpg)
 
 #### 效果
 
-[满封VIP](/images/mirage/vipresult.jpg)
+![满封VIP](images/mirage/vipresult.jpg)
