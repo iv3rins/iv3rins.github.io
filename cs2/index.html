@@ -107,7 +107,7 @@
   </div>
   <script>
     window.$docsify = {
-      name: 'CounterStrike2 手册',
+      name: '<b>Counter-Strike2 帮助手册</b>',
       search: {
         maxAge: 86400000,
         paths: 'auto',
@@ -183,7 +183,35 @@
         right: 12,
         bottom: 52,
         offset: 25
-      }
+      },
+      progress: {
+        position: "top",
+        color: "var(--theme-color,#42b983)",
+        height: "3px",
+      },
+      chat: {
+        title: "聊天记录"
+      },
+      'flexible-alerts': {
+        note: {
+          label: "注意"
+        },
+        tip: {
+          label: "提示"
+        },
+        warning: {
+          label: "警告"
+        },
+        attention: {
+          label: "补丁"
+        }
+      },
+      ads: [
+        {
+          img: 'https://1721181113.rsc.cdn77.org/data/images/full/53177/counter-strike-2-logo.png',
+          href: 'https://www.counter-strike.net/cs2'
+        }
+      ]
     }
   </script>
   <!-- Docsify v4 -->
@@ -256,5 +284,13 @@
   <!-- ↑ 此为 Docsify 回到顶部拓展组件 ↑ -->
   <script src="https://fastly.jsdelivr.net/gh/zignis/docsify-fa/script.min.js"></script>
   <!-- ↑ 此为 Docsify FontAwesome 拓展组件 ↑ -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify-progress@latest/dist/progress.min.js"></script>
+  <!-- ↑ 此为 Docsify 进度条拓展组件 ↑ -->
+  <script src="//cdn.jsdelivr.net/npm/docsify-chat/lib/docsify-chat.min.js"></script>
+  <!-- ↑ 此为 Docsify 聊天拓展组件 ↑ -->
+  <script src="https://unpkg.com/docsify-plugin-flexible-alerts"></script>
+  <!-- ↑ 此为 Docsify 警告拓展组件 ↑ -->
+  <script src="https://unpkg.com/docsify-ads@1.0.4/dist/docsify-ads.min.js"></script>
+  <!-- ↑ 此为 Docsify 广告拓展组件 ↑ -->
 </body>
 </html>
