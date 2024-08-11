@@ -87,7 +87,7 @@
 #### **相关视频 <span class="tab-badge">爆!!!</span>**
 
 - Bilibili video
-- aid=708255828&bvid=BV1wQ4y1E7SW&cid=1395326689&p=1
+- aid=1106261109&bvid=BV1Dw4m1r7FC&cid=1631311196&p=1
 
 <!-- tabs:end -->
 
