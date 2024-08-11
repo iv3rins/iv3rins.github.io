@@ -84,6 +84,10 @@
 **Nik0major**
 > NiKo奋战多年，但是却没有Major冠军，于是被冠以0major，而O跟0特别相似，因此结合了NiKo和0mjoar而诞生的梗。
 
+#### **相关视频**
+
+- Bilibili video aid=708255828&bvid=BV1wQ4y1E7SW&cid=1395326689&p=1
+
 <!-- tabs:end -->
 
 ### advent
