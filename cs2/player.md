@@ -41,6 +41,14 @@
 **摇头晃脑**
 > 指s1mple在一场比赛中回防无望，在INFERNO的A2楼摇头晃脑摆烂。
 
+#### **相关视频**
+
+<div style="display: flex;flex-wrap: wrap; justify-content: flex-start; align-items: stretch; ">
+    <div style="width: 1280px; height: 600px;flex-grow: 0;min-width: 100px;margin: 10px;">
+          <iframe src="//player.bilibili.com/player.html?isOutside=true&aid=464074517&bvid=BV1bL411u7LY&cid=439338891&p=1" style="width: 100%; height: 100%;" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
+    </div>
+</div>
+
 <!-- tabs:end -->
 
 ### NiKo
@@ -86,8 +94,11 @@
 
 #### **相关视频 <span class="tab-badge">爆!!!</span>**
 
-- Bilibili video
-- aid=1106261109&bvid=BV1Dw4m1r7FC&cid=1631311196&p=1
+<div style="display: flex;flex-wrap: wrap; justify-content: flex-start; align-items: stretch; ">
+    <div style="width: 1280px; height: 600px;flex-grow: 0;min-width: 100px;margin: 10px;">
+          <iframe src="//player.bilibili.com/player.html?isOutside=true&aid=1903578681&bvid=BV1im41127RG&cid=1516651585&p=1" style="width: 100%; height: 100%;" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
+    </div>
+</div>
 
 <!-- tabs:end -->
 
@@ -111,5 +122,13 @@
 
 **259的来历**
 > advent解释道，是因为暗恋的女生的名字首字母用九键输入法打出了就是259，所以在ID后面加了个259（advent259），后面念着顺口，大家就都叫他259啦。
+
+#### **相关视频**
+
+<div style="display: flex;flex-wrap: wrap; justify-content: flex-start; align-items: stretch; ">
+    <div style="width: 1280px; height: 600px;flex-grow: 0;min-width: 100px;margin: 10px;">
+          <iframe src="//player.bilibili.com/player.html?isOutside=true&aid=112932557949154&bvid=BV1ubYueDEY2&cid=500001643971050&p=1" style="width: 100%; height: 100%;" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
+    </div>
+</div>
 
 <!-- tabs:end -->
