@@ -46,7 +46,8 @@
   <meta name="description" content="CS2新手帮助手册">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
   <link rel="stylesheet" href="//fastly.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
-  <link rel="stylesheet" href="//fastly.jsdelivr.net/npm/docsify-dark-mode@latest/dist/style.min.css" />
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/dark.css" disabled>
   <link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/docsify-plugin-toc@1.3.1/dist/light.css">
   <link rel="stylesheet" href="css/jump-card.css">
   <link rel="stylesheet" href="css/load.css">
@@ -107,7 +108,7 @@
   </div>
   <script>
     window.$docsify = {
-      name: '<b>Counter-Strike2 帮助手册</b>',
+      name: '<font color="#00d545"><b>Counter-Strike2 帮助手册</b></font>',
       search: {
         maxAge: 86400000,
         paths: 'auto',
@@ -141,36 +142,15 @@
         sync: false,
         theme: 'material'
       },
-      darkMode: {
-        dark: {
-          background: "#1c2022",
-          toggleBtnBg: "#34495e",
-          textColor: "#b4b4b4"
-        },
-        light: {
-          background: "white",
-          toggleBtnBg: "#c9c9c9",
-          textColor: "var(--theme-color)"
-        },
+      switchLightDarkMode: {
+        useSwitchMode: true,
+        top: 130,
+        right: 26,
+        svgColor: '#5b5a63',
+      },
       hideCode: {
           scroll: true, // Enable scrolling
           height: 300 // Max height
-        },
-      'flexible-alerts': {
-          style: 'flat',
-          note: {
-            label: '笔记'
-          },
-          tip: {
-            label: '提示'
-          },
-          warning: {
-            label: '警告'
-          },
-          attention: {
-            label: '注意'
-          }
-        }
       },
       toc: {
         tocMaxLevel: 3,
@@ -231,7 +211,7 @@
   <!-- ↑ 此为 Docsify Bilibili 视频嵌入支持组件 ↑ -->
   <script src="//fastly.jsdelivr.net/npm/docsify-pagination/dist/docsify-pagination.min.js"></script>
   <!-- ↑ 此为 Docsify 仿 Gitbook 式翻页标签 ↑ -->
-  <script src="//fastly.jsdelivr.net/npm/docsify-dark-mode@latest/dist/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/pikapikapikaori/docsify-simple-dark-mode@latest/src/switchLightDarkMode.js"></script>
   <!-- ↑ 此为 Docsify 夜间模式组件 ↑ -->
   <script src="//fastly.jsdelivr.net/npm/docsify-hide-code/dist/docsify-hide-code.min.js"></script>
   <!-- ↑ 此为 Docsify 代码折叠组件 ↑ -->
