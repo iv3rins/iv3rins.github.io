@@ -13,3 +13,5 @@
 
 > [!TIP]
 > 素材来源于 IEM科隆小组赛 NAVI vs paiN
+
+[![](povs/mirage/aleksib/cover.png '李神的POV解析')](pov_mirage_aleksib.md)
