@@ -328,7 +328,7 @@ NAVI强图，我永远膜拜Aleksib李神呀。
 
 #### **瞄点**
 
-![](images/mirage/dooroutch.jpg '白条往外拉一点')
+![](images/mirage/dooroutch.jpg '蹲下来瞄准白条往外拉一点')
 
 #### **效果**
 
@@ -627,5 +627,27 @@ NAVI强图，我永远膜拜Aleksib李神呀。
 #### **效果**
 
 ![](images/mirage/bstresult.jpg '跳台满封')
+
+<!-- tabs:end -->
+
+### 中路警家烟
+
+**作用:** 封住警家的视野
+
+**投掷方法:** 左键跳投
+
+<!-- tabs:start -->
+
+#### **站位**
+
+![](images/mirage/car.jpg '抵住这个角落')
+
+#### **瞄点**
+
+![](images/mirage/ctch.jpg '瞄准这个木条的交点往上一点点')
+
+#### **效果**
+
+![](images/mirage/ctresult.jpg '警家满封')
 
 <!-- tabs:end -->
