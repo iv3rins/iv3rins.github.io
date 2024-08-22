@@ -4,6 +4,7 @@
     * [荒漠迷城](mirage_grenades.md)
     * [炼狱小镇](inferno_grenades.md)
 * [赛事](tournaments.md)
+* [游戏技巧篇](gametips.md)
 * [CS知名选手](player.md)
 * [职业选手POV](frompro.md)
     * [荒漠迷城 | Aleksib](pov_mirage_aleksib.md)

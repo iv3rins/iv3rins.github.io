@@ -72,3 +72,24 @@
 
 <!-- tabs:end -->
 
+### 书房烟
+
+**出手时机:** 集合打A或者是链接同A1夹A时使用此烟
+
+**作用:** 封住书房的视野，切断对方的回防路线
+
+**投掷方法:** 左键跳投
+
+<!-- tabs:start -->
+
+#### **站位**
+
+![](images/inferno/libra.jpg '贴住这里')
+
+#### **瞄点**
+
+![](images/inferno/librach.jpg '瞄住屋檐第三条杆的里侧')
+
+#### **效果**
+
+![](images/inferno/librare.jpg '满封书房')
