@@ -230,10 +230,16 @@ sensitivity <数字> |	设置灵敏度，单独输入sensitivity就是查看灵�
 
 **有可能会大幅度优化最低帧和降低突然卡顿的启动项**
 这个启动项参数不建议一般人使用，以下启动项参数是给那些帧数疯子（疯狂追求帧数的人）使用的，可能会对游戏稳定性造成大幅度的影响。
-`+engine_low_latency_sleep_after_client_tick true +fps_max 0 -nojoy -high -fullscreen +mat_disable_fancy_blending 1 -forcenovsync +r_dynamic 0 +mat_queue_mode 2`
+
+```
++engine_low_latency_sleep_after_client_tick true +fps_max 0 -nojoy -high -fullscreen +mat_disable_fancy_blending 1 -forcenovsync +r_dynamic 0 +mat_queue_mode 2
+```
 
 **普通人可以酌情使用的启动项参数**
-`+fps_max 0 -nojoy -console`
+
+```
++fps_max 0 -nojoy -console
+```
 
 > [!NOTE]
 > 有人注意到了，启动项参数应该有`-thread <核心数>`的一席之地的呀，为什么笔者这里没有标注出来呢？原因如下：
@@ -278,3 +284,40 @@ sensitivity <数字> |	设置灵敏度，单独输入sensitivity就是查看灵�
 有条件的最好还是接上有线网络，因为这能提高稳定性还有传输速率。
 
 **软件问题** 这有可能是你其他软件会导致CS的卡顿，建议在玩CS之前关闭一些不必要的软件，比如说一些通讯软件（一个语音电话打过来就老实了）。不建议下载某些不知名的FPS优化软件，很有可能会导致负面优化。
+
+其次，你可以在任务管理器中找到CS，然后右键它，选择`转到详细信息`中
+
+![](images/tips/cs2.png '右键它，选择转到详细信息')
+
+然后再右键它，选择设置优先级，将它的优先级设置为`高`。
+
+**内存不足** 请注意，这不是代表你的硬件空间不足，而是代表你的运行内存不足的意思。
+
+![](images/tips/ram.png '这个才是运行内存')
+
+建议预留有4-8G内存给CS，最好就是把后台不用的软件啊关掉。
+
+**游戏配置不正确** 这个其实问题不是很大，无非就是降低分辨率，然后降低画质这些。笔者的画质设置如下，需要的人可以自取。
+
+![](images/tips/screen.jpg '刷新率请调到你能设置的最高')
+
+![](images/tips/videos.jpg '上面的设置就不展示了，影响不大，垂直同步一定要关')
+
+**显卡驱动版本过期** 这个酌情更新，因为不一定是最新版的驱动就有最流畅的游戏体验。笔者目前的版本是：560.94
+
+设置完之后，建议配合上控制台指令效果更佳。
+
+那有小伙伴就要问了，设置完了这么多，我的帧数还是上不去？那该怎么办？笔者这里分享了一些“偏方”，请各位酌情参考：
+
+1. 在Steam设置中关闭着色器缓存。
+
+![](images/tips/cache.png '或许可能让游戏启动得更快')
+
+2. 把CS安装到固态硬盘。
+3. 使用`-vulkan`启动项。
+4. 设置卓越性能模式：在Windows Poweshell（管理员）中输入以下指令：`powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61`
+5. 把CS.exe设置为高性能
+
+![](images/tips/high.png '把它设置为高性能')
+
+6. 关闭NVIDIA Reflex低延迟模式。
