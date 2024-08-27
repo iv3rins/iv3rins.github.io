@@ -94,6 +94,8 @@
 
 ![](images/inferno/librare.jpg '满封书房')
 
+<!-- tabs:end -->
+
 ### 摩托车烟
 
 **出手时机:** 集合打A时可以使用这个烟雾弹
@@ -116,6 +118,8 @@
 
 ![](images/inferno/motore.jpg '完全隔断')
 
+<!-- tabs:end -->
+
 ### 警家闪光
 
 **出手时机:** 集合打B的时候，发起进攻的号角，也可以在队友进点的时候给，在警家花坛上爆开
@@ -133,6 +137,8 @@
 #### **瞄点**
 
 ![](images/inferno/ctfch.jpg '瞄住窗户的左上角')
+
+<!-- tabs:end -->
 
 ### 台上烟
 
@@ -155,3 +161,5 @@
 #### **效果**
 
 ![](images/inferno/onre.jpg '满封台上')
+
+<!-- tabs:end -->
