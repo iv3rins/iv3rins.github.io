@@ -4,7 +4,7 @@
 
 ### 介绍
 
-本 Counter-Strike2 手册由IVERINS(完美电竞社区ID: Mercedes_TaZ)独自撰写，未经同意不允许转载。
+本 Counter-Strike2 手册由IVERINS撰写，未经同意不允许转载。
 
 在本手册中，你可以查询到**服役地图**的道具，**CS赛事相关**小趣事以及了解一些比较常规的战术。
 
