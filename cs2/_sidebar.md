@@ -9,5 +9,6 @@
 * [易拉罐节奏](criticism.md)
     * [四姓尼神显神通，孤留孩神于队中](cr_niko.md)
     * [超除宗桑疲弱怂，钱驴技穷败走科隆](cr_donk.md)
+    * [凯皇怒将宗师鞭，赛后滑跪直播间](cr_tyloo.md)
 * [职业选手POV](frompro.md)
     * [荒漠迷城 | Aleksib](pov_mirage_aleksib.md)
