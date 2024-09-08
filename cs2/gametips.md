@@ -321,3 +321,6 @@ sensitivity <数字> |	设置灵敏度，单独输入sensitivity就是查看灵�
 ![](images/tips/high.png '把它设置为高性能')
 
 6. 关闭NVIDIA Reflex低延迟模式。
+
+## 枪法提升篇
+
