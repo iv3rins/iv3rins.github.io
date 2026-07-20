@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可爱大乱斗 - 观战模式</title>
+    <style>
+        /* ================= 基础与全局设定 ================= */
+        :root {
+            --bg-color: #fef6f5;       
+            --primary: #ffb6c1;        
+            --hp-color: #ff7675;       
+            --shield-color: #74b9ff;   
+            --text-main: #2d3436;
+            --font-cute: 'Comic Sans MS', 'Microsoft YaHei', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none; 
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-cute);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            /* 可爱的小猫爪鼠标指针 */
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"><text y="22" font-size="20">🐾</text></svg>'), auto;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+
+        /* ================= 动画库 ================= */
+        @keyframes bounceHover { 
+            0%, 100% { transform: translateY(0); } 
+            50% { transform: translateY(-5px); } 
+        }
+        
+        /* 哭唧唧专属动画 */
+        @keyframes cryShake {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-10deg) scale(0.9); }
+            75% { transform: rotate(10deg) scale(1.1); }
+        }
+
+        /* 通用按钮样式 */
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-family: inherit;
+            cursor: inherit;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+        .btn:hover { filter: brightness(1.05); }
+
+        /* ================= 布局：对手区域 (仍然在战斗) ================= */
+        .opponents-area { 
+            position: absolute; 
+            top: 50px; 
+            left: 50px; 
+            right: 350px; 
+            display: flex; 
+            gap: 30px; 
+            flex-wrap: wrap;
+        }
+        
+        .player-card {
+            background: white; 
+            border: 3px solid #eee; 
+            border-radius: 15px; 
+            width: 130px; 
+            padding: 15px 10px;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: 0.3s;
+            position: relative;
+        }
+        /* 观战模式下不需要 targetable 交互 */
+        
+        .player-card .name { font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        .player-card .avatar { font-size: 35px; animation: bounceHover 3s infinite; }
+        .player-card .role { font-size: 20px; font-weight: bold; margin: 8px 0; }
+        .suit-red { color: #d63031; }
+        .suit-black { color: #2d3436; }
+        
+        .status-bar { 
+            width: 100%; height: 10px; border-radius: 5px; background: #eee; margin-top: 5px; position: relative; overflow: hidden; 
+        }
+        .status-hp { height: 100%; background: var(--hp-color); transition: width 0.3s; }
+        .status-shield { height: 100%; background: var(--shield-color); position: absolute; top:0; left:0; transition: width 0.3s; opacity: 0.8; }
+        .hand-count { 
+            position: absolute; bottom: -10px; right: -10px; background: var(--text-main); color: white; border-radius: 50%; width: 25px; height: 25px; line-height: 25px; text-align: center; font-size: 12px; font-weight: bold;
+        }
+
+        /* ================= 布局：自己区域 (已阵亡) ================= */
+        .self-area { 
+            position: absolute; 
+            bottom: 30px; 
+            left: 50px; 
+        }
+        
+        .dead-card { 
+            border: 4px solid #b2bec3 !important; 
+            background: #f5f6fa !important; 
+            filter: grayscale(0.8); /* 灰白滤镜 */
+            width: 150px; 
+            padding: 20px 15px; 
+            box-shadow: none !important;
+        }
+        .dead-text { 
+            color: #636e72; 
+            font-size: 16px !important; 
+        }
+        .crying-anim { 
+            animation: cryShake 2s infinite !important; /* 覆盖原来的弹跳动画 */
+        }
+
+        /* 观战模式提示文字 */
+        .spectator-notice {
+            position: absolute;
+            bottom: 80px;
+            left: 250px;
+            font-size: 24px;
+            color: #b2bec3;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        /* ================= 布局：聊天框 (右) ================= */
+        .chat-box { 
+            position: absolute; 
+            right: 30px; 
+            top: 50px; 
+            bottom: 30px; 
+            width: 300px; 
+            background: white; 
+            border: 3px solid #eee; 
+            border-radius: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        .chat-messages { 
+            flex: 1; padding: 15px; overflow-y: auto; font-size: 14px; display: flex; flex-direction: column; gap: 10px;
+        }
+        .msg.system { color: #b2bec3; font-size: 12px; text-align: center; }
+        .msg.user { background: #fef6f5; padding: 8px 12px; border-radius: 10px; align-self: flex-start; max-width: 90%; }
+        
+        .chat-input { display: flex; border-top: 2px solid #eee; }
+        .chat-input input { flex: 1; border: none; padding: 15px; outline: none; font-family: inherit; font-size: 14px; }
+        .chat-input button { background: var(--primary); color: white; border: none; padding: 0 20px; font-family: inherit; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- 其他存活玩家区域 -->
+    <div class="opponents-area" id="opponents-container">
+        <!-- 玩家1 (仍在战斗) -->
+        <div class="player-card">
+            <div class="name">玩家1</div>
+            <div class="avatar">🐶</div>
+            <div class="role suit-red">♥K</div>
+            <div class="status-bar">
+                <div class="status-hp" style="width: 80%;"></div>
+                <div class="status-shield" style="width: 0%;"></div>
+            </div>
+            <div class="hand-count">4</div>
+        </div>
+        <!-- 玩家2 (仍在战斗) -->
+        <div class="player-card">
+            <div class="name">玩家2</div>
+            <div class="avatar">🐰</div>
+            <div class="role suit-black">♠Q</div>
+            <div class="status-bar">
+                <div class="status-hp" style="width: 20%;"></div>
+                <div class="status-shield" style="width: 0%;"></div>
+            </div>
+            <div class="hand-count">6</div>
+        </div>
+    </div>
+
+    <!-- 自己区域 (已阵亡) -->
+    <div class="self-area">
+        <div class="player-card dead-card">
+            <div class="name">自己 (小猫猫)</div>
+            <div class="avatar crying-anim">😭</div>
+            <div class="role dead-text">已淘汰</div>
+            <div class="status-bar">
+                <div class="status-hp" style="width: 0%;"></div>
+                <div class="status-shield" style="width: 0%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 观战提示语 (原操作区与手牌区被替换) -->
+    <div class="spectator-notice">
+        👻 您已阵亡，正在观战中...
+    </div>
+
+    <!-- 聊天框 (死了依然可以发弹幕) -->
+    <div class="chat-box">
+        <div class="chat-messages" id="chat-messages">
+            <div class="msg system">您已阵亡，进入观战模式。</div>
+            <div class="msg system">您的三名角色均已无生命体征。</div>
+        </div>
+        <div class="chat-input">
+            <input type="text" placeholder="发句遗言指导一下吧..." id="chat-input-text">
+            <button onclick="sendSpectatorChat()">发送</button>
+        </div>
+    </div>
+
+    <script>
+        // 观战模式下的聊天功能
+        function sendSpectatorChat() {
+            const input = document.getElementById('chat-input-text');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            const msgBox = document.getElementById('chat-messages');
+            const newMsg = document.createElement('div');
+            newMsg.className = 'msg user';
+            // 给观战者的发言加个幽灵标记
+            newMsg.innerHTML = `<b>自己 👻:</b> ${text}`;
+            // 观战者气泡可以是灰色的，这里简单通过内联样式覆盖
+            newMsg.style.background = '#f1f2f6';
+            
+            msgBox.appendChild(newMsg);
+            
+            input.value = '';
+            msgBox.scrollTop = msgBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
