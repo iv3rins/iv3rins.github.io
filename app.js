@@ -1,9 +1,7 @@
 /**
  * 可爱大乱斗 - 主业务逻辑 (app.js)
- * 
- * 架构: Host-Client 同步模型
- * - 房主 (Host): 实例化 GameEngine，接收客户端 ACTION，计算后广播 SYNC_STATE
- * - 客户端 (Client): 发送用户操作给房主，根据 SYNC_STATE 渲染 UI
+ * 架构: Host-Client 权威同步模型
+ * 视图流: Home → Waiting → Game / Spectator → Result
  */
 
 // ============================================================
@@ -14,15 +12,19 @@ const G = {
     isHost: false,
     playerName: '',
     roomCode: '',
-    myPlayerId: -1,          // 我在 GameEngine.players 中的索引
-    gameEngine: null,        // 仅房主持有
-    peerToPlayer: {},        // host: { peerId -> playerIndex }
-    playerToPeer: {},        // host: { playerIndex -> peerId }
-    currentState: null,      // 最近一次 SYNC_STATE 快照
-    selectedTargetId: -1,    // 选中的攻击目标 playerId
-    selectedCardIndices: [], // 选中的手牌索引数组
-    aValue: 0,               // A 牌转化数值
-    timerTimeout: null,      // 30 秒倒计时
+    myPlayerId: -1,
+    gameEngine: null,
+    peerToPlayer: {},
+    playerToPeer: {},
+    playerNames: {},
+    playerReady: {},
+    currentState: null,
+    selectedTargetId: -1,
+    selectedCardIndices: [],
+    timerTimeout: null,
+    roundCount: 0,
+    maxPlayers: 8,
+    avatars: ['🐱','🐶','🐰','🐻','🦊','🐼','🐧','🦁'],
 };
 
 // ============================================================
@@ -34,8 +36,13 @@ function showPage(pageId) {
     if (page) page.classList.add('active');
 }
 
+function showModal(text) {
+    document.getElementById('modal-disconnect-text').textContent = text;
+    document.getElementById('modal-disconnect').classList.add('show');
+}
+
 // ============================================================
-// 主页按钮绑定
+// 主页逻辑
 // ============================================================
 function initHomePage() {
     document.getElementById('btn-create-room').addEventListener('click', createRoom);
@@ -43,105 +50,226 @@ function initHomePage() {
 }
 
 function createRoom() {
-    const nameInput = document.getElementById('player-name');
-    G.playerName = nameInput.value.trim() || '小猫猫';
+    G.playerName = document.getElementById('player-name').value.trim() || '小猫猫';
     G.isHost = true;
     G.myPlayerId = 0;
+    G.playerNames[0] = G.playerName;
+    G.playerReady[0] = true;
 
     G.p2p = new P2PManager();
     G.p2p.callbacks.onReady = (roomCode) => {
         G.roomCode = roomCode;
-        console.log('房间创建成功:', roomCode);
-
-        // 房主初始化 GameEngine（先用2人，有人加入时动态扩展？暂用最大4人）
-        G.gameEngine = new GameEngine(4);
-        // 登记房主自己
         G.peerToPlayer[G.p2p.myId] = 0;
         G.playerToPeer[0] = G.p2p.myId;
-
-        // 记录玩家名字
-        G.gameEngine.players[0].name = G.playerName;
-
-        showPage('game');
-        document.getElementById('disp-room-code').textContent = roomCode;
-        updatePlayerCount();
-        broadcastSyncState();
+        document.getElementById('display-room-code').textContent = roomCode;
+        showPage('waiting');
+        renderWaitingLobby();
+        addWaitingChat('system', '房间创建成功！快邀请小伙伴加入吧~ 🐾');
     };
 
     G.p2p.callbacks.onPlayerJoin = (peerId) => {
-        // 分配一个未使用的 playerIndex
         const usedIndices = Object.values(G.peerToPlayer);
         let nextIndex = 1;
         while (usedIndices.includes(nextIndex)) nextIndex++;
-        if (nextIndex >= 4) {
-            console.warn('房间已满');
-            return;
-        }
+        if (nextIndex >= G.maxPlayers) { console.warn('房间已满'); return; }
         G.peerToPlayer[peerId] = nextIndex;
         G.playerToPeer[nextIndex] = peerId;
-
-        console.log('玩家加入, peerId:', peerId, 'playerIndex:', nextIndex);
-        updatePlayerCount();
-
-        // 通知新玩家他的 playerId
-        G.p2p.sendMessage({
-            type: 'PLAYER_ASSIGNED',
-            payload: { playerId: nextIndex, playerName: '玩家' + (nextIndex + 1) }
-        });
-
-        // 广播更新后的状态
-        broadcastSyncState();
-        addChatMessage('system', '玩家' + (nextIndex + 1) + ' 加入了游戏！🐾');
+        G.playerNames[nextIndex] = '玩家' + (nextIndex + 1);
+        G.playerReady[nextIndex] = false;
+        addWaitingChat('system', '新玩家加入了房间！');
+        renderWaitingLobby();
+        broadcastLobbyState();
     };
 
     G.p2p.callbacks.onPlayerLeave = (peerId) => {
-        const playerIdx = G.peerToPlayer[peerId];
-        if (playerIdx !== undefined) {
+        const idx = G.peerToPlayer[peerId];
+        if (idx !== undefined) {
             delete G.peerToPlayer[peerId];
-            delete G.playerToPeer[playerIdx];
-            addChatMessage('system', '玩家' + (playerIdx + 1) + ' 离开了游戏 😿');
-            updatePlayerCount();
-            broadcastSyncState();
+            delete G.playerToPeer[idx];
+            delete G.playerNames[idx];
+            delete G.playerReady[idx];
+            addWaitingChat('system', (G.playerNames[idx]||'玩家') + ' 离开了房间 😿');
+            if (G.gameEngine) {
+                // 游戏中掉线 → 标记淘汰
+                const p = G.gameEngine.players[idx];
+                if (p && !p.isEliminated) {
+                    p.characters.forEach(c => c.execute());
+                    p.isEliminated = true;
+                    p.disconnectReason = '断线';
+                    broadcastSyncState();
+                }
+            } else {
+                renderWaitingLobby();
+                broadcastLobbyState();
+            }
         }
     };
 
     G.p2p.callbacks.onMessage = handleHostMessage;
+    G.p2p.callbacks.onPeerError = (err) => {
+        if (err.type === 'unavailable-id') {
+            showModal('房间号已被占用，请换一个！');
+        }
+    };
 
     G.p2p.createRoom();
 }
 
 function joinRoom() {
-    const nameInput = document.getElementById('player-name');
-    const codeInput = document.getElementById('room-code');
-    G.playerName = nameInput.value.trim() || '小猫猫';
-    const code = codeInput.value.trim();
-
-    if (code.length !== 4) {
-        alert('请输入4位可爱的邀请码哦！');
-        return;
-    }
-
+    G.playerName = document.getElementById('player-name').value.trim() || '小猫猫';
+    const code = document.getElementById('room-code').value.trim();
+    if (code.length !== 4) { alert('请输入4位邀请码！'); return; }
     G.isHost = false;
     G.roomCode = code;
 
     G.p2p = new P2PManager();
     G.p2p.callbacks.onReady = (roomCode) => {
-        console.log('成功加入房间:', roomCode);
-        showPage('game');
-        document.getElementById('disp-room-code').textContent = roomCode;
-
-        // 发送 JOIN_REQ
-        setTimeout(() => {
-            G.p2p.sendMessage({
-                type: 'JOIN_REQ',
-                payload: { playerName: G.playerName }
-            });
-        }, 300); // 稍等连接稳定
+        showPage('waiting');
+        document.getElementById('display-room-code').textContent = roomCode;
+        G.p2p.sendMessage({ type: 'JOIN_REQ', payload: { playerName: G.playerName } });
     };
-
     G.p2p.callbacks.onMessage = handleClientMessage;
-
+    G.p2p.callbacks.onHostDisconnect = () => {
+        showModal('房主已断开连接，房间已解散。');
+    };
+    G.p2p.callbacks.onPeerError = (err) => {
+        if (err.type === 'peer-unavailable') {
+            showModal('找不到该房间，请检查邀请码！');
+        }
+    };
     G.p2p.joinRoom(code);
+}
+
+// ============================================================
+// 等待大厅
+// ============================================================
+function initWaitingPage() {
+    document.getElementById('btn-copy-code').addEventListener('click', () => {
+        const code = document.getElementById('display-room-code').textContent;
+        navigator.clipboard.writeText(code).then(() => alert('🐾 邀请码 ' + code + ' 复制成功！'));
+    });
+    document.getElementById('btn-start-game').addEventListener('click', () => {
+        if (!G.isHost) return;
+        const playerCount = Object.keys(G.playerNames).length;
+        if (playerCount < 2) { alert('至少需要2名玩家才能开始！'); return; }
+        startGame();
+    });
+    document.getElementById('btn-leave-waiting').addEventListener('click', leaveRoom);
+    document.getElementById('btn-waiting-chat-send').addEventListener('click', sendWaitingChat);
+    document.getElementById('waiting-chat-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') sendWaitingChat();
+    });
+}
+
+function renderWaitingLobby() {
+    const grid = document.getElementById('players-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    const playerCount = Object.keys(G.playerNames).length;
+
+    // 已加入玩家
+    Object.entries(G.playerNames).forEach(([idx, name]) => {
+        const i = parseInt(idx);
+        const slot = document.createElement('div');
+        slot.className = 'player-slot occupied';
+        if (i === 0) slot.classList.add('host');
+        const isHost = i === 0;
+        const isReady = G.playerReady[i];
+        slot.innerHTML = `
+            ${isHost ? '<div class="status-badge host-badge">👑 房主</div>' : `<div class="status-badge">${isReady ? '已准备' : '未准备'}</div>`}
+            <div class="avatar cute-bounce">${G.avatars[i % G.avatars.length]}</div>
+            <div class="name">${name}</div>
+        `;
+        grid.appendChild(slot);
+    });
+
+    // 空槽位
+    for (let i = playerCount; i < G.maxPlayers; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'player-slot empty';
+        slot.innerHTML = '<div class="avatar">🪑</div><div class="name">等待加入...</div>';
+        grid.appendChild(slot);
+    }
+
+    // 房主按钮：显示"开始游戏"；客户端按钮：显示"准备"
+    const btnStart = document.getElementById('btn-start-game');
+    if (G.isHost) {
+        btnStart.textContent = '🚀 开始游戏 (' + playerCount + '人)';
+        btnStart.disabled = playerCount < 2;
+    } else {
+        btnStart.textContent = G.playerReady[G.myPlayerId] ? '✅ 已准备' : '📦 准备';
+        btnStart.disabled = false;
+    }
+}
+
+function broadcastLobbyState() {
+    if (!G.isHost) return;
+    const lobbyState = {
+        type: 'LOBBY_STATE',
+        payload: {
+            roomCode: G.roomCode,
+            playerNames: G.playerNames,
+            playerReady: G.playerReady,
+            myPlayerId: -1, // 每个客户端不同，下方单独设置
+        }
+    };
+    Object.entries(G.playerToPeer).forEach(([idxStr, peerId]) => {
+        const idx = parseInt(idxStr);
+        if (idx === 0) return; // 跳过房主
+        const conn = G.p2p.connections[peerId];
+        if (conn && conn.open) {
+            conn.send({
+                type: 'LOBBY_STATE',
+                payload: { ...lobbyState.payload, myPlayerId: idx }
+            });
+        }
+    });
+}
+
+function sendWaitingChat() {
+    const input = document.getElementById('waiting-chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+    G.p2p.sendMessage({ type: 'CHAT', payload: { senderName: G.playerName, text } });
+    addWaitingChat('self', G.playerName + ': ' + text);
+    input.value = '';
+}
+
+function addWaitingChat(cls, text) {
+    const box = document.getElementById('waiting-chat-messages');
+    if (!box) return;
+    const div = document.createElement('div');
+    div.className = 'msg ' + cls;
+    div.textContent = text;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+}
+
+function leaveRoom() {
+    if (G.p2p) G.p2p.disconnect();
+    location.reload();
+}
+
+// ============================================================
+// 开始游戏
+// ============================================================
+function startGame() {
+    if (!G.isHost || !G.p2p) return;
+    const playerCount = Object.keys(G.playerNames).length;
+    G.gameEngine = new GameEngine(playerCount);
+    G.roundCount = 0;
+
+    // 设置玩家名字
+    Object.entries(G.playerNames).forEach(([idx, name]) => {
+        const i = parseInt(idx);
+        if (G.gameEngine.players[i]) G.gameEngine.players[i].name = name;
+    });
+
+    // 通知所有客户端游戏开始
+    G.p2p.sendMessage({ type: 'GAME_START', payload: {} });
+    broadcastSyncState();
+    showPage('game');
+    addGameChat('system', '🎮 游戏开始！爪爪对决！🐾');
 }
 
 // ============================================================
@@ -150,11 +278,22 @@ function joinRoom() {
 function handleHostMessage(data, senderId) {
     switch (data.type) {
         case 'JOIN_REQ': {
-            const playerIdx = G.peerToPlayer[senderId];
-            if (playerIdx !== undefined && G.gameEngine) {
-                G.gameEngine.players[playerIdx].name = data.payload.playerName;
-                addChatMessage('system', data.payload.playerName + ' 准备就绪！');
-                broadcastSyncState();
+            const idx = G.peerToPlayer[senderId];
+            if (idx !== undefined) {
+                G.playerNames[idx] = data.payload.playerName;
+                G.playerReady[idx] = false;
+                renderWaitingLobby();
+                broadcastLobbyState();
+                addWaitingChat('system', data.payload.playerName + ' 加入了房间！');
+            }
+            break;
+        }
+        case 'READY': {
+            const idx = G.peerToPlayer[senderId];
+            if (idx !== undefined) {
+                G.playerReady[idx] = data.payload.ready;
+                renderWaitingLobby();
+                broadcastLobbyState();
             }
             break;
         }
@@ -162,74 +301,50 @@ function handleHostMessage(data, senderId) {
             if (!G.gameEngine) break;
             const payload = data.payload;
             const attackerIdx = G.peerToPlayer[senderId];
-            const attacker = G.gameEngine.players[attackerIdx];
-            const target = G.gameEngine.players[payload.targetPlayerId];
-
-            if (!attacker || !target) {
-                console.error('无效的攻击者或目标');
-                break;
-            }
-
-            // 验证回合
-            if (G.gameEngine.currentPlayerIndex !== attackerIdx) {
-                console.warn('不是你的回合');
-                break;
-            }
-
+            if (attackerIdx === undefined) break;
             try {
-                // 从手牌中取出打出的牌
-                const indices = payload.cardIndices.sort((a, b) => b - a); // 降序，方便 splice
-                const cards = indices.map(i => attacker.hand[i]).filter(Boolean);
-
-                if (cards.length !== indices.length) {
-                    console.error('手牌索引无效');
-                    break;
-                }
-
-                // 检查是否包含 Joker
-                const hasJoker = cards.some(c => c.isJoker);
-                if (hasJoker) {
-                    // Joker 特殊处理
-                    const targetCharIndex = target.activeCharIndex;
-                    G.gameEngine.playJoker(attacker, target, targetCharIndex, cards);
-                } else {
-                    G.gameEngine.playAttack(attacker, target, cards, payload.aValue || 0);
-                }
-
-                // 推进回合
-                if (!G.gameEngine.isGameOver) {
-                    G.gameEngine.nextTurn();
-                }
-
-                addChatMessage('system',
-                    attacker.name + ' 攻击了 ' + target.name + '！');
-
-                broadcastSyncState();
-
-                // 检查游戏结束
-                if (G.gameEngine.isGameOver) {
-                    broadcastGameOver();
-                }
+                processPlayCard(attackerIdx, payload);
             } catch (err) {
                 console.error('出牌错误:', err);
-                // 通知出牌者错误
-                const conn = G.p2p.connections[senderId];
-                if (conn && conn.open) {
-                    conn.send({
-                        type: 'ERROR',
-                        payload: { message: err.message }
-                    });
-                }
+                G.p2p.sendTo(senderId, { type: 'ERROR', payload: { message: err.message } });
             }
             break;
         }
         case 'CHAT': {
-            // 房主中转聊天消息
-            addChatMessage('user', data.payload.senderName + ': ' + data.payload.text);
-            G.p2p.sendMessage(data); // 广播给所有人
+            if (G.gameEngine) {
+                addGameChat('user', data.payload.senderName + ': ' + data.payload.text);
+            } else {
+                addWaitingChat('user', data.payload.senderName + ': ' + data.payload.text);
+            }
+            G.p2p.sendMessage(data);
             break;
         }
     }
+}
+
+// 房主处理出牌（共用）
+function processPlayCard(attackerIdx, payload) {
+    const engine = G.gameEngine;
+    const attacker = engine.players[attackerIdx];
+    const target = engine.players[payload.targetPlayerId];
+    if (!attacker || !target) throw new Error('无效的攻击者或目标');
+    if (engine.currentPlayerIndex !== attackerIdx) throw new Error('不是你的回合');
+
+    const sorted = [...payload.cardIndices].sort((a, b) => b - a);
+    const cards = sorted.map(i => attacker.hand[i]).filter(Boolean);
+    if (cards.length !== payload.cardIndices.length) throw new Error('手牌索引无效');
+
+    const hasJoker = cards.some(c => c.isJoker);
+    if (hasJoker) {
+        engine.playJoker(attacker, target, target.activeCharIndex, cards);
+    } else {
+        engine.playAttack(attacker, target, cards, payload.aValue || 0);
+    }
+    G.roundCount++;
+    if (!engine.isGameOver) engine.nextTurn();
+    addGameChat('system', attacker.name + ' 攻击了 ' + target.name + '！');
+    broadcastSyncState();
+    if (engine.isGameOver) broadcastGameOver();
 }
 
 // ============================================================
@@ -237,9 +352,19 @@ function handleHostMessage(data, senderId) {
 // ============================================================
 function handleClientMessage(data, senderId) {
     switch (data.type) {
-        case 'PLAYER_ASSIGNED': {
-            G.myPlayerId = data.payload.playerId;
-            console.log('我被分配为 player', G.myPlayerId);
+        case 'LOBBY_STATE': {
+            const s = data.payload;
+            G.playerNames = s.playerNames;
+            G.playerReady = s.playerReady;
+            G.myPlayerId = s.myPlayerId;
+            G.roomCode = s.roomCode;
+            document.getElementById('display-room-code').textContent = s.roomCode;
+            renderWaitingLobby();
+            break;
+        }
+        case 'GAME_START': {
+            showPage('game');
+            addGameChat('system', '🎮 游戏开始！爪爪对决！🐾');
             break;
         }
         case 'SYNC_STATE': {
@@ -248,7 +373,8 @@ function handleClientMessage(data, senderId) {
             break;
         }
         case 'CHAT': {
-            addChatMessage('user', data.payload.senderName + ': ' + data.payload.text);
+            addGameChat('user', data.payload.senderName + ': ' + data.payload.text);
+            addWaitingChat('user', data.payload.senderName + ': ' + data.payload.text);
             break;
         }
         case 'GAME_OVER': {
@@ -263,21 +389,17 @@ function handleClientMessage(data, senderId) {
 }
 
 // ============================================================
-// 房主：广播状态
+// 广播与序列化
 // ============================================================
 function broadcastSyncState() {
     if (!G.gameEngine) return;
-
-    Object.entries(G.playerToPeer).forEach(([playerIdxStr, peerId]) => {
-        const playerIdx = parseInt(playerIdxStr);
+    Object.entries(G.playerToPeer).forEach(([idxStr, peerId]) => {
+        const idx = parseInt(idxStr);
+        if (idx === 0) return;
         const conn = G.p2p.connections[peerId];
         if (!conn || !conn.open) return;
-
-        const state = serializeState(G.gameEngine, playerIdx);
-        conn.send({ type: 'SYNC_STATE', payload: state });
+        conn.send({ type: 'SYNC_STATE', payload: serializeState(G.gameEngine, idx) });
     });
-
-    // 房主自己也渲染
     const hostState = serializeState(G.gameEngine, 0);
     G.currentState = hostState;
     renderState(hostState);
@@ -289,91 +411,57 @@ function broadcastGameOver() {
     const payload = {
         winner: winner ? winner.name : '平局',
         winnerId: winner ? winner.id : -1,
+        rounds: G.roundCount,
+        survivors: engine.players.filter(p => !p.isEliminated).length,
     };
-
-    // 广播给所有客户端
-    Object.values(G.p2p.connections).forEach(conn => {
-        if (conn.open) conn.send({ type: 'GAME_OVER', payload });
-    });
-
-    // 房主自己显示结算
+    G.p2p.sendMessage({ type: 'GAME_OVER', payload });
     showResultPage(payload);
 }
 
-// ============================================================
-// 状态序列化
-// ============================================================
 function serializeState(engine, forPlayerId) {
-    const player = engine.players[forPlayerId];
     return {
         players: engine.players.map((p, i) => ({
             id: p.id,
             name: p.name || ('玩家' + (p.id + 1)),
             characters: p.characters.map(c => ({
-                rank: c.rank,
-                suit: c.suit,
-                maxHp: c.maxHp,
-                hp: c.hp,
-                shield: c.shield,
-                isDead: c.isDead,
+                rank: c.rank, suit: c.suit, maxHp: c.maxHp,
+                hp: c.hp, shield: c.shield, isDead: c.isDead,
             })),
             activeCharIndex: p.activeCharIndex,
             handCount: p.hand.length,
             isEliminated: p.isEliminated,
             hand: (i === forPlayerId) ? p.hand.map(c => ({
-                suit: c.suit,
-                rank: c.rank,
-                isJoker: c.isJoker,
-                value: c.value,
+                suit: c.suit, rank: c.rank, isJoker: c.isJoker, value: c.value,
             })) : null,
         })),
         currentPlayerIndex: engine.currentPlayerIndex,
         deckCount: engine.deck.length,
         isGameOver: engine.isGameOver,
-        winner: engine.winner ? {
-            id: engine.winner.id,
-            name: engine.winner.name || ('玩家' + (engine.winner.id + 1)),
-        } : null,
+        winner: engine.winner ? { id: engine.winner.id, name: engine.winner.name } : null,
         myPlayerId: forPlayerId,
+        roundCount: G.roundCount,
     };
 }
 
 // ============================================================
-// UI 渲染
+// 渲染逻辑
 // ============================================================
 function renderState(state) {
     G.currentState = state;
     const me = state.players[state.myPlayerId];
     const isSpectating = me && me.isEliminated;
-
-    // 观战模式切换
     const gamePage = document.getElementById('page-game');
-    if (isSpectating) {
-        gamePage.classList.add('spectator-mode');
-    } else {
-        gamePage.classList.remove('spectator-mode');
-    }
+    if (isSpectating) { gamePage.classList.add('spectator-mode'); }
+    else { gamePage.classList.remove('spectator-mode'); }
 
-    // 渲染玩家数
-    updatePlayerCount();
-
-    // 渲染对手
     renderOpponents(state);
-
-    // 渲染自己
     renderSelf(state);
-
-    // 渲染手牌
     if (!isSpectating && me && me.hand) {
-        renderHand(me.hand, state);
+        renderHand(me.hand);
     } else {
         document.getElementById('hand-container').innerHTML = '';
     }
-
-    // 更新回合指示器 & 攻击按钮
     updateTurnUI(state);
-
-    // 重置选中状态
     G.selectedTargetId = -1;
     G.selectedCardIndices = [];
 }
@@ -381,64 +469,42 @@ function renderState(state) {
 function renderOpponents(state) {
     const container = document.getElementById('opponents-container');
     container.innerHTML = '';
-
     const me = state.players[state.myPlayerId];
     const isMyTurn = state.currentPlayerIndex === state.myPlayerId;
     const isSpectating = me && me.isEliminated;
-
     state.players.forEach((p, i) => {
-        if (i === state.myPlayerId) return; // 跳过自己
-
-        const card = createPlayerCard(p, i, false, isMyTurn && !isSpectating);
-        container.appendChild(card);
+        if (i === state.myPlayerId) return;
+        container.appendChild(createPlayerCard(p, i, false, isMyTurn && !isSpectating, state));
     });
 }
 
 function renderSelf(state) {
     const container = document.getElementById('self-container');
     container.innerHTML = '';
-
     const me = state.players[state.myPlayerId];
     if (!me) return;
-
-    const card = createPlayerCard(me, state.myPlayerId, true, false);
-    container.appendChild(card);
+    container.appendChild(createPlayerCard(me, state.myPlayerId, true, false, state));
 }
 
-function createPlayerCard(p, idx, isSelf, isTargetable) {
+function createPlayerCard(p, idx, isSelf, isTargetable, state) {
     const div = document.createElement('div');
     div.className = 'player-card';
     if (isTargetable) div.classList.add('targetable');
     div.dataset.playerId = idx;
-
-    const char = p.characters[p.activeCharIndex];
-    const isDead = char.isDead;
-
-    // 寻找存活角色显示
     const aliveChar = p.characters.find(c => !c.isDead);
-    const displayChar = isDead && aliveChar ? aliveChar : char;
-
+    const displayChar = aliveChar || p.characters[p.activeCharIndex];
     const isRed = displayChar.suit === '♦' || displayChar.suit === '♥';
     const suitClass = isRed ? 'suit-red' : 'suit-black';
-
-    // 头像
-    const avatars = ['🐱', '🐶', '🐰', '🐻'];
-    const avatar = p.isEliminated ? '😭' : avatars[idx % avatars.length];
-    const avatarClass = p.isEliminated ? 'crying-anim' : '';
-
-    // 名字
+    const avatar = p.isEliminated ? '😭' : G.avatars[idx % G.avatars.length];
+    const avatarClass = p.isEliminated ? 'crying-anim' : 'cute-bounce';
     const nameHtml = isSelf
         ? `<div class="name">${p.name} (你)</div>`
         : `<div class="name">${p.name}${p.isEliminated ? ' 💀' : ''}</div>`;
-
-    // HP 百分比
     const hpPct = displayChar.maxHp > 0 ? (displayChar.hp / displayChar.maxHp * 100) : 0;
     const shieldPct = displayChar.maxHp > 0 ? (displayChar.shield / displayChar.maxHp * 100) : 0;
-
     const roleText = p.isEliminated
         ? '<span class="role" style="color:#b2bec3">已淘汰</span>'
         : `<span class="role ${suitClass}">${displayChar.suit}${displayChar.rank}</span>`;
-
     div.innerHTML = `
         ${nameHtml}
         <div class="avatar ${avatarClass}">${avatar}</div>
@@ -449,32 +515,25 @@ function createPlayerCard(p, idx, isSelf, isTargetable) {
         </div>
         <div class="hand-count">${p.handCount}</div>
     `;
-
-    // 当前回合指示器
-    if (idx === G.currentState?.currentPlayerIndex && !p.isEliminated) {
-        const indicator = document.createElement('div');
-        indicator.className = 'current-turn-indicator';
-        indicator.textContent = '⚡';
-        div.appendChild(indicator);
+    if (idx === state.currentPlayerIndex && !p.isEliminated) {
+        const ind = document.createElement('div');
+        ind.className = 'current-turn-indicator';
+        ind.textContent = '⚡';
+        div.appendChild(ind);
     }
-
-    // 点击选择目标
     if (isTargetable) {
         div.addEventListener('click', () => selectTarget(idx, div));
     }
-
     return div;
 }
 
-function renderHand(cards, state) {
+function renderHand(cards) {
     const container = document.getElementById('hand-container');
     container.innerHTML = '';
-
     cards.forEach((card, i) => {
         const div = document.createElement('div');
         div.className = 'poker-card';
         div.dataset.index = i;
-
         if (card.isJoker) {
             div.classList.add('card-joker');
             div.innerHTML = '<span>🃏</span><span style="font-size:16px">Joker</span>';
@@ -483,7 +542,6 @@ function renderHand(cards, state) {
             div.classList.add(isRed ? 'suit-red' : 'suit-black');
             div.innerHTML = `<span>${card.suit}</span><span>${card.rank}</span>`;
         }
-
         div.addEventListener('click', () => toggleCard(i, div));
         container.appendChild(div);
     });
@@ -493,10 +551,8 @@ function updateTurnUI(state) {
     const isMyTurn = state.currentPlayerIndex === state.myPlayerId;
     const me = state.players[state.myPlayerId];
     const isSpectating = me && me.isEliminated;
-
-    const attackBtn = document.getElementById('attack-btn');
     const actionArea = document.getElementById('action-area');
-
+    const attackBtn = document.getElementById('attack-btn');
     if (isSpectating) {
         actionArea.style.display = 'none';
     } else if (isMyTurn) {
@@ -506,54 +562,37 @@ function updateTurnUI(state) {
         startTimer();
     } else {
         actionArea.style.display = 'flex';
-        const currentPlayer = state.players[state.currentPlayerIndex];
-        attackBtn.textContent = `⏳ 等待 ${currentPlayer?.name || '...'} 出牌...`;
+        const cur = state.players[state.currentPlayerIndex];
+        attackBtn.textContent = `⏳ 等待 ${cur?.name || '...'} 出牌...`;
         attackBtn.disabled = true;
         clearTimer();
     }
 }
 
 // ============================================================
-// 卡牌选择
+// 卡牌选择与出牌
 // ============================================================
 function toggleCard(index, el) {
     const idx = G.selectedCardIndices.indexOf(index);
-    if (idx >= 0) {
-        G.selectedCardIndices.splice(idx, 1);
-        el.classList.remove('selected');
-    } else {
-        G.selectedCardIndices.push(index);
-        el.classList.add('selected');
-    }
+    if (idx >= 0) { G.selectedCardIndices.splice(idx, 1); el.classList.remove('selected'); }
+    else { G.selectedCardIndices.push(index); el.classList.add('selected'); }
 }
 
 function selectTarget(playerId, el) {
-    // 清除之前的选中
     document.querySelectorAll('.player-card.targeted').forEach(c => c.classList.remove('targeted'));
     G.selectedTargetId = playerId;
     el.classList.add('targeted');
 }
 
-// ============================================================
-// 执行攻击
-// ============================================================
 function executeAttack() {
-    if (G.selectedCardIndices.length === 0) {
-        alert('请先选择要打出的牌哦！🐾');
-        return;
-    }
-    if (G.selectedTargetId < 0) {
-        alert('请先选择一个攻击目标哦！🐾');
-        return;
-    }
+    if (G.selectedCardIndices.length === 0) { alert('请先选择要打出的牌！🐾'); return; }
+    if (G.selectedTargetId < 0) { alert('请先选择一个攻击目标！🐾'); return; }
 
     // 飞行动画
     const animLayer = document.getElementById('anim-layer');
-    const selectedEls = G.selectedCardIndices.map(i =>
-        document.querySelector(`.poker-card[data-index="${i}"]`)
-    ).filter(Boolean);
-
-    selectedEls.forEach((card, idx) => {
+    G.selectedCardIndices.forEach((ci, idx) => {
+        const card = document.querySelector(`.poker-card[data-index="${ci}"]`);
+        if (!card) return;
         const rect = card.getBoundingClientRect();
         const clone = card.cloneNode(true);
         clone.style.position = 'absolute';
@@ -565,16 +604,15 @@ function executeAttack() {
         setTimeout(() => clone.remove(), 600);
     });
 
-    // 计算 A 值
+    // A牌数值
     let aValue = 0;
     const state = G.currentState;
     if (state) {
         const myHand = state.players[state.myPlayerId]?.hand;
         if (myHand) {
-            const selectedCards = G.selectedCardIndices.map(i => myHand[i]).filter(Boolean);
-            const hasA = selectedCards.some(c => c && c.rank === 'A');
-            if (hasA) {
-                const input = prompt('你打出了 A 牌！请输入转化数值 (1-13)：', '5');
+            const selected = G.selectedCardIndices.map(i => myHand[i]).filter(Boolean);
+            if (selected.some(c => c && c.rank === 'A')) {
+                const input = prompt('你打出了A牌！请输入转化数值 (1-13)：', '5');
                 aValue = parseInt(input) || 5;
                 if (aValue < 1) aValue = 1;
                 if (aValue > 13) aValue = 13;
@@ -583,21 +621,15 @@ function executeAttack() {
     }
 
     if (G.isHost) {
-        // 房主直接处理
-        handleHostPlayCard(G.selectedCardIndices, G.selectedTargetId, aValue);
+        try { processPlayCard(G.myPlayerId, { targetPlayerId: G.selectedTargetId, cardIndices: [...G.selectedCardIndices], aValue }); }
+        catch (err) { alert('出牌失败: ' + err.message); }
     } else {
-        // 客户端发送给房主
         G.p2p.sendMessage({
             type: 'PLAY_CARD',
-            payload: {
-                targetPlayerId: G.selectedTargetId,
-                cardIndices: [...G.selectedCardIndices],
-                aValue: aValue,
-            }
+            payload: { targetPlayerId: G.selectedTargetId, cardIndices: [...G.selectedCardIndices], aValue }
         });
     }
 
-    // 重置选中
     G.selectedCardIndices = [];
     G.selectedTargetId = -1;
     document.querySelectorAll('.poker-card.selected').forEach(c => c.classList.remove('selected'));
@@ -605,90 +637,28 @@ function executeAttack() {
     clearTimer();
 }
 
-// 房主本地处理出牌
-function handleHostPlayCard(cardIndices, targetPlayerId, aValue) {
-    if (!G.gameEngine) return;
-
-    const attacker = G.gameEngine.players[G.myPlayerId];
-    const target = G.gameEngine.players[targetPlayerId];
-
-    if (G.gameEngine.currentPlayerIndex !== G.myPlayerId) {
-        console.warn('不是你的回合');
-        return;
-    }
-
-    try {
-        const sorted = [...cardIndices].sort((a, b) => b - a);
-        const cards = sorted.map(i => attacker.hand[i]).filter(Boolean);
-
-        if (cards.length !== cardIndices.length) {
-            console.error('手牌索引无效');
-            return;
-        }
-
-        const hasJoker = cards.some(c => c.isJoker);
-        if (hasJoker) {
-            G.gameEngine.playJoker(attacker, target, target.activeCharIndex, cards);
-        } else {
-            G.gameEngine.playAttack(attacker, target, cards, aValue);
-        }
-
-        if (!G.gameEngine.isGameOver) {
-            G.gameEngine.nextTurn();
-        }
-
-        addChatMessage('system', attacker.name + ' 攻击了 ' + target.name + '！');
-        broadcastSyncState();
-
-        if (G.gameEngine.isGameOver) {
-            broadcastGameOver();
-        }
-    } catch (err) {
-        console.error('出牌错误:', err);
-        alert('出牌失败: ' + err.message);
-    }
-}
-
 // ============================================================
 // 倒计时
 // ============================================================
 function startTimer() {
     clearTimer();
-    const timerBar = document.querySelector('.timer-bar-bg');
-    if (timerBar) {
-        timerBar.classList.remove('timer-active');
-        void timerBar.offsetWidth;
-        timerBar.classList.add('timer-active');
-    }
-    G.timerTimeout = setTimeout(() => {
-        forceRandomPlay();
-    }, 30000);
+    const tb = document.querySelector('.timer-bar-bg');
+    if (tb) { tb.classList.remove('timer-active'); void tb.offsetWidth; tb.classList.add('timer-active'); }
+    G.timerTimeout = setTimeout(() => forceRandomPlay(), 30000);
 }
 
 function clearTimer() {
-    if (G.timerTimeout) {
-        clearTimeout(G.timerTimeout);
-        G.timerTimeout = null;
-    }
-    const timerBar = document.querySelector('.timer-bar-bg');
-    if (timerBar) {
-        timerBar.classList.remove('timer-active');
-    }
+    if (G.timerTimeout) { clearTimeout(G.timerTimeout); G.timerTimeout = null; }
+    const tb = document.querySelector('.timer-bar-bg');
+    if (tb) tb.classList.remove('timer-active');
 }
 
 function forceRandomPlay() {
     const cards = document.querySelectorAll('#hand-container .poker-card');
     const targets = document.querySelectorAll('#opponents-container .player-card.targetable');
-
     if (cards.length > 0 && targets.length > 0) {
-        // 随机选一张牌
-        const randCard = cards[Math.floor(Math.random() * cards.length)];
-        randCard.click();
-
-        // 随机选一个目标
-        const randTarget = targets[Math.floor(Math.random() * targets.length)];
-        randTarget.click();
-
+        cards[Math.floor(Math.random() * cards.length)].click();
+        targets[Math.floor(Math.random() * targets.length)].click();
         setTimeout(executeAttack, 500);
     }
 }
@@ -696,88 +666,53 @@ function forceRandomPlay() {
 // ============================================================
 // 聊天
 // ============================================================
-function sendChat() {
-    const input = document.getElementById('chat-input-text');
+function sendGameChat() {
+    const input = document.getElementById('game-chat-input');
     const text = input.value.trim();
     if (!text) return;
-
-    G.p2p.sendMessage({
-        type: 'CHAT',
-        payload: { senderName: G.playerName, text }
-    });
-
-    addChatMessage('user', G.playerName + ': ' + text);
+    G.p2p.sendMessage({ type: 'CHAT', payload: { senderName: G.playerName, text } });
+    addGameChat('self', G.playerName + ': ' + text);
     input.value = '';
 }
 
-function addChatMessage(cls, text) {
-    const msgBox = document.getElementById('chat-messages');
-    if (!msgBox) return;
+function addGameChat(cls, text) {
+    const box = document.getElementById('game-chat-messages');
+    if (!box) return;
     const div = document.createElement('div');
     div.className = 'msg ' + cls;
     div.textContent = text;
-    msgBox.appendChild(div);
-    msgBox.scrollTop = msgBox.scrollHeight;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
 }
 
 // ============================================================
-// 结算页面
+// 结算
 // ============================================================
 function showResultPage(payload) {
     showPage('result');
-
     document.getElementById('stat-winner').textContent = payload.winner;
-    document.getElementById('stat-damage').textContent = '回合制对战';
-    document.getElementById('stat-survivors').textContent = payload.winnerId >= 0 ? '1 人存活' : '无人生还';
-
-    addChatMessage('system', '🏆 游戏结束！胜者: ' + payload.winner);
+    document.getElementById('stat-rounds').textContent = payload.rounds + ' 回合';
+    document.getElementById('stat-survivors').textContent = payload.survivors + ' 人';
+    addGameChat('system', '🏆 游戏结束！胜者: ' + payload.winner);
 }
 
 // ============================================================
-// 辅助函数
-// ============================================================
-function updatePlayerCount() {
-    const el = document.getElementById('disp-player-count');
-    if (!el) return;
-
-    if (G.isHost && G.gameEngine) {
-        const active = G.gameEngine.players.filter(p => true).length;
-        el.textContent = '玩家: ' + active + '/4';
-    } else if (G.currentState) {
-        el.textContent = '玩家: ' + G.currentState.players.length + ' 人';
-    } else {
-        el.textContent = '等待玩家...';
-    }
-}
-
-// ============================================================
-// 事件绑定
+// 初始化
 // ============================================================
 function initGamePage() {
     document.getElementById('attack-btn').addEventListener('click', executeAttack);
-    document.getElementById('btn-send-chat').addEventListener('click', sendChat);
-
-    // 回车发送聊天
-    document.getElementById('chat-input-text').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') sendChat();
+    document.getElementById('btn-game-chat-send').addEventListener('click', sendGameChat);
+    document.getElementById('game-chat-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') sendGameChat();
     });
-
-    // 结算页面按钮
-    document.getElementById('btn-restart').addEventListener('click', () => {
-        showPage('home');
-        location.reload();
-    });
-    document.getElementById('btn-leave-room').addEventListener('click', () => {
-        showPage('home');
-        location.reload();
-    });
+    document.getElementById('btn-restart').addEventListener('click', () => location.reload());
+    document.getElementById('btn-leave-room').addEventListener('click', () => location.reload());
+    document.getElementById('btn-modal-ok').addEventListener('click', () => location.reload());
 }
 
-// ============================================================
-// 启动
-// ============================================================
 document.addEventListener('DOMContentLoaded', () => {
     initHomePage();
+    initWaitingPage();
     initGamePage();
     console.log('🐾 可爱大乱斗 初始化完成！');
 });
