@@ -212,6 +212,10 @@ class GameEngine {
 
         if (jokers.length > 0) return { valid: false, error: 'Joker不能作为普通攻击牌打出' };
         if (aCards.length > 1) return { valid: false, error: '一次出牌最多只能包含一张A' };
+        if (normalCards.length === 0 && aCards.length === 1) {
+            // 纯A牌：合法，花色由 aSuit 指定
+            return { valid: true, primarySuit: null, normalCards: [], hasA: true };
+        }
         
         let validLengths = [1, 3, 5];
         if (!validLengths.includes(normalCards.length)) {
@@ -231,10 +235,16 @@ class GameEngine {
      * @param {Array<Card>} cards 打出的卡牌组合
      * @param {Number} aValue 如果有A，玩家指定的转化数值
      */
-    playShield(player, cards, aValue = 0) {
+    playShield(player, cards, aValue = 0, aSuit = 'same') {
         const validation = this.validatePlay(cards);
         if (!validation.valid) throw new Error(validation.error);
-        if (validation.primarySuit !== '♣') throw new Error('只有梅花牌才能用于护盾');
+
+        // 梅花判断：普通牌是梅花，或纯A时 aSuit 指定为梅花
+        let isClub = validation.primarySuit === '♣';
+        if (!validation.primarySuit && validation.hasA) {
+            isClub = (aSuit === '♣');
+        }
+        if (!isClub) throw new Error('只有梅花牌才能用于护盾');
 
         let totalShield = validation.normalCards.reduce((sum, c) => sum + c.value, 0);
         if (validation.hasA) {
@@ -254,17 +264,22 @@ class GameEngine {
      * @param {Array<Card>} cards 打出的卡牌组合
      * @param {Number} aValue 如果有A，玩家指定的转化数值
      */
-    playAttack(attacker, target, cards, aValue = 0) {
+    playAttack(attacker, target, cards, aValue = 0, aSuit = 'same') {
         const validation = this.validatePlay(cards);
         if (!validation.valid) throw new Error(validation.error);
 
         // 1. 计算初始伤害与花色
         let totalDamage = validation.normalCards.reduce((sum, c) => sum + c.value, 0);
         if (validation.hasA) {
-            totalDamage += aValue; // 计入万化的A的值
+            totalDamage += aValue; // A 基础值为 0，只加万化值
         }
         
-        const attackSuit = validation.primarySuit;
+        // 花色：纯A时由 aSuit 指定，否则用普通牌花色
+        let attackSuit = validation.primarySuit;
+        if (!attackSuit && validation.hasA) {
+            attackSuit = aSuit !== 'same' ? aSuit : '♦'; // 默认方块
+        }
+        if (!attackSuit) throw new Error('无法确定攻击花色');
         const targetChar = target.getActiveCharacter();
         const attackerChar = attacker.getActiveCharacter();
         const isImmune = (attackSuit === targetChar.suit); // 角色花色免疫判断

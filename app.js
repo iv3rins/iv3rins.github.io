@@ -240,8 +240,14 @@ function sendWaitingChat() {
     const input = document.getElementById('waiting-chat-input');
     const text = input.value.trim();
     if (!text) return;
-    G.p2p.sendMessage({ type: 'CHAT', payload: { senderName: G.playerName, text } });
-    // 不在本地渲染，统一由广播回来的 onMessage('CHAT') 插入
+    const msg = { type: 'CHAT', payload: { senderName: G.playerName, text } };
+    if (G.isHost) {
+        // 房主：先本地渲染，再广播
+        addChat('self', G.playerName + ': ' + text);
+        G.p2p.sendMessage(msg);
+    } else {
+        G.p2p.sendMessage(msg);
+    }
     input.value = '';
 }
 
@@ -364,10 +370,14 @@ function handleHostMessage(data, senderId) {
             break;
         }
         case 'CHAT': {
-            // 统一渲染：标记是否自己发的
-            const cls = data.payload.senderName === G.playerName ? 'self' : 'user';
-            addChat(cls, data.payload.senderName + ': ' + data.payload.text);
-            G.p2p.sendMessage(data); // 中转广播给所有客户端
+            // 标记是否自己发的
+            const isSelf = data.payload.senderName === G.playerName;
+            if (!isSelf) {
+                // 别人的消息：渲染 + 中转广播
+                addChat('user', data.payload.senderName + ': ' + data.payload.text);
+                G.p2p.sendMessage(data);
+            }
+            // 自己的消息：发送时已渲染，跳过
             break;
         }
     }
@@ -396,13 +406,13 @@ function processPlayCard(attackerIdx, payload) {
         addGameChat('system', attacker.name + ' 使用了 Joker！');
     } else if (isClub) {
         // ♣ 梅花：对自己加护盾，不需要目标
-        engine.playShield(attacker, cards, payload.aValue || 0);
+        engine.playShield(attacker, cards, payload.aValue || 0, payload.aSuit || 'same');
         addGameChat('system', attacker.name + ' 获得了护盾！🛡️');
     } else {
         // ♦♥♠ 攻击：需要目标
         const target = engine.players[payload.targetPlayerId];
         if (!target) throw new Error('无效的目标');
-        engine.playAttack(attacker, target, cards, payload.aValue || 0);
+        engine.playAttack(attacker, target, cards, payload.aValue || 0, payload.aSuit || 'same');
         addGameChat('system', attacker.name + ' 攻击了 ' + target.name + '！');
     }
 
@@ -440,8 +450,10 @@ function handleClientMessage(data, senderId) {
             break;
         }
         case 'CHAT': {
-            const cls = data.payload.senderName === G.playerName ? 'self' : 'user';
-            addChat(cls, data.payload.senderName + ': ' + data.payload.text);
+            const isSelf = data.payload.senderName === G.playerName;
+            if (!isSelf) {
+                addChat('user', data.payload.senderName + ': ' + data.payload.text);
+            }
             break;
         }
         case 'GAME_OVER': {
@@ -537,10 +549,13 @@ function renderState(state) {
 
     updateTurnUI(state);
 
-    // 清空选择（新一轮状态）
-    G.selectedTargetId = -1;
-    G.selectedCardIndices = [];
-    hideAValuePanel();
+    // 清空选择（仅在出牌后或强制刷新时）
+    if (G._pendingClear) {
+        G.selectedTargetId = -1;
+        G.selectedCardIndices = [];
+        G._pendingClear = false;
+        hideAValuePanel();
+    }
 }
 
 // 对手区域：动态渲染，支持任意人数
@@ -763,17 +778,15 @@ function executeAttack() {
         aSuit,
     };
 
+    // 暂存选择，等 SYNC_STATE 回来再清（防止 renderState 提前清空）
+    G._pendingClear = true;
+
     if (G.isHost) {
         try { processPlayCard(G.myPlayerId, payload); }
-        catch (err) { alert('出牌失败: ' + err.message); }
+        catch (err) { alert('出牌失败: ' + err.message); G._pendingClear = false; }
     } else {
         G.p2p.sendMessage({ type: 'PLAY_CARD', payload });
     }
-
-    G.selectedCardIndices = [];
-    G.selectedTargetId = -1;
-    hideAValuePanel();
-    clearTimer();
 }
 
 // ============================================================
@@ -809,8 +822,13 @@ function sendGameChat() {
     const input = document.getElementById('game-chat-input');
     const text = input.value.trim();
     if (!text) return;
-    G.p2p.sendMessage({ type: 'CHAT', payload: { senderName: G.playerName, text } });
-    // 不在本地渲染，统一由广播回来的 onMessage('CHAT') 插入
+    const msg = { type: 'CHAT', payload: { senderName: G.playerName, text } };
+    if (G.isHost) {
+        addChat('self', G.playerName + ': ' + text);
+        G.p2p.sendMessage(msg);
+    } else {
+        G.p2p.sendMessage(msg);
+    }
     input.value = '';
 }
 
