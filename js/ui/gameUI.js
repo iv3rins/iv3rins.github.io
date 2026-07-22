@@ -366,12 +366,8 @@ export function executeAttack() {
         setTimeout(() => clone.remove(), 600);
     });
 
-    // Ace 花色（仅限允许的花色，固定值=1）
-    let aSuit = null;
-    if (selectedCards.some(c => c.rank === 'A' && !c.isJoker)) {
-        const suitSel = document.getElementById('a-suit-select');
-        aSuit = suitSel ? suitSel.value : null;
-    }
+    // Ace 花色 — 已在上面读取过，直接复用
+    // aSuit 用于 payload，已在 isShield 判定前读取
 
     const payload = {
         targetPlayerId: isShield ? state.myPlayerId : G.selectedTargetId,
