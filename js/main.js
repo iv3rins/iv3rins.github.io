@@ -76,6 +76,8 @@ function createRoom() {
 
     G.p2p.callbacks.onPlayerJoin = (peerId) => {
         if (G.gameStarted) return;
+        // ★ 如果 JOIN_REQ 已经提前分配了槽位，跳过
+        if (G.peerToPlayer[peerId] !== undefined) return;
         const used = Object.values(G.peerToPlayer);
         let idx = 1;
         while (used.includes(idx)) idx++;

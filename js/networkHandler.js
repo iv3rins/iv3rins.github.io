@@ -18,7 +18,17 @@ import { Toast } from './ui/toast.js';
 export function handleHostMessage(data, senderId) {
     switch (data.type) {
         case 'JOIN_REQ': {
-            const idx = G.peerToPlayer[senderId];
+            let idx = G.peerToPlayer[senderId];
+            // ★ 修复竞态：如果 onPlayerJoin 还没触发，手动创建映射
+            if (idx === undefined) {
+                const used = Object.values(G.peerToPlayer);
+                idx = 1;
+                while (used.includes(idx)) idx++;
+                if (idx >= G.maxPlayers) { console.warn('[P2P] 房间已满，拒绝加入'); return; }
+                G.peerToPlayer[senderId] = idx;
+                G.playerToPeer[idx] = senderId;
+                console.log('%c[P2P] JOIN_REQ 比 open 先到，自动分配槽位:', 'color:#f39c12', idx);
+            }
             if (idx !== undefined) {
                 let name = data.payload.playerName;
                 const avatar = data.payload.avatar || '🐱';
