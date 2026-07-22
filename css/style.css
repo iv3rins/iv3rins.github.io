@@ -323,3 +323,9 @@ body {
     40%, 80% { transform: translateX(6px); }
 }
 .card-shake { animation: cardShake 0.4s ease-in-out; border-color: #ff4757 !important; }
+
+/* ═══ 万化组合方案弹窗 ═══ */
+.combo-item { background: #fdf6f6; border: 2px solid #eee; border-radius: 15px; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: all 0.2s ease; }
+.combo-item:hover { border-color: var(--primary); background: #fff; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,182,193,0.3); }
+.combo-cards-preview { display: flex; gap: 6px; }
+.mini-poker-card { width: 40px; height: 58px; background: white; border: 1.5px solid #ddd; border-radius: 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 14px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }

@@ -357,10 +357,10 @@ export function executeAttack() {
         Toast.show('Joker 需要指定目标！🐾', 'error'); return;
     }
 
-    // ★ 如果有 A 牌，弹出万化选择弹窗
+    // ★ 如果有 A 牌，弹出万化组合方案选择弹窗
     if (hasA) {
-        showWildcardModal(selectedCards, primarySuit, (chosenSuit) => {
-            dispatchPlayAction(selectedCards, chosenSuit, hasJoker, nonJokers, state);
+        openCombinationModal(selectedCards, primarySuit, (combo) => {
+            dispatchPlayAction(selectedCards, combo.targetSuit, hasJoker, nonJokers, state);
         });
         return;
     }
@@ -369,31 +369,57 @@ export function executeAttack() {
     dispatchPlayAction(selectedCards, primarySuit, hasJoker, nonJokers, state);
 }
 
-function showWildcardModal(selectedCards, primarySuit, callback) {
-    const modal = document.getElementById('modal-wildcard');
-    const optionsContainer = document.getElementById('wildcard-options');
-    if (!modal || !optionsContainer) return;
-    optionsContainer.innerHTML = '';
+function openCombinationModal(selectedCards, primarySuit, onConfirm) {
+    const modal = document.getElementById('modal-combination');
+    const container = document.getElementById('combo-list-container');
+    if (!modal || !container) return;
+    container.innerHTML = '';
 
-    // 可用花色：A 自身花色 + 普通牌花色（去重）
-    const availableSuits = new Set();
-    selectedCards.forEach(c => { if (c.rank === 'A') availableSuits.add(c.suit); });
-    if (primarySuit) availableSuits.add(primarySuit);
-    if (availableSuits.size === 0) ['♦', '♣', '♥', '♠'].forEach(s => availableSuits.add(s));
+    // 收集所有可能的花色（A 自身花色 + 普通牌花色，去重）
+    const possibleSuits = new Set();
+    selectedCards.forEach(c => { if (!c.isJoker) possibleSuits.add(c.suit); });
+    if (possibleSuits.size === 0) ['♦', '♣', '♥', '♠'].forEach(s => possibleSuits.add(s));
 
-    availableSuits.forEach(suit => {
-        const btn = document.createElement('button');
-        btn.className = 'btn';
-        btn.textContent = suit === '♣' ? '♣ 梅花 (护盾)' : suit + ' 攻击/特殊';
-        btn.onclick = () => {
+    possibleSuits.forEach(targetSuit => {
+        let normalTotal = 0;
+        selectedCards.forEach(c => {
+            if (!c.isJoker && c.rank !== 'A') normalTotal += c.value;
+        });
+        const totalVal = normalTotal + 1;
+        const isShield = (targetSuit === '♣');
+
+        // 预览卡牌
+        let previewHtml = '<div class="combo-cards-preview">';
+        selectedCards.forEach(c => {
+            const displaySuit = c.rank === 'A' ? targetSuit : c.suit;
+            const displayRank = c.rank;
+            const colorClass = (displaySuit === '♦' || displaySuit === '♥') ? 'suit-red' : 'suit-black';
+            previewHtml += `<div class="mini-poker-card ${colorClass}"><span style="font-size:10px">${displaySuit}</span><span style="font-size:12px">${displayRank}</span></div>`;
+        });
+        previewHtml += '</div>';
+
+        const item = document.createElement('div');
+        item.className = 'combo-item';
+        item.innerHTML = `
+            <div>
+                <div style="font-weight: bold; margin-bottom: 4px;">
+                    ${isShield ? '🛡️ 方案：转化为护盾' : '⚔️ 方案：主花色 ' + targetSuit}
+                    <span style="color: var(--hp-color); margin-left: 10px;">总效能: ${totalVal}</span>
+                </div>
+                ${previewHtml}
+            </div>
+            <button class="btn btn-small">选择此方案</button>
+        `;
+
+        item.onclick = () => {
             modal.classList.remove('show');
-            callback(suit);
+            onConfirm({ targetSuit, totalValue: totalVal, isShield });
         };
-        optionsContainer.appendChild(btn);
+        container.appendChild(item);
     });
 
     modal.classList.add('show');
-    document.getElementById('btn-cancel-wildcard').onclick = () => {
+    document.getElementById('btn-cancel-combo').onclick = () => {
         modal.classList.remove('show');
     };
 }
