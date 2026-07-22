@@ -61,10 +61,15 @@
         .action-buttons{display:flex;justify-content:center;gap:20px;margin-top:20px;padding-top:20px;border-top:2px dashed #eee;}
         .chat-sidebar{width:320px;background:#fff;border:3px solid #eee;border-radius:25px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.05);}
         .chat-header{background:#fdf6f6;padding:15px;text-align:center;font-weight:bold;color:var(--hp);border-bottom:2px solid #eee;}
-        .chat-messages{flex:1;padding:12px;overflow-y:auto;font-size:13px;display:flex;flex-direction:column;gap:8px;}
+        .chat-messages{flex:1;padding:15px;overflow-y:auto;font-size:14px;display:flex;flex-direction:column;gap:12px;}
         .msg.system{color:#b2bec3;font-size:11px;text-align:center;}
-        .msg.user{background:#fef6f5;padding:6px 10px;border-radius:10px;align-self:flex-start;max-width:90%;word-break:break-all;}
-        .msg.self{background:#e3f2fd !important;align-self:flex-end !important;}
+        .chat-bubble-container{display:flex;flex-direction:column;max-width:80%;}
+        .chat-bubble-container.self{align-self:flex-end;align-items:flex-end;}
+        .chat-bubble-container.other{align-self:flex-start;align-items:flex-start;}
+        .chat-sender-name{font-size:11px;color:#a0a0a0;margin-bottom:3px;padding:0 4px;}
+        .chat-bubble{padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.4;word-break:break-all;box-shadow:0 2px 8px rgba(0,0,0,.04);}
+        .chat-bubble-container.self .chat-bubble{background:linear-gradient(135deg,#ffc3a0 0%,#ffafbd 100%);color:#fff;border-bottom-right-radius:4px;}
+        .chat-bubble-container.other .chat-bubble{background:#fff;color:#2d3436;border:1.5px solid #eee;border-bottom-left-radius:4px;}
         .chat-input{display:flex;border-top:2px solid #eee;}
         .chat-input input{flex:1;border:none;padding:12px;outline:none;font-family:inherit;font-size:13px;}
         .chat-input button{background:var(--primary);color:#fff;border:none;padding:0 15px;font-family:inherit;font-weight:bold;cursor:inherit;}

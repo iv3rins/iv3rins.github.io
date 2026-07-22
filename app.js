@@ -240,10 +240,10 @@ function sendWaitingChat() {
     const input = document.getElementById('waiting-chat-input');
     const text = input.value.trim();
     if (!text) return;
-    const msg = { type: 'CHAT', payload: { senderName: G.playerName, text } };
+    const msg = { type: 'CHAT', payload: { senderId: G.p2p.myId, senderName: G.playerName, text } };
     if (G.isHost) {
         // 房主：先本地渲染，再广播
-        addChat('self', G.playerName + ': ' + text);
+        addChat(G.p2p.myId, G.playerName, text);
         G.p2p.sendMessage(msg);
     } else {
         G.p2p.sendMessage(msg);
@@ -252,19 +252,53 @@ function sendWaitingChat() {
 }
 
 // 聊天统一渲染入口（等待大厅 & 游戏内共用）
-function addChat(cls, text) {
-    if (G.gameStarted) addGameChat(cls, text);
-    else addWaitingChat(cls, text);
+function addChat(senderId, senderName, text) {
+    const isSelf = senderId === G.p2p?.myId;
+    if (G.gameStarted) renderChatBubble('game-chat-messages', isSelf, senderName, text);
+    else renderChatBubble('waiting-chat-messages', isSelf, senderName, text);
 }
 
-function addWaitingChat(cls, text) {
-    const box = document.getElementById('waiting-chat-messages');
+// 聊天气泡渲染
+function renderChatBubble(boxId, isSelf, senderName, text) {
+    const box = document.getElementById(boxId);
+    if (!box) return;
+    const container = document.createElement('div');
+    container.className = 'chat-bubble-container ' + (isSelf ? 'self' : 'other');
+    if (!isSelf) {
+        const nameEl = document.createElement('div');
+        nameEl.className = 'chat-sender-name';
+        nameEl.textContent = senderName;
+        container.appendChild(nameEl);
+    }
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble';
+    bubble.textContent = text;
+    container.appendChild(bubble);
+    box.appendChild(container);
+    box.scrollTop = box.scrollHeight;
+}
+
+// 系统消息
+function addSystemChat(text) {
+    const boxId = G.gameStarted ? 'game-chat-messages' : 'waiting-chat-messages';
+    const box = document.getElementById(boxId);
     if (!box) return;
     const div = document.createElement('div');
-    div.className = 'msg ' + cls;
+    div.className = 'msg system';
     div.textContent = text;
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
+}
+
+function addWaitingChat(cls, text) {
+    if (cls === 'system') { addSystemChat(text); return; }
+    // 兼容旧调用
+    addChat('unknown', '', text);
+}
+
+function addGameChat(cls, text) {
+    if (cls === 'system') { addSystemChat(text); return; }
+    addChat('unknown', '', text);
 }
 
 function leaveRoom() {
@@ -329,11 +363,19 @@ function handleHostMessage(data, senderId) {
         case 'JOIN_REQ': {
             const idx = G.peerToPlayer[senderId];
             if (idx !== undefined) {
-                G.playerNames[idx] = data.payload.playerName;
+                let name = data.payload.playerName;
+                // 重名检测：如果已有同名玩家，自动加后缀
+                const existingNames = Object.values(G.playerNames);
+                if (existingNames.includes(name)) {
+                    let suffix = 2;
+                    while (existingNames.includes(name + '(' + suffix + ')')) suffix++;
+                    name = name + '(' + suffix + ')';
+                }
+                G.playerNames[idx] = name;
                 G.playerReady[idx] = false;
                 renderWaitingLobby();
                 broadcastLobbyState();
-                addWaitingChat('system', data.payload.playerName + ' 加入了房间！');
+                addSystemChat(name + ' 加入了房间！');
             }
             break;
         }
@@ -370,14 +412,11 @@ function handleHostMessage(data, senderId) {
             break;
         }
         case 'CHAT': {
-            // 标记是否自己发的
-            const isSelf = data.payload.senderName === G.playerName;
+            const isSelf = data.payload.senderId === G.p2p.myId;
             if (!isSelf) {
-                // 别人的消息：渲染 + 中转广播
-                addChat('user', data.payload.senderName + ': ' + data.payload.text);
-                G.p2p.sendMessage(data);
+                addChat(data.payload.senderId, data.payload.senderName, data.payload.text);
+                G.p2p.sendMessage(data); // 中转广播
             }
-            // 自己的消息：发送时已渲染，跳过
             break;
         }
     }
@@ -450,9 +489,9 @@ function handleClientMessage(data, senderId) {
             break;
         }
         case 'CHAT': {
-            const isSelf = data.payload.senderName === G.playerName;
+            const isSelf = data.payload.senderId === G.p2p.myId;
             if (!isSelf) {
-                addChat('user', data.payload.senderName + ': ' + data.payload.text);
+                addChat(data.payload.senderId, data.payload.senderName, data.payload.text);
             }
             break;
         }
@@ -822,24 +861,14 @@ function sendGameChat() {
     const input = document.getElementById('game-chat-input');
     const text = input.value.trim();
     if (!text) return;
-    const msg = { type: 'CHAT', payload: { senderName: G.playerName, text } };
+    const msg = { type: 'CHAT', payload: { senderId: G.p2p.myId, senderName: G.playerName, text } };
     if (G.isHost) {
-        addChat('self', G.playerName + ': ' + text);
+        addChat(G.p2p.myId, G.playerName, text);
         G.p2p.sendMessage(msg);
     } else {
         G.p2p.sendMessage(msg);
     }
     input.value = '';
-}
-
-function addGameChat(cls, text) {
-    const box = document.getElementById('game-chat-messages');
-    if (!box) return;
-    const div = document.createElement('div');
-    div.className = 'msg ' + cls;
-    div.textContent = text;
-    box.appendChild(div);
-    box.scrollTop = box.scrollHeight;
 }
 
 // ============================================================
