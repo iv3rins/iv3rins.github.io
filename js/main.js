@@ -10,7 +10,7 @@ import { showPage, showModal, renderWaitingLobby } from './ui/lobbyUI.js';
 import { addSystemChat, addGameChat, sendWaitingChat, sendGameChat } from './ui/chatUI.js';
 import { setProcessPlayCard, executeAttack } from './ui/gameUI.js';
 import { Toast } from './ui/toast.js';
-import { AudioManager } from './audioManager.js';
+import { audioManager } from './audioManager.js';
 import {
     handleHostMessage, handleClientMessage,
     broadcastLobbyState, broadcastSyncState, broadcastGameOver,
@@ -55,7 +55,6 @@ function initAvatarPicker() {
 
 function createRoom() {
     G.playerName = document.getElementById('player-name').value.trim() || '小猫猫';
-    AudioManager.unlock();  // ★ 解锁音频上下文
     G.isHost = true;
     G.myPlayerId = 0;
     G.playerNames = { 0: G.playerName };

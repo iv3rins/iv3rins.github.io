@@ -5,7 +5,7 @@
 import { G } from '../state.js';
 import { getAceAllowedSuits } from '../engine/GameValidator.js';
 import { Toast } from './toast.js';
-import { AudioManager } from '../audioManager.js';
+import { audioManager } from '../audioManager.js';
 
 // ═══ 渲染入口 ═══
 
@@ -16,13 +16,27 @@ export function renderState(state) {
     const me = state.players[state.myPlayerId];
     const isSpectating = me && me.isEliminated;
 
-    // ★ VFX: lastAction 优先（引擎显式触发）
+    // ★ VFX: lastAction — 夸张飘字 + 音效
     if (state.lastAction) {
-        const la = state.lastAction;
-        if (la.type === 'damage') {
-            setTimeout(() => showDamageFloat(la.targetId, la.amount), 100);
-        } else if (la.type === 'shield') {
-            setTimeout(() => showHealFloat(la.targetId, la.amount), 100);
+        const { type, targetId, amount } = state.lastAction;
+        const cardEl = document.querySelector(`.player-card[data-player-id="${targetId}"]`);
+        if (cardEl) {
+            const vfx = document.createElement('div');
+            vfx.className = `vfx-popup ${type === 'damage' ? 'vfx-dmg' : 'vfx-shd'}`;
+            vfx.textContent = type === 'damage' ? `-${amount}` : `+${amount} 🛡️`;
+            cardEl.appendChild(vfx);
+
+            if (type === 'damage') {
+                cardEl.classList.add('card-shake');
+                audioManager.play('attack');
+            } else {
+                audioManager.play('heal');
+            }
+
+            setTimeout(() => {
+                vfx.remove();
+                cardEl.classList.remove('card-shake');
+            }, 1200);
         }
     } else if (_prevState) {
         state.players.forEach((p, i) => {
@@ -180,23 +194,14 @@ export function updateActionButtonUI() {
     const selectedCards = G.selectedCardIndices.map(i => myHand[i]).filter(Boolean);
     const nonJokers = selectedCards.filter(c => !c.isJoker);
     const hasJoker = selectedCards.some(c => c.isJoker);
-    const hasA = selectedCards.some(c => c.rank === 'A' && !c.isJoker);
 
-    // A 牌当前选的花色
-    let currentASuit = null;
-    if (hasA) {
-        const suitSel = document.getElementById('a-suit-select');
-        currentASuit = suitSel ? suitSel.value : null;
-    }
-
-    // 护盾判定：全♣ 或 A 万化为 ♣
-    const isShield = (nonJokers.length > 0 && nonJokers.every(c => c.suit === '♣') && !hasA)
-        || (hasA && currentASuit === '♣');
+    // 纯 ♣（无 A）→ 护盾提示
+    const isPureClub = nonJokers.length > 0 && nonJokers.every(c => c.suit === '♣') && !selectedCards.some(c => c.rank === 'A');
 
     if (hasJoker) {
         btn.textContent = '🃏 Joker 特殊行动';
         btn.disabled = G.selectedTargetId < 0;
-    } else if (isShield) {
+    } else if (isPureClub) {
         if (G.selectedTargetId >= 0) {
             document.querySelectorAll('.player-card.targeted').forEach(c => c.classList.remove('targeted'));
             G.selectedTargetId = -1;
@@ -332,23 +337,69 @@ export function executeAttack() {
     const nonJokers = selectedCards.filter(c => !c.isJoker);
     const hasA = selectedCards.some(c => c.rank === 'A' && !c.isJoker);
 
-    // A 牌当前花色
-    let aSuit = null;
-    if (hasA) {
-        const suitSel = document.getElementById('a-suit-select');
-        aSuit = suitSel ? suitSel.value : null;
+    // 校验普通牌是否同花色
+    let primarySuit = null;
+    if (nonJokers.length > 0) {
+        primarySuit = nonJokers[0].suit;
+        const isSame = nonJokers.every(c => c.suit === primarySuit);
+        if (!isSame && !hasJoker) {
+            Toast.show('多张普通牌必须同花色！', 'error');
+            return;
+        }
     }
 
-    // 护盾判定
-    const isShield = (nonJokers.length > 0 && nonJokers.every(c => c.suit === '♣') && !hasA)
-        || (hasA && aSuit === '♣');
-
-    if (!isShield && !hasJoker && G.selectedTargetId < 0) {
+    // 目标校验
+    const isPureClub = nonJokers.length > 0 && nonJokers.every(c => c.suit === '♣') && !hasA;
+    if (!isPureClub && !hasJoker && G.selectedTargetId < 0) {
         Toast.show('请先选择一个攻击目标！🐾', 'error'); return;
     }
     if (hasJoker && G.selectedTargetId < 0) {
         Toast.show('Joker 需要指定目标！🐾', 'error'); return;
     }
+
+    // ★ 如果有 A 牌，弹出万化选择弹窗
+    if (hasA) {
+        showWildcardModal(selectedCards, primarySuit, (chosenSuit) => {
+            dispatchPlayAction(selectedCards, chosenSuit, hasJoker, nonJokers, state);
+        });
+        return;
+    }
+
+    // 无 A 牌：直接出牌
+    dispatchPlayAction(selectedCards, primarySuit, hasJoker, nonJokers, state);
+}
+
+function showWildcardModal(selectedCards, primarySuit, callback) {
+    const modal = document.getElementById('modal-wildcard');
+    const optionsContainer = document.getElementById('wildcard-options');
+    if (!modal || !optionsContainer) return;
+    optionsContainer.innerHTML = '';
+
+    // 可用花色：A 自身花色 + 普通牌花色（去重）
+    const availableSuits = new Set();
+    selectedCards.forEach(c => { if (c.rank === 'A') availableSuits.add(c.suit); });
+    if (primarySuit) availableSuits.add(primarySuit);
+    if (availableSuits.size === 0) ['♦', '♣', '♥', '♠'].forEach(s => availableSuits.add(s));
+
+    availableSuits.forEach(suit => {
+        const btn = document.createElement('button');
+        btn.className = 'btn';
+        btn.textContent = suit === '♣' ? '♣ 梅花 (护盾)' : suit + ' 攻击/特殊';
+        btn.onclick = () => {
+            modal.classList.remove('show');
+            callback(suit);
+        };
+        optionsContainer.appendChild(btn);
+    });
+
+    modal.classList.add('show');
+    document.getElementById('btn-cancel-wildcard').onclick = () => {
+        modal.classList.remove('show');
+    };
+}
+
+function dispatchPlayAction(selectedCards, chosenSuit, hasJoker, nonJokers, state) {
+    const isShield = chosenSuit === '♣';
 
     // 飞行动画
     const animLayer = document.getElementById('anim-layer');
@@ -366,17 +417,13 @@ export function executeAttack() {
         setTimeout(() => clone.remove(), 600);
     });
 
-    // Ace 花色 — 已在上面读取过，直接复用
-    // aSuit 用于 payload，已在 isShield 判定前读取
-
     const payload = {
         targetPlayerId: isShield ? state.myPlayerId : G.selectedTargetId,
         cardIndices: [...G.selectedCardIndices],
-        aSuit,
+        aSuit: chosenSuit,
     };
 
     G._pendingClear = true;
-    // ★ 立即清除选中状态，防止残留
     G.selectedCardIndices = [];
     G.selectedTargetId = -1;
     hideAValuePanel();
@@ -431,7 +478,7 @@ export function showDamageFloat(playerId, amount) {
     requestAnimationFrame(() => el.classList.add('fly'));
     setTimeout(() => el.remove(), 900);
     triggerHitShake(playerId);
-    AudioManager.play('attack');
+    audioManager.play('attack');
 }
 
 export function showHealFloat(playerId, amount) {
@@ -444,7 +491,7 @@ export function showHealFloat(playerId, amount) {
     requestAnimationFrame(() => el.classList.add('fly'));
     setTimeout(() => el.remove(), 900);
     triggerHealAnim(playerId);
-    AudioManager.play('heal');
+    audioManager.play('heal');
 }
 
 function triggerHitShake(playerId) {
@@ -470,5 +517,5 @@ export function markNewCardsAsDealt(prevHandLength, currentCards) {
         allCards[i].classList.add('card-deal-anim');
         allCards[i].style.setProperty('--deal-delay', `${(i - prevHandLength) * 0.08}s`);
     }
-    if (currentCards.length > prevHandLength) AudioManager.play('draw');
+    if (currentCards.length > prevHandLength) audioManager.play('draw');
 }
