@@ -226,6 +226,28 @@ class GameEngine {
     }
 
     /**
+     * 打出梅花护盾（对自己使用，不攻击他人）
+     * @param {Player} player 出牌玩家
+     * @param {Array<Card>} cards 打出的卡牌组合
+     * @param {Number} aValue 如果有A，玩家指定的转化数值
+     */
+    playShield(player, cards, aValue = 0) {
+        const validation = this.validatePlay(cards);
+        if (!validation.valid) throw new Error(validation.error);
+        if (validation.primarySuit !== '♣') throw new Error('只有梅花牌才能用于护盾');
+
+        let totalShield = validation.normalCards.reduce((sum, c) => sum + c.value, 0);
+        if (validation.hasA) {
+            totalShield += aValue;
+        }
+
+        const activeChar = player.getActiveCharacter();
+        activeChar.shield += totalShield;
+
+        this._postPlayCleanup(player, player, cards);
+    }
+
+    /**
      * 执行攻击出牌
      * @param {Player} attacker 出牌玩家
      * @param {Player} target 目标玩家
@@ -262,31 +284,22 @@ class GameEngine {
 
         // 4. 结算后置效果
         if (attackSuit === '♦' && !isImmune) {
-            // 方块：摸5张牌，逆时针(在此模型中视为索引递增)
             let drawCount = 0;
             let currentIdx = this.players.indexOf(attacker);
             let aliveCount = this.players.filter(p => !p.isEliminated).length;
             let passes = 0;
-            
             while (drawCount < 5 && passes < aliveCount) {
                 let p = this.players[currentIdx];
                 if (!p.isEliminated && p.hand.length < MAX_HAND_SIZE) {
                     this.drawCards(p, 1);
                     drawCount++;
-                    passes = 0; // 重置跳过计数
+                    passes = 0;
                 } else {
                     passes++;
                 }
                 currentIdx = (currentIdx + 1) % this.numPlayers;
             }
-        } 
-        else if (attackSuit === '♣') {
-            // 梅花：增加护盾
-            // 注: 规则未说明攻击同色时攻击者失去护盾增加，只说"对应效果失效->无视目标护盾直接扣血"
-            attackerChar.shield += totalDamage; 
-        } 
-        else if (attackSuit === '♥' && !isImmune) {
-            // 红桃：吸血等于实际伤害
+        } else if (attackSuit === '♥' && !isImmune) {
             attackerChar.hp = Math.min(attackerChar.maxHp, attackerChar.hp + actualDamageDealt);
         }
 

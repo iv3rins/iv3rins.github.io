@@ -377,22 +377,37 @@ function handleHostMessage(data, senderId) {
 function processPlayCard(attackerIdx, payload) {
     const engine = G.gameEngine;
     const attacker = engine.players[attackerIdx];
-    const target = engine.players[payload.targetPlayerId];
-    if (!attacker || !target) throw new Error('无效的攻击者或目标');
+    if (!attacker) throw new Error('无效的攻击者');
     if (engine.currentPlayerIndex !== attackerIdx) throw new Error('不是你的回合');
 
     const sorted = [...payload.cardIndices].sort((a, b) => b - a);
     const cards = sorted.map(i => attacker.hand[i]).filter(Boolean);
     if (cards.length !== payload.cardIndices.length) throw new Error('手牌索引无效');
 
+    // 判断花色：梅花走护盾，其他走攻击
+    const nonJokers = cards.filter(c => !c.isJoker);
+    const isClub = nonJokers.length > 0 && nonJokers.every(c => c.suit === '♣');
+
     if (cards.some(c => c.isJoker)) {
+        // Joker 特殊机制
+        const target = engine.players[payload.targetPlayerId];
+        if (!target) throw new Error('Joker 需要指定目标');
         engine.playJoker(attacker, target, target.activeCharIndex, cards);
+        addGameChat('system', attacker.name + ' 使用了 Joker！');
+    } else if (isClub) {
+        // ♣ 梅花：对自己加护盾，不需要目标
+        engine.playShield(attacker, cards, payload.aValue || 0);
+        addGameChat('system', attacker.name + ' 获得了护盾！🛡️');
     } else {
+        // ♦♥♠ 攻击：需要目标
+        const target = engine.players[payload.targetPlayerId];
+        if (!target) throw new Error('无效的目标');
         engine.playAttack(attacker, target, cards, payload.aValue || 0);
+        addGameChat('system', attacker.name + ' 攻击了 ' + target.name + '！');
     }
+
     G.roundCount++;
     if (!engine.isGameOver) engine.nextTurn();
-    addGameChat('system', attacker.name + ' 攻击了 ' + target.name + '！');
     broadcastSyncState();
     if (engine.isGameOver) broadcastGameOver();
 }
@@ -693,7 +708,25 @@ function hideAValuePanel() {
 
 function executeAttack() {
     if (G.selectedCardIndices.length === 0) { alert('请先选择要打出的牌！🐾'); return; }
-    if (G.selectedTargetId < 0) { alert('请先选择一个攻击目标！🐾'); return; }
+
+    const state = G.currentState;
+    if (!state) return;
+    const myHand = state.players[state.myPlayerId]?.hand;
+    if (!myHand) return;
+
+    // 判断选中牌的花色
+    const selectedCards = G.selectedCardIndices.map(i => myHand[i]).filter(Boolean);
+    const hasJoker = selectedCards.some(c => c.isJoker);
+    const nonJokers = selectedCards.filter(c => !c.isJoker);
+    const isClub = nonJokers.length > 0 && nonJokers.every(c => c.suit === '♣');
+
+    // 梅花不需要选目标，其他牌型需要
+    if (!isClub && !hasJoker && G.selectedTargetId < 0) {
+        alert('请先选择一个攻击目标！🐾'); return;
+    }
+    if (hasJoker && G.selectedTargetId < 0) {
+        alert('Joker 需要指定目标！🐾'); return;
+    }
 
     // 飞行动画
     const animLayer = document.getElementById('anim-layer');
@@ -711,23 +744,23 @@ function executeAttack() {
         setTimeout(() => clone.remove(), 600);
     });
 
-    // A 牌数值（从中场面板读取）
+    // A 牌数值
     let aValue = 0;
-    const state = G.currentState;
-    if (state) {
-        const myHand = state.players[state.myPlayerId]?.hand;
-        if (myHand && G.selectedCardIndices.some(i => myHand[i] && myHand[i].rank === 'A' && !myHand[i].isJoker)) {
-            const input = document.getElementById('a-value-input');
-            aValue = parseInt(input.value) || 5;
-            if (aValue < 1) aValue = 1;
-            if (aValue > 13) aValue = 13;
-        }
+    let aSuit = 'same';
+    if (selectedCards.some(c => c.rank === 'A' && !c.isJoker)) {
+        const input = document.getElementById('a-value-input');
+        aValue = parseInt(input.value) || 5;
+        if (aValue < 1) aValue = 1;
+        if (aValue > 13) aValue = 13;
+        const suitSel = document.getElementById('a-suit-select');
+        aSuit = suitSel ? suitSel.value : 'same';
     }
 
     const payload = {
-        targetPlayerId: G.selectedTargetId,
+        targetPlayerId: isClub ? state.myPlayerId : G.selectedTargetId,
         cardIndices: [...G.selectedCardIndices],
         aValue,
+        aSuit,
     };
 
     if (G.isHost) {
@@ -737,7 +770,6 @@ function executeAttack() {
         G.p2p.sendMessage({ type: 'PLAY_CARD', payload });
     }
 
-    // 清空本地选择（实际手牌更新等 SYNC_STATE 回来再渲染）
     G.selectedCardIndices = [];
     G.selectedTargetId = -1;
     hideAValuePanel();
