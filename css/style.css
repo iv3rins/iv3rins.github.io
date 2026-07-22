@@ -232,3 +232,67 @@ body {
 .spinner { width: 44px; height: 44px; border: 4px solid #eee; border-top-color: var(--primary); border-radius: 50%; animation: spin .7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-text { font-size: 16px; color: var(--text-muted); font-weight: bold; }
+
+/* ═══ 悬浮图标按钮 ═══ */
+.btn-icon { position: fixed; z-index: 10000; width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff; background: rgba(0,0,0,.4); color: #fff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: .2s; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.btn-icon:hover { background: rgba(0,0,0,.6); transform: scale(1.1); }
+#btn-fullscreen { top: 10px; right: 10px; }
+#mobile-chat-toggle { top: 10px; right: 58px; display: none; }
+
+/* ═══ 横屏锁定覆盖层 ═══ */
+.orientation-prompt { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-weight: bold; color: var(--text-muted); font-size: 16px; }
+.rotate-icon { font-size: 40px; animation: spin 2s linear infinite; }
+
+/* ═══ 聊天抽屉（移动端） ═══ */
+.chat-box.show-mobile-chat { right: 0 !important; }
+.chat-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 999; }
+.chat-overlay.show { display: block; }
+
+/* ──────── 📱 媒体查询 ──────── */
+
+/* ═══ 竖屏：阻断操作 ═══ */
+@media screen and (max-width: 900px) and (orientation: portrait) {
+    .orientation-prompt { display: flex; }
+    .page-view.active { display: none !important; }
+}
+
+/* ═══ 横屏低矮：极限压缩 ═══ */
+@media screen and (max-height: 500px) {
+    .player-card { width: 95px; padding: 4px; border-radius: 10px; }
+    .player-card .avatar { font-size: 20px; }
+    .player-card .name { font-size: 10px; margin-bottom: 1px; }
+    .player-card .role { font-size: 13px; margin: 1px 0; }
+    .status-bar { height: 5px; margin-top: 2px; }
+    .hand-count { width: 17px; height: 17px; line-height: 17px; font-size: 9px; bottom: -6px; right: -6px; }
+    .current-turn-indicator { width: 18px; height: 18px; line-height: 18px; font-size: 10px; top: -8px; left: -8px; }
+    .self-area .player-card { width: 105px; padding: 6px; }
+    .game-bottom { flex-direction: row; align-items: center; gap: 8px; padding: 5px 10px 8px; }
+    .hand-area { padding-bottom: 2px; }
+    .poker-card { width: 62px; height: 80px; font-size: 18px; margin-left: -22px; }
+    .poker-card.selected { margin: 0 12px; }
+    .poker-card:hover { margin: 0 5px; }
+    .opponents-area { max-height: 32vh; gap: 6px; padding: 8px 10px; }
+    .board-center { gap: 4px; }
+    .deck-info { font-size: 11px; padding: 3px 10px; }
+    .a-value-panel { padding: 6px 12px; gap: 5px; }
+    .a-value-panel label { font-size: 12px; }
+    .a-value-panel select { font-size: 12px; padding: 4px 6px; }
+    .timer-bar-bg { width: 200px; height: 6px; }
+    .btn { padding: 6px 14px; font-size: 13px; }
+}
+
+/* ═══ 移动端聊天抽屉 ═══ */
+@media screen and (max-width: 900px) {
+    .chat-box { position: fixed; top: 0; right: -320px; width: 300px; height: 100vh; z-index: 1000; transition: right .3s cubic-bezier(.4,0,.2,1); box-shadow: -5px 0 15px rgba(0,0,0,.1); }
+    .chat-sidebar { position: fixed; top: 0; right: -320px; width: 300px; height: 100vh; z-index: 1000; transition: right .3s cubic-bezier(.4,0,.2,1); box-shadow: -5px 0 15px rgba(0,0,0,.1); }
+    .chat-sidebar.show-mobile-chat { right: 0 !important; }
+    .game-main { width: 100%; }
+    #mobile-chat-toggle { display: flex; }
+}
+
+/* ═══ 移动端防误触：强视觉反馈 ═══ */
+@media (hover: none) and (pointer: coarse) {
+    .poker-card:hover { transform: none; margin: 0; }
+    .poker-card.selected { transform: translateY(-25px) scale(1.08); margin: 0 18px; z-index: 100; border-color: var(--primary); box-shadow: 0 0 20px rgba(255,182,193,.6), 0 12px 30px rgba(0,0,0,.2); }
+    .poker-card { margin-left: -20px; }
+}

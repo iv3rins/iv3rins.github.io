@@ -245,5 +245,45 @@ document.addEventListener('DOMContentLoaded', () => {
     initHomePage();
     initWaitingPage();
     initGamePage();
+    initFullscreenBtn();
+    initChatDrawer();
     console.log('🐾 PokeWar 初始化完成！');
 });
+
+// ═══ 全屏按钮 ═══
+
+function initFullscreenBtn() {
+    const btn = document.getElementById('btn-fullscreen');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            const el = document.documentElement;
+            if (el.requestFullscreen) el.requestFullscreen();
+            else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+            btn.textContent = '🔳';
+        } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+            else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            btn.textContent = '🔲';
+        }
+    });
+    document.addEventListener('fullscreenchange', () => {
+        btn.textContent = document.fullscreenElement ? '🔳' : '🔲';
+    });
+    document.addEventListener('webkitfullscreenchange', () => {
+        btn.textContent = document.webkitFullscreenElement ? '🔳' : '🔲';
+    });
+}
+
+// ═══ 移动端聊天抽屉 ═══
+
+function initChatDrawer() {
+    const toggle = document.getElementById('mobile-chat-toggle');
+    if (!toggle) return;
+    toggle.addEventListener('click', () => {
+        const chatBox = document.querySelector('.chat-box');
+        const sidebar = document.querySelector('.chat-sidebar');
+        const target = chatBox || sidebar;
+        if (target) target.classList.toggle('show-mobile-chat');
+    });
+}

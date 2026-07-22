@@ -2,12 +2,22 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>PokeWar - P2P卡牌对战</title>
     <link rel="stylesheet" href="./css/style.css">
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
 </head>
 <body>
+    <!-- 横屏提示覆盖层 -->
+    <div id="orientation-prompt" class="orientation-prompt">
+        <div class="rotate-icon">🔄</div>
+        <div style="margin-top:15px">请将手机旋转至横屏以获得最佳游玩体验 🐾</div>
+    </div>
+
+    <!-- 全屏 + 聊天切换悬浮按钮 -->
+    <button id="btn-fullscreen" class="btn-icon">🔲</button>
+    <button id="mobile-chat-toggle" class="btn-icon btn-chat-toggle">💬</button>
+
     <!-- Toast 容器 -->
     <div class="toast-container" id="toast-container"></div>
 
