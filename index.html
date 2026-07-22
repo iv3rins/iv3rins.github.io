@@ -78,12 +78,6 @@
                 <div class="action-area" id="action-area">
                     <button class="btn" id="attack-btn">⚔️ 选择一个玩家，攻击</button>
                     <div class="timer-bar-bg"><div class="timer-bar-fill" id="turn-timer"></div></div>
-                    <!-- A 牌面板：固定值=1，花色仅限 A自身花色 或 组合花色 -->
-                    <div class="a-value-panel" id="a-value-panel">
-                        <label>🃏 A牌 (固定值=1)</label>
-                        <label>花色:</label>
-                        <select id="a-suit-select"></select>
-                    </div>
                 </div>
             </div>
             <div class="game-bottom">
@@ -155,6 +149,25 @@
             <div style="margin-top: 20px;">
                 <button class="btn btn-secondary" id="btn-cancel-combo">取消出牌</button>
             </div>
+        </div>
+    </div>
+
+    <!-- ★ Bug4: 首发选将弹窗 -->
+    <div id="modal-starter" class="modal-overlay">
+        <div class="modal-box" style="max-width: 500px; width: 90%;">
+            <h3>⚔️ 请选择您的首发角色</h3>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px;">选择一个角色作为首发，其余两个待机：</p>
+            <div id="starter-options" style="display: flex; gap: 15px; justify-content: center; margin: 20px 0;"></div>
+        </div>
+    </div>
+
+    <!-- ★ Bug3: 濒死救援弹窗 -->
+    <div id="modal-dying" class="modal-overlay">
+        <div class="modal-box" style="max-width: 450px; width: 90%;">
+            <h3>⚠️ 有人濒死！</h3>
+            <p id="dying-desc" style="color: var(--text-muted); font-size: 14px; margin-bottom: 10px;"></p>
+            <div id="dying-countdown" style="font-size: 32px; font-weight: 900; color: #ff4757; text-align: center; margin: 10px 0;">10</div>
+            <div id="dying-actions" style="display: flex; gap: 12px; justify-content: center; margin-top: 15px;"></div>
         </div>
     </div>
 

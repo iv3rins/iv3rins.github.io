@@ -211,7 +211,8 @@ function startGame() {
 
     G.myPlayerId = 0;
     showPage('game');
-    addGameChat('system', '🎮 游戏开始！爪爪对决！🐾');
+    addGameChat('system', '🎮 游戏开始！请先选择首发角色！⚔️');
+    // ★ Bug4: 广播初始状态（SELECTING_STARTER 阶段），所有人看到选将弹窗
     broadcastSyncState();
 }
 

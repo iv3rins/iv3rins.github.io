@@ -70,6 +70,37 @@ export function handleHostMessage(data, senderId) {
             }
             break;
         }
+        // ★ Bug4: 选将
+        case 'SELECT_STARTER': {
+            if (!G.gameEngine) break;
+            const lobbyIdx = G.peerToPlayer[senderId];
+            if (lobbyIdx === undefined) break;
+            const engineIdx = Object.keys(G.engineToLobby).find(k => G.engineToLobby[k] === lobbyIdx);
+            if (engineIdx === undefined) break;
+            const result = G.gameEngine.selectStarter(parseInt(engineIdx), data.payload.charIndex);
+            if (!result.ok) {
+                G.p2p.sendTo(senderId, { type: 'ERROR', payload: { message: result.error } });
+            } else {
+                broadcastSyncState();
+            }
+            break;
+        }
+        // ★ Bug3: Joker 救援
+        case 'JOKER_RESCUE': {
+            if (!G.gameEngine) break;
+            const lobbyIdx = G.peerToPlayer[senderId];
+            if (lobbyIdx === undefined) break;
+            const engineIdx = Object.keys(G.engineToLobby).find(k => G.engineToLobby[k] === lobbyIdx);
+            if (engineIdx === undefined) break;
+            const result = G.gameEngine.rescueWithJoker(parseInt(engineIdx), data.payload.jokerCardIdx);
+            if (!result.ok) {
+                G.p2p.sendTo(senderId, { type: 'ERROR', payload: { message: result.error } });
+            } else {
+                addGameChat('system', result.rescuerName + ' 用 Joker 救回了 ' + result.rescuedName + '！💊');
+                broadcastSyncState();
+            }
+            break;
+        }
         case 'CHAT': {
             // Bug Fix: 房主本地渲染 + 单次广播给其他客户端（排除发送者）
             addChat(data.payload.senderId, data.payload.senderName, data.payload.text);
@@ -185,9 +216,10 @@ export function serializeState(engine, forEngineId) {
             name: p.name || ('玩家' + (p.id + 1)),
             characters: p.characters.map(c => ({
                 rank: c.rank, suit: c.suit, maxHp: c.maxHp,
-                hp: c.hp, shield: c.shield, isDead: c.isDead,
+                hp: c.hp, shield: c.shield, isDead: c.isDead, isDying: c.isDying,
             })),
             activeCharIndex: p.activeCharIndex,
+            starterSelected: p.starterSelected,
             handCount: p.hand.length,
             isEliminated: p.isEliminated,
             hand: (i === forEngineId) ? p.hand.map(c => ({
@@ -202,6 +234,9 @@ export function serializeState(engine, forEngineId) {
         roundCount: G.roundCount,
         playerAvatars: G.playerAvatars,
         lastAction: engine.lastAction || null,
+        // ★ Bug3+4: 阶段信息
+        phase: engine.phase,
+        dyingInfo: engine.dyingInfo,
     };
 }
 
@@ -211,6 +246,9 @@ export function processPlayCard(attackerIdx, payload) {
     const engine = G.gameEngine;
     const attacker = engine.players[attackerIdx];
     if (!attacker) throw new Error('无效的攻击者');
+
+    // ★ Bug3/4: 非 PLAYING 阶段禁止普通出牌（Joker 救援除外，走 JOKER_RESCUE）
+    if (engine.phase !== 'PLAYING') throw new Error('当前阶段不能出牌');
 
     const sorted = [...payload.cardIndices].sort((a, b) => b - a);
     const cards = sorted.map(i => attacker.hand[i]).filter(Boolean);
@@ -245,6 +283,26 @@ export function processPlayCard(attackerIdx, payload) {
     }
 
     G.roundCount++;
+
+    // ★ Bug3: 濒死时不推进回合，启动 10 秒救援倒计时
+    if (engine.phase === 'WAITING_FOR_JOKER') {
+        addGameChat('system', '⚠️ ' + (engine.players[engine.dyingInfo.playerId].name || '玩家') + ' 濒死！等待 Joker 救援...');
+        broadcastSyncState();
+        // 10 秒后自动死亡
+        setTimeout(() => {
+            if (G.gameEngine && G.gameEngine.phase === 'WAITING_FOR_JOKER') {
+                const result = G.gameEngine.resolveDying();
+                if (result.ok) {
+                    addGameChat('system', '💀 无人救援，' + (engine.players[result.playerId].name || '玩家') + ' 的角色阵亡了...');
+                    if (!G.gameEngine.isGameOver) G.gameEngine.nextTurn();
+                    broadcastSyncState();
+                    if (G.gameEngine.isGameOver) broadcastGameOver();
+                }
+            }
+        }, 10000);
+        return;
+    }
+
     if (!engine.isGameOver) engine.nextTurn();
     broadcastSyncState();
     if (engine.isGameOver) broadcastGameOver();

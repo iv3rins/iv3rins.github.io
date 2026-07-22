@@ -3,7 +3,7 @@
  * 对手卡牌、自己状态、手牌、回合 UI、A 牌面板、目标选择、出牌执行
  */
 import { G } from '../state.js';
-import { getAceAllowedSuits, calculateWildcardCombinations, findPlayableCombinations } from '../engine/GameValidator.js';
+import { calculateWildcardCombinations, findPlayableCombinations } from '../engine/GameValidator.js';
 import { Toast } from './toast.js';
 import { audioManager } from '../audioManager.js';
 
@@ -15,6 +15,30 @@ export function renderState(state) {
     G.currentState = state;
     const me = state.players[state.myPlayerId];
     const isSpectating = me && me.isEliminated;
+
+    // ★ Bug4: 选将阶段
+    if (state.phase === 'SELECTING_STARTER') {
+        if (me && !me.starterSelected) {
+            showStarterModal(me);
+        } else {
+            hideStarterModal();
+            // 已选完，等待他人
+            const waitingCount = state.players.filter(p => !p.starterSelected).length;
+            const deckInfo = document.getElementById('deck-info');
+            if (deckInfo) deckInfo.textContent = `⏳ 等待 ${waitingCount} 人选将...`;
+        }
+        renderOpponents(state);
+        renderSelf(state);
+        return;
+    }
+    hideStarterModal();
+
+    // ★ Bug3: 濒死救援阶段
+    if (state.phase === 'WAITING_FOR_JOKER' && state.dyingInfo) {
+        showDyingModal(state);
+    } else {
+        hideDyingModal();
+    }
 
     // ★ VFX: lastAction — 夸张飘字 + 音效
     if (state.lastAction) {
@@ -92,7 +116,6 @@ export function renderState(state) {
         G.selectedTargetId = -1;
         G.selectedCardIndices = [];
         G._pendingClear = false;
-        hideAValuePanel();
     }
 }
 
@@ -128,8 +151,10 @@ export function createPlayerCard(p, idx, isSelf, isTargetable, state) {
     if (G.selectedTargetId === idx) div.classList.add('targeted');
     div.dataset.playerId = idx;
 
-    const aliveChar = p.characters.find(c => !c.isDead);
-    const displayChar = aliveChar || p.characters[p.activeCharIndex];
+    const aliveChar = p.characters.find(c => !c.isDead && !c.isDying);
+    // ★ Bug4: activeCharIndex=-1 时用第一个角色显示
+    const charIdx = p.activeCharIndex >= 0 ? p.activeCharIndex : 0;
+    const displayChar = aliveChar || p.characters[charIdx] || p.characters[0];
     const isRed = displayChar.suit === '♦' || displayChar.suit === '♥';
     const suitClass = isRed ? 'suit-red' : 'suit-black';
 
@@ -147,7 +172,7 @@ export function createPlayerCard(p, idx, isSelf, isTargetable, state) {
         : `<span class="role ${suitClass}">${displayChar.suit}${displayChar.rank}</span>`;
 
     const charDots = p.characters.map(c =>
-        `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 2px;background:${c.isDead ? '#dfe6e9' : '#55efc4'}"></span>`
+        `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 2px;background:${c.isDead ? '#dfe6e9' : c.isDying ? '#ff4757' : '#55efc4'}"></span>`
     ).join('');
 
     div.innerHTML = `
@@ -254,7 +279,6 @@ export function toggleCard(index, el) {
         G.selectedCardIndices.push(index);
         el.classList.add('selected');
     }
-    updateAValuePanel();
     updateActionButtonUI();  // ★ 动态按钮文字
 }
 
@@ -266,20 +290,17 @@ export function updateTurnUI(state) {
     const isSpectating = me && me.isEliminated;
     const actionArea = document.getElementById('action-area');
     const btn = document.getElementById('attack-btn');
-    const aPanel = document.getElementById('a-value-panel');
 
     if (isSpectating) {
         actionArea.style.visibility = 'hidden';
         clearTimer();
     } else if (isMyTurn) {
         actionArea.style.visibility = 'visible';
-        if (aPanel) aPanel.style.display = '';
         updateActionButtonUI();
         startTimer();
     } else {
-        // 非自己回合：隐藏 A 面板，检测是否只选了 Joker 可插队
+        // 非自己回合：检测是否只选了 Joker 可插队
         actionArea.style.visibility = 'visible';
-        if (aPanel) { aPanel.classList.remove('show'); aPanel.style.display = 'none'; }
         clearTimer();
         // 检测是否选中了纯 Joker
         const myHand = state.players[state.myPlayerId]?.hand;
@@ -295,37 +316,6 @@ export function updateTurnUI(state) {
             btn.disabled = true;
         }
     }
-}
-
-// ═══ A 牌面板（Bug Fix：仅显示 Ace 自身花色 + 组合中其他牌花色） ═══
-
-export function updateAValuePanel() {
-    const panel = document.getElementById('a-value-panel');
-    const state = G.currentState;
-    if (!state || !panel) return;
-    const myHand = state.players[state.myPlayerId]?.hand;
-    if (!myHand) { panel.classList.remove('show'); return; }
-
-    const selectedCards = G.selectedCardIndices.map(i => myHand[i]).filter(Boolean);
-    const aceCard = selectedCards.find(c => c.rank === 'A' && !c.isJoker);
-    const hasA = !!aceCard;
-
-    if (!hasA) { panel.classList.remove('show'); return; }
-
-    panel.classList.add('show');
-    const allowedSuits = getAceAllowedSuits(aceCard, selectedCards);
-    const suitSel = document.getElementById('a-suit-select');
-    if (suitSel) {
-        const currentValue = suitSel.value;
-        suitSel.innerHTML = allowedSuits.map(s =>
-            `<option value="${s}" ${s === currentValue ? 'selected' : ''}>${s} ${s === '♦' ? '方块' : s === '♣' ? '梅花' : s === '♥' ? '红桃' : '黑桃'}</option>`
-        ).join('');
-    }
-}
-
-export function hideAValuePanel() {
-    const panel = document.getElementById('a-value-panel');
-    if (panel) panel.classList.remove('show');
 }
 
 // ═══ 出牌执行 ═══
@@ -451,7 +441,6 @@ function dispatchPlayAction(selectedCards, chosenSuit, hasJoker, nonJokers, stat
     G._pendingClear = true;
     G.selectedCardIndices = [];
     G.selectedTargetId = -1;
-    hideAValuePanel();
 
     if (G.isHost) {
         try { processPlayCard(G.myPlayerId, payload); }
@@ -557,4 +546,121 @@ export function markSuggestedCards(handCards) {
             el.classList.remove('suggested');
         }
     });
+}
+
+// ═══ Bug4: 首发选将弹窗 ═══
+
+function showStarterModal(me) {
+    const modal = document.getElementById('modal-starter');
+    const container = document.getElementById('starter-options');
+    if (!modal || !container) return;
+    container.innerHTML = '';
+
+    me.characters.forEach((c, idx) => {
+        const isRed = c.suit === '♦' || c.suit === '♥';
+        const card = document.createElement('div');
+        card.className = 'starter-card';
+        card.style.color = isRed ? '#dc2626' : '#1e293b';
+        card.innerHTML = `
+            <div class="starter-suit">${c.suit}</div>
+            <div class="starter-rank">${c.rank}</div>
+            <div class="starter-hp">${c.hp}/${c.maxHp} HP</div>
+        `;
+        card.onclick = () => {
+            // 发送选将消息
+            if (G.isHost) {
+                const result = G.gameEngine.selectStarter(G.myPlayerId, idx);
+                if (result.ok) {
+                    modal.classList.remove('show');
+                    broadcastSyncState();
+                }
+            } else {
+                G.p2p.sendMessage({ type: 'SELECT_STARTER', payload: { charIndex: idx } });
+                modal.classList.remove('show');
+            }
+        };
+        container.appendChild(card);
+    });
+
+    modal.classList.add('show');
+}
+
+function hideStarterModal() {
+    const modal = document.getElementById('modal-starter');
+    if (modal) modal.classList.remove('show');
+}
+
+// ═══ Bug3: 濒死救援弹窗 ═══
+
+let _dyingTimer = null;
+
+function showDyingModal(state) {
+    const modal = document.getElementById('modal-dying');
+    const desc = document.getElementById('dying-desc');
+    const countdown = document.getElementById('dying-countdown');
+    const actions = document.getElementById('dying-actions');
+    if (!modal || !desc || !countdown || !actions) return;
+
+    const dyingPlayer = state.players[state.dyingInfo.playerId];
+    const dyingChar = dyingPlayer.characters[state.dyingInfo.charIndex];
+    const me = state.players[state.myPlayerId];
+    const myJokers = me?.hand?.map((c, i) => ({ ...c, idx: i })).filter(c => c.isJoker) || [];
+
+    desc.textContent = `${dyingPlayer.name} 的 ${dyingChar.suit}${dyingChar.rank} 濒死！ (${dyingChar.hp}/${dyingChar.maxHp} HP)`;
+
+    // 倒计时（从 dyingInfo.timestamp 计算）
+    const elapsed = Math.floor((Date.now() - state.dyingInfo.timestamp) / 1000);
+    const remaining = Math.max(0, 10 - elapsed);
+    countdown.textContent = remaining;
+
+    // 清除旧定时器
+    if (_dyingTimer) clearInterval(_dyingTimer);
+    _dyingTimer = setInterval(() => {
+        const el2 = Math.floor((Date.now() - state.dyingInfo.timestamp) / 1000);
+        const rem = Math.max(0, 10 - el2);
+        countdown.textContent = rem;
+        if (rem <= 0) {
+            clearInterval(_dyingTimer);
+            _dyingTimer = null;
+            hideDyingModal();
+        }
+    }, 500);
+
+    // 救援按钮
+    actions.innerHTML = '';
+    if (myJokers.length > 0) {
+        const rescueBtn = document.createElement('button');
+        rescueBtn.className = 'btn';
+        rescueBtn.textContent = `💊 使用 Joker 救援 (${myJokers.length}张)`;
+        rescueBtn.onclick = () => {
+            if (G.isHost) {
+                const result = G.gameEngine.rescueWithJoker(G.myPlayerId, myJokers[0].idx);
+                if (result.ok) {
+                    hideDyingModal();
+                    broadcastSyncState();
+                }
+            } else {
+                G.p2p.sendMessage({ type: 'JOKER_RESCUE', payload: { jokerCardIdx: myJokers[0].idx } });
+            }
+        };
+        actions.appendChild(rescueBtn);
+    }
+
+    const passBtn = document.createElement('button');
+    passBtn.className = 'btn btn-secondary';
+    passBtn.textContent = myJokers.length > 0 ? '不救' : '等待...';
+    if (myJokers.length > 0) {
+        passBtn.onclick = () => hideDyingModal();
+    } else {
+        passBtn.disabled = true;
+    }
+    actions.appendChild(passBtn);
+
+    modal.classList.add('show');
+}
+
+function hideDyingModal() {
+    const modal = document.getElementById('modal-dying');
+    if (modal) modal.classList.remove('show');
+    if (_dyingTimer) { clearInterval(_dyingTimer); _dyingTimer = null; }
 }

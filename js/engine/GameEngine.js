@@ -21,6 +21,9 @@ export class GameEngine {
         this.currentPlayerIndex = 0;
         this.isGameOver = false;
         this.winner = null;
+        // ★ Bug3+4: 阶段状态机
+        this.phase = 'SELECTING_STARTER';  // SELECTING_STARTER | PLAYING | WAITING_FOR_JOKER | GAME_OVER
+        this.dyingInfo = null;             // { playerId, charIndex, timestamp }
         this._initGame();
     }
 
@@ -32,7 +35,65 @@ export class GameEngine {
         this._generateDeck(deckCount);
         this._dealCharacters();
         this.players.forEach(p => this.drawCards(p, 5));
+        // ★ Bug4: 不设置 activeCharIndex，等所有玩家选将
         this.currentPlayerIndex = Math.floor(Math.random() * this.numPlayers);
+    }
+
+    // ★ Bug4: 选将
+    selectStarter(playerId, charIndex) {
+        if (this.phase !== 'SELECTING_STARTER') return { ok: false, error: '当前不是选将阶段' };
+        const player = this.players[playerId];
+        if (!player) return { ok: false, error: '无效玩家' };
+        if (player.starterSelected) return { ok: false, error: '已选过将' };
+        if (player.selectStarter(charIndex)) {
+            // 检查是否所有人都选完了
+            if (this.players.every(p => p.starterSelected)) {
+                this.phase = 'PLAYING';
+            }
+            return { ok: true, allSelected: this.phase === 'PLAYING' };
+        }
+        return { ok: false, error: '无效角色索引' };
+    }
+
+    // ★ Bug3: Joker 救援
+    rescueWithJoker(rescuerId, jokerCardIdx) {
+        if (this.phase !== 'WAITING_FOR_JOKER' || !this.dyingInfo) {
+            return { ok: false, error: '当前无人濒死' };
+        }
+        const rescuer = this.players[rescuerId];
+        if (!rescuer || rescuer.isEliminated) return { ok: false, error: '无效救援者' };
+        const jokerCard = rescuer.hand[jokerCardIdx];
+        if (!jokerCard || !jokerCard.isJoker) return { ok: false, error: '请选择 Joker' };
+
+        const target = this.players[this.dyingInfo.playerId];
+        const targetChar = target.characters[this.dyingInfo.charIndex];
+        if (!targetChar.isDying) return { ok: false, error: '目标已脱离濒死' };
+
+        // 移除 Joker
+        rescuer.hand.splice(jokerCardIdx, 1);
+        this.discardPile.push(jokerCard);
+        // 救援：回复 50% 最大血量
+        targetChar.rescue(Math.floor(targetChar.maxHp / 2));
+
+        this.phase = 'PLAYING';
+        const rescuedName = target.name || '玩家' + target.id;
+        const rescuerName = rescuer.name || '玩家' + rescuer.id;
+        this.dyingInfo = null;
+        this.lastAction = { type: 'rescue', targetId: target.id, amount: targetChar.hp, rescuerId };
+        return { ok: true, rescuedName, rescuerName };
+    }
+
+    // ★ Bug3: 濒死超时，真正死亡
+    resolveDying() {
+        if (this.phase !== 'WAITING_FOR_JOKER' || !this.dyingInfo) return { ok: false };
+        const target = this.players[this.dyingInfo.playerId];
+        const targetChar = target.characters[this.dyingInfo.charIndex];
+        targetChar.die();
+        this.phase = 'PLAYING';
+        this.dyingInfo = null;
+        target.checkElimination();
+        this.checkWinCondition();
+        return { ok: true, playerId: target.id };
     }
 
     _generateDeck(deckCount) {
@@ -55,7 +116,7 @@ export class GameEngine {
                 const randomSuit = SUITS[Math.floor(Math.random() * SUITS.length)];
                 p.characters.push(new Character(rank, randomSuit));
             });
-            p.activeCharIndex = 0;
+            // ★ Bug4: 不设置 activeCharIndex，等玩家选将（Player 构造函数已设为 -1）
         });
     }
 
@@ -149,6 +210,16 @@ export class GameEngine {
         const ignoreShield = (attackSuit === '♣' && isImmune);
         const actualDamageDealt = targetChar.takeDamage(finalDamage, ignoreShield);
 
+        // ★ Bug3: 濒死检测 — hp=0 但未死
+        if (targetChar.isDying) {
+            this.phase = 'WAITING_FOR_JOKER';
+            this.dyingInfo = {
+                playerId: target.id,
+                charIndex: target.activeCharIndex,
+                timestamp: Date.now(),
+            };
+        }
+
         // ♦ 方块：五谷丰登 — 摸牌总数 = 最终伤害值
         if (attackSuit === '♦' && !isImmune) {
             let remaining = finalDamage;
@@ -201,6 +272,8 @@ export class GameEngine {
     _postPlayCleanup(attacker, target, cardsPlayed) {
         attacker.removeCardsFromHand(cardsPlayed);
         this.discardPile.push(...cardsPlayed);
+        // ★ Bug3: 濒死时暂停淘汰判定和回合推进
+        if (this.phase === 'WAITING_FOR_JOKER') return;
         target.checkElimination();
         this.checkWinCondition();
         if (this.isGameOver) return;
@@ -209,6 +282,7 @@ export class GameEngine {
 
     nextTurn() {
         if (this.isGameOver) return;
+        if (this.phase !== 'PLAYING') return; // ★ Bug3/4: 非 PLAYING 阶段不推进
         do {
             this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.numPlayers;
         } while (this.players[this.currentPlayerIndex].isEliminated);

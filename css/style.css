@@ -337,3 +337,18 @@ body {
     100% { border-color: #ffeaa7; box-shadow: 0 0 5px #ffeaa7; }
 }
 .poker-card.suggested { animation: suggestPulse 1.5s infinite; }
+
+/* ═══ Bug4: 选将弹窗 ═══ */
+.starter-card {
+    width: 100px; height: 140px; background: white; border: 3px solid #ddd; border-radius: 12px;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    cursor: pointer; transition: all 0.2s ease; font-weight: bold; box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+.starter-card:hover { border-color: var(--primary); transform: translateY(-5px); box-shadow: 0 8px 20px rgba(255,182,193,0.4); }
+.starter-card .starter-suit { font-size: 32px; }
+.starter-card .starter-rank { font-size: 24px; margin-top: 5px; }
+.starter-card .starter-hp { font-size: 12px; color: #636e72; margin-top: 5px; }
+
+/* ═══ Bug3: 濒死弹窗 ═══ */
+#modal-dying .modal-box { border: 3px solid #ff4757; animation: dyingPulse 1s infinite; }
+@keyframes dyingPulse { 0%,100% { box-shadow: 0 0 10px rgba(255,71,87,0.3); } 50% { box-shadow: 0 0 30px rgba(255,71,87,0.6); } }
