@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>可爱大乱斗 - P2P卡牌对战</title>
+    <title>PokeWar - P2P卡牌对战</title>
     <link rel="stylesheet" href="./css/style.css">
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
 </head>
@@ -11,12 +11,18 @@
     <!-- Toast 容器 -->
     <div class="toast-container" id="toast-container"></div>
 
+    <!-- Loading 遮罩 -->
+    <div class="loading-overlay hidden" id="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">连接中...</div>
+    </div>
+
     <!-- 主页 -->
     <div class="page-view active" id="page-home">
         <div class="home-container">
             <div class="home-box">
                 <div class="home-logo" id="avatar-preview">🐱</div>
-                <h2>可爱大乱斗</h2>
+                <h2>PokeWar</h2>
                 <p style="font-size:0.8em;color:#a0a0a0;margin-bottom:15px">点击头像选择你的 Emoji</p>
                 <div class="input-group"><input type="text" id="player-name" placeholder="输入可爱的昵称..." value="小猫猫"></div>
                 <div class="room-actions">

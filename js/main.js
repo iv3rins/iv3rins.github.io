@@ -1,5 +1,5 @@
 /**
- * 可爱大乱斗 — 主入口
+ * PokeWar — 主入口
  * 绑定 DOM 事件 + 引导全模块
  */
 
@@ -61,6 +61,7 @@ function createRoom() {
     G.playerReady = { 0: true };
     G.playerAvatars = { 0: G.myAvatar };
 
+    showLoading();
     G.p2p = new P2PManager();
     G.p2p.callbacks.onReady = (roomCode) => {
         G.roomCode = roomCode;
@@ -70,6 +71,7 @@ function createRoom() {
         showPage('waiting');
         renderWaitingLobby();
         addSystemChat('房间创建成功！快邀请小伙伴加入吧~ 🐾');
+        hideLoading();
     };
 
     G.p2p.callbacks.onPlayerJoin = (peerId) => {
@@ -131,11 +133,13 @@ function joinRoom() {
     G.isHost = false;
     G.roomCode = code;
 
+    showLoading();
     G.p2p = new P2PManager();
     G.p2p.callbacks.onReady = () => {
         document.getElementById('display-room-code').textContent = code;
         showPage('waiting');
         G.p2p.sendMessage({ type: 'JOIN_REQ', payload: { playerName: G.playerName, avatar: G.myAvatar } });
+        hideLoading();
     };
 
     G.p2p.callbacks.onMessage = handleClientMessage;
@@ -214,6 +218,14 @@ function leaveRoom() {
     location.reload();
 }
 
+function showLoading() {
+    document.getElementById('loading-overlay')?.classList.remove('hidden');
+}
+
+function hideLoading() {
+    document.getElementById('loading-overlay')?.classList.add('hidden');
+}
+
 // ═══ 游戏初始化 ═══
 
 function initGamePage() {
@@ -233,5 +245,5 @@ document.addEventListener('DOMContentLoaded', () => {
     initHomePage();
     initWaitingPage();
     initGamePage();
-    console.log('🐾 可爱大乱斗 初始化完成！');
+    console.log('🐾 PokeWar 初始化完成！');
 });

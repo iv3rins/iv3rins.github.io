@@ -141,22 +141,28 @@ export class GameEngine {
         const ignoreShield = (attackSuit === '♣' && isImmune);
         const actualDamageDealt = targetChar.takeDamage(finalDamage, ignoreShield);
 
-        // ♦ 方块摸牌
+        // ♦ 方块：五谷丰登 — 摸牌总数 = 最终伤害值
         if (attackSuit === '♦' && !isImmune) {
-            let drawCount = 0;
-            let currentIdx = this.players.indexOf(attacker);
-            const aliveCount = this.players.filter(p => !p.isEliminated).length;
-            let passes = 0;
-            while (drawCount < 5 && passes < aliveCount) {
-                const p = this.players[currentIdx];
-                if (!p.isEliminated && p.hand.length < MAX_HAND_SIZE) {
-                    this.drawCards(p, 1);
-                    drawCount++;
-                    passes = 0;
-                } else {
-                    passes++;
+            let remaining = finalDamage;
+            const alivePlayers = this.players.filter(p => !p.isEliminated);
+            if (alivePlayers.length === 0) { /* no one to draw */ }
+            else {
+                // 从攻击者开始，按回合顺序循环
+                const startIdx = this.players.indexOf(attacker);
+                let idx = startIdx;
+                let loops = 0;
+                const maxLoops = alivePlayers.length * 3; // 安全上限
+                while (remaining > 0 && loops < maxLoops) {
+                    loops++;
+                    const p = this.players[idx];
+                    if (!p.isEliminated && p.hand.length < MAX_HAND_SIZE) {
+                        this.drawCards(p, 1);
+                        remaining--;
+                    }
+                    // 全场手牌都满了 → 终止
+                    if (alivePlayers.every(ap => ap.hand.length >= MAX_HAND_SIZE)) break;
+                    idx = (idx + 1) % this.numPlayers;
                 }
-                currentIdx = (currentIdx + 1) % this.numPlayers;
             }
         }
         // ♥ 红桃吸血
