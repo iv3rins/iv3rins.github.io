@@ -16,8 +16,15 @@ export function renderState(state) {
     const me = state.players[state.myPlayerId];
     const isSpectating = me && me.isEliminated;
 
-    // ★ VFX 检测
-    if (_prevState) {
+    // ★ VFX: lastAction 优先（引擎显式触发）
+    if (state.lastAction) {
+        const la = state.lastAction;
+        if (la.type === 'damage') {
+            setTimeout(() => showDamageFloat(la.targetId, la.amount), 100);
+        } else if (la.type === 'shield') {
+            setTimeout(() => showHealFloat(la.targetId, la.amount), 100);
+        }
+    } else if (_prevState) {
         state.players.forEach((p, i) => {
             const prev = _prevState.players[i];
             if (!prev || p.isEliminated !== prev.isEliminated) return;
@@ -173,13 +180,23 @@ export function updateActionButtonUI() {
     const selectedCards = G.selectedCardIndices.map(i => myHand[i]).filter(Boolean);
     const nonJokers = selectedCards.filter(c => !c.isJoker);
     const hasJoker = selectedCards.some(c => c.isJoker);
-    const isClub = nonJokers.length > 0 && nonJokers.every(c => c.suit === '♣');
+    const hasA = selectedCards.some(c => c.rank === 'A' && !c.isJoker);
+
+    // A 牌当前选的花色
+    let currentASuit = null;
+    if (hasA) {
+        const suitSel = document.getElementById('a-suit-select');
+        currentASuit = suitSel ? suitSel.value : null;
+    }
+
+    // 护盾判定：全♣ 或 A 万化为 ♣
+    const isShield = (nonJokers.length > 0 && nonJokers.every(c => c.suit === '♣') && !hasA)
+        || (hasA && currentASuit === '♣');
 
     if (hasJoker) {
         btn.textContent = '🃏 Joker 特殊行动';
         btn.disabled = G.selectedTargetId < 0;
-    } else if (isClub) {
-        // ♣ 护盾：不需要选目标，清除已选目标
+    } else if (isShield) {
         if (G.selectedTargetId >= 0) {
             document.querySelectorAll('.player-card.targeted').forEach(c => c.classList.remove('targeted'));
             G.selectedTargetId = -1;
@@ -203,7 +220,7 @@ export function renderHand(cards) {
         const div = document.createElement('div');
         div.className = 'poker-card';
         div.dataset.index = i;
-        if (G.selectedCardIndices.includes(i)) div.classList.add('selected');
+        if (G.selectedCardIndices && G.selectedCardIndices.length > 0 && G.selectedCardIndices.includes(i)) div.classList.add('selected');
         if (card.isJoker) {
             div.classList.add('card-joker');
             div.innerHTML = '<span>🃏</span><span style="font-size:14px">Joker</span>';
@@ -313,9 +330,20 @@ export function executeAttack() {
     const selectedCards = G.selectedCardIndices.map(i => myHand[i]).filter(Boolean);
     const hasJoker = selectedCards.some(c => c.isJoker);
     const nonJokers = selectedCards.filter(c => !c.isJoker);
-    const isClub = nonJokers.length > 0 && nonJokers.every(c => c.suit === '♣');
+    const hasA = selectedCards.some(c => c.rank === 'A' && !c.isJoker);
 
-    if (!isClub && !hasJoker && G.selectedTargetId < 0) {
+    // A 牌当前花色
+    let aSuit = null;
+    if (hasA) {
+        const suitSel = document.getElementById('a-suit-select');
+        aSuit = suitSel ? suitSel.value : null;
+    }
+
+    // 护盾判定
+    const isShield = (nonJokers.length > 0 && nonJokers.every(c => c.suit === '♣') && !hasA)
+        || (hasA && aSuit === '♣');
+
+    if (!isShield && !hasJoker && G.selectedTargetId < 0) {
         Toast.show('请先选择一个攻击目标！🐾', 'error'); return;
     }
     if (hasJoker && G.selectedTargetId < 0) {
@@ -346,12 +374,16 @@ export function executeAttack() {
     }
 
     const payload = {
-        targetPlayerId: isClub ? state.myPlayerId : G.selectedTargetId,
+        targetPlayerId: isShield ? state.myPlayerId : G.selectedTargetId,
         cardIndices: [...G.selectedCardIndices],
         aSuit,
     };
 
     G._pendingClear = true;
+    // ★ 立即清除选中状态，防止残留
+    G.selectedCardIndices = [];
+    G.selectedTargetId = -1;
+    hideAValuePanel();
 
     if (G.isHost) {
         try { processPlayCard(G.myPlayerId, payload); }

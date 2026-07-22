@@ -105,6 +105,7 @@ export class GameEngine {
 
         const activeChar = player.getActiveCharacter();
         activeChar.shield += totalShield;
+        this.lastAction = { type: 'shield', targetId: player.id, amount: totalShield };
         this._postPlayCleanup(player, player, cards);
     }
 
@@ -177,6 +178,7 @@ export class GameEngine {
             attackerChar.hp = Math.min(attackerChar.maxHp, attackerChar.hp + actualDamageDealt);
         }
 
+        this.lastAction = { type: 'damage', targetId: target.id, amount: actualDamageDealt, suit: attackSuit };
         this._postPlayCleanup(attacker, target, cards);
     }
 

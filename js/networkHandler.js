@@ -191,6 +191,7 @@ export function serializeState(engine, forEngineId) {
         myPlayerId: forEngineId,
         roundCount: G.roundCount,
         playerAvatars: G.playerAvatars,
+        lastAction: engine.lastAction || null,
     };
 }
 
