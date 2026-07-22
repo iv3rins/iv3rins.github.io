@@ -154,9 +154,10 @@ export class GameEngine {
         const validation = validatePlay(cards);
         if (!validation.valid) throw new Error(validation.error);
 
+        // ★ Bug2 修复: 全♣ 或 A 万化为 ♣ 均可护盾
         let isClub = validation.primarySuit === '♣';
-        if (!validation.primarySuit && validation.hasA) {
-            isClub = (aSuit === '♣');
+        if (validation.hasA && aSuit === '♣') {
+            isClub = true;
         }
         if (!isClub) throw new Error('只有梅花牌才能用于护盾');
 

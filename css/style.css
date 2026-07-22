@@ -148,12 +148,6 @@ body {
 .timer-bar-fill { height: 100%; }
 .timer-active .timer-bar-fill { animation: timerShrink 30s linear forwards; }
 
-/* ═══ A 牌面板（Bug Fix：移除数值输入，花色仅限可选） ═══ */
-.a-value-panel { display: none; align-items: center; gap: 10px; background: #fff; padding: 10px 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,.1); flex-wrap: wrap; justify-content: center; }
-.a-value-panel.show { display: flex; }
-.a-value-panel label { font-weight: bold; font-size: 14px; }
-.a-value-panel select { padding: 6px 10px; border: 2px solid var(--primary); border-radius: 8px; font-family: inherit; font-size: 14px; outline: none; background: #fff; cursor: pointer; }
-
 /* ═══ 底部区域 ═══ */
 .game-bottom { display: flex; align-items: flex-end; padding: 10px 20px 15px; gap: 20px; }
 .self-area { flex-shrink: 0; }
@@ -275,9 +269,6 @@ body {
     .opponents-area { max-height: 32vh; gap: 6px; padding: 8px 10px; }
     .board-center { gap: 4px; }
     .deck-info { font-size: 11px; padding: 3px 10px; }
-    .a-value-panel { padding: 6px 12px; gap: 5px; }
-    .a-value-panel label { font-size: 12px; }
-    .a-value-panel select { font-size: 12px; padding: 4px 6px; }
     .timer-bar-bg { width: 200px; height: 6px; }
     .btn { padding: 6px 14px; font-size: 13px; }
 }
@@ -332,11 +323,11 @@ body {
 
 /* ═══ 智能提示呼吸灯 ═══ */
 @keyframes suggestPulse {
-    0% { border-color: #ffeaa7; box-shadow: 0 0 5px #ffeaa7; }
-    50% { border-color: #fdcb6e; box-shadow: 0 0 15px #fdcb6e; transform: translateY(-5px); }
-    100% { border-color: #ffeaa7; box-shadow: 0 0 5px #ffeaa7; }
+    0% { border-color: #ffeaa7; box-shadow: 0 0 3px #ffeaa7; }
+    50% { border-color: #fdcb6e; box-shadow: 0 0 8px #fdcb6e; }
+    100% { border-color: #ffeaa7; box-shadow: 0 0 3px #ffeaa7; }
 }
-.poker-card.suggested { animation: suggestPulse 1.5s infinite; }
+.poker-card.suggested { animation: suggestPulse 2s infinite; }
 
 /* ═══ Bug4: 选将弹窗 ═══ */
 .starter-card {
