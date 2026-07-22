@@ -19,12 +19,15 @@
         @keyframes popIn{0%{transform:scale(.8);opacity:0}80%{transform:scale(1.05);opacity:1}100%{transform:scale(1);opacity:1}}
         @keyframes floatTrophy{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
         @keyframes cryShake{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-10deg) scale(.9)}75%{transform:rotate(10deg) scale(1.1)}}
-        .btn{background:var(--primary);color:#fff;border:none;padding:10px 20px;border-radius:20px;font-size:16px;font-family:inherit;cursor:inherit;transition:all .2s;box-shadow:0 4px 6px rgba(255,182,193,.4);font-weight:bold;}
-        .btn:hover{transform:scale(1.05);filter:brightness(1.05);}
-        .btn:active{transform:scale(.95);}
-        .btn-secondary{background:#a29bfe;box-shadow:0 4px 6px rgba(162,155,254,.4);}
+        .btn{background:var(--primary);color:#fff;border:none;padding:10px 20px;border-radius:20px;font-size:16px;font-family:inherit;cursor:pointer;transition:all .15s cubic-bezier(.4,0,.2,1);box-shadow:0 6px 0 rgba(0,0,0,.1),0 8px 15px rgba(0,0,0,.08);font-weight:bold;}
+        .btn:hover{transform:translateY(-2px);filter:brightness(1.05);}
+        .btn:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.1),0 3px 6px rgba(0,0,0,.08);}
+        .btn-secondary{background:#a29bfe;box-shadow:0 6px 0 rgba(0,0,0,.1),0 8px 15px rgba(162,155,254,.3);}
+        .btn-secondary:active{box-shadow:0 2px 0 rgba(0,0,0,.1),0 3px 6px rgba(162,155,254,.3);}
         .btn-small{padding:5px 15px;font-size:14px;margin-left:10px;}
-        .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+        .btn:disabled{opacity:.5;cursor:not-allowed;transform:none !important;box-shadow:0 6px 0 rgba(0,0,0,.1),0 8px 15px rgba(0,0,0,.08) !important;}
+        .btn-ready{background:linear-gradient(135deg,#ff9a9e 0%,#fecfef 100%);color:#fff;}
+        .btn-leave{background:linear-gradient(135deg,#a1c4fd 0%,#c2e9fb 100%);color:#fff;}
         .suit-red{color:#dc2626;}
         .suit-black{color:#1e293b;}
         /* ========== 主页 ========== */
@@ -155,7 +158,7 @@
                 <div class="players-grid" id="players-grid"></div>
                 <div class="action-buttons">
                     <button class="btn" id="btn-start-game">🚀 开始游戏</button>
-                    <button class="btn btn-secondary" id="btn-leave-waiting">🚪 离开房间</button>
+                    <button class="btn btn-leave" id="btn-leave-waiting">🚪 离开房间</button>
                 </div>
             </div>
             <div class="chat-sidebar">

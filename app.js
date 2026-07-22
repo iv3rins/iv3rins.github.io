@@ -162,10 +162,7 @@ function initWaitingPage() {
             startGame();
         } else {
             // 客户端：切换准备状态
-            const ready = !G.playerReady[G.myPlayerId];
-            G.playerReady[G.myPlayerId] = ready;
-            G.p2p.sendMessage({ type: 'READY', payload: { ready } });
-            renderWaitingLobby();
+            toggleReady();
         }
     });
 
@@ -208,11 +205,17 @@ function renderWaitingLobby() {
 
     const btn = document.getElementById('btn-start-game');
     if (G.isHost) {
-        btn.textContent = `🚀 开始游戏 (${indices.length}人)`;
-        btn.disabled = indices.length < 2;
+        const nonHostReady = indices.filter(i => i !== 0).every(i => G.playerReady[i]);
+        const canStart = indices.length >= 2 && nonHostReady;
+        btn.textContent = canStart
+            ? `🚀 开始游戏 (${indices.length}人)`
+            : `⏳ 等待准备 (${indices.filter(i => i !== 0 && G.playerReady[i]).length}/${indices.length - 1})`;
+        btn.disabled = !canStart;
+        btn.className = canStart ? 'btn btn-ready' : 'btn';
     } else {
         btn.textContent = G.playerReady[G.myPlayerId] ? '✅ 已准备 (点击取消)' : '📦 点击准备';
         btn.disabled = false;
+        btn.className = G.playerReady[G.myPlayerId] ? 'btn btn-ready' : 'btn';
     }
 }
 
@@ -238,8 +241,14 @@ function sendWaitingChat() {
     const text = input.value.trim();
     if (!text) return;
     G.p2p.sendMessage({ type: 'CHAT', payload: { senderName: G.playerName, text } });
-    addWaitingChat('self', G.playerName + ': ' + text);
+    // 不在本地渲染，统一由广播回来的 onMessage('CHAT') 插入
     input.value = '';
+}
+
+// 聊天统一渲染入口（等待大厅 & 游戏内共用）
+function addChat(cls, text) {
+    if (G.gameStarted) addGameChat(cls, text);
+    else addWaitingChat(cls, text);
 }
 
 function addWaitingChat(cls, text) {
@@ -255,6 +264,16 @@ function addWaitingChat(cls, text) {
 function leaveRoom() {
     if (G.p2p) G.p2p.disconnect();
     location.reload();
+}
+
+// ============================================================
+// 准备状态切换（客户端 → 房主）
+// ============================================================
+function toggleReady() {
+    G.p2p.sendMessage({ type: 'TOGGLE_READY', payload: {} });
+    // 本地先乐观更新（等 LOBBY_STATE 回来会覆盖）
+    G.playerReady[G.myPlayerId] = !G.playerReady[G.myPlayerId];
+    renderWaitingLobby();
 }
 
 // ============================================================
@@ -313,9 +332,19 @@ function handleHostMessage(data, senderId) {
             break;
         }
         case 'READY': {
+            // 兼容旧协议，转发给 TOGGLE_READY 处理
             const idx = G.peerToPlayer[senderId];
             if (idx !== undefined) {
                 G.playerReady[idx] = data.payload.ready;
+                renderWaitingLobby();
+                broadcastLobbyState();
+            }
+            break;
+        }
+        case 'TOGGLE_READY': {
+            const idx = G.peerToPlayer[senderId];
+            if (idx !== undefined) {
+                G.playerReady[idx] = !G.playerReady[idx];
                 renderWaitingLobby();
                 broadcastLobbyState();
             }
@@ -335,9 +364,10 @@ function handleHostMessage(data, senderId) {
             break;
         }
         case 'CHAT': {
-            if (G.gameStarted) addGameChat('user', data.payload.senderName + ': ' + data.payload.text);
-            else addWaitingChat('user', data.payload.senderName + ': ' + data.payload.text);
-            G.p2p.sendMessage(data); // 中转广播
+            // 统一渲染：标记是否自己发的
+            const cls = data.payload.senderName === G.playerName ? 'self' : 'user';
+            addChat(cls, data.payload.senderName + ': ' + data.payload.text);
+            G.p2p.sendMessage(data); // 中转广播给所有客户端
             break;
         }
     }
@@ -395,8 +425,8 @@ function handleClientMessage(data, senderId) {
             break;
         }
         case 'CHAT': {
-            if (G.gameStarted) addGameChat('user', data.payload.senderName + ': ' + data.payload.text);
-            else addWaitingChat('user', data.payload.senderName + ': ' + data.payload.text);
+            const cls = data.payload.senderName === G.playerName ? 'self' : 'user';
+            addChat(cls, data.payload.senderName + ': ' + data.payload.text);
             break;
         }
         case 'GAME_OVER': {
@@ -748,7 +778,7 @@ function sendGameChat() {
     const text = input.value.trim();
     if (!text) return;
     G.p2p.sendMessage({ type: 'CHAT', payload: { senderName: G.playerName, text } });
-    addGameChat('self', G.playerName + ': ' + text);
+    // 不在本地渲染，统一由广播回来的 onMessage('CHAT') 插入
     input.value = '';
 }
 
