@@ -3,7 +3,7 @@
  * 对手卡牌、自己状态、手牌、回合 UI、A 牌面板、目标选择、出牌执行
  */
 import { G } from '../state.js';
-import { getAceAllowedSuits } from '../engine/GameValidator.js';
+import { getAceAllowedSuits, calculateWildcardCombinations, findPlayableCombinations } from '../engine/GameValidator.js';
 import { Toast } from './toast.js';
 import { audioManager } from '../audioManager.js';
 
@@ -77,7 +77,13 @@ export function renderState(state) {
     renderOpponents(state);
     renderSelf(state);
 
-    if (!isSpectating && me && me.hand) renderHand(me.hand);
+    if (!isSpectating && me && me.hand) {
+        renderHand(me.hand);
+        // ★ 智能提示：高亮可出牌
+        if (state.currentPlayerIndex === state.myPlayerId) {
+            markSuggestedCards(me.hand);
+        }
+    }
     else document.getElementById('hand-container').innerHTML = '';
 
     updateTurnUI(state);
@@ -375,22 +381,15 @@ function openCombinationModal(selectedCards, primarySuit, onConfirm) {
     if (!modal || !container) return;
     container.innerHTML = '';
 
-    // 收集所有可能的花色（A 自身花色 + 普通牌花色，去重）
-    const possibleSuits = new Set();
-    selectedCards.forEach(c => { if (!c.isJoker) possibleSuits.add(c.suit); });
-    if (possibleSuits.size === 0) ['♦', '♣', '♥', '♠'].forEach(s => possibleSuits.add(s));
+    // ★ 使用穷举计算器
+    const combos = calculateWildcardCombinations(selectedCards);
 
-    possibleSuits.forEach(targetSuit => {
-        let normalTotal = 0;
-        selectedCards.forEach(c => {
-            if (!c.isJoker && c.rank !== 'A') normalTotal += c.value;
-        });
-        const totalVal = normalTotal + 1;
-        const isShield = (targetSuit === '♣');
+    combos.forEach(combo => {
+        const { targetSuit, totalValue, isShield, effectHint, previewCards } = combo;
 
         // 预览卡牌
         let previewHtml = '<div class="combo-cards-preview">';
-        selectedCards.forEach(c => {
+        previewCards.forEach(c => {
             const displaySuit = c.rank === 'A' ? targetSuit : c.suit;
             const displayRank = c.rank;
             const colorClass = (displaySuit === '♦' || displaySuit === '♥') ? 'suit-red' : 'suit-black';
@@ -403,8 +402,8 @@ function openCombinationModal(selectedCards, primarySuit, onConfirm) {
         item.innerHTML = `
             <div>
                 <div style="font-weight: bold; margin-bottom: 4px;">
-                    ${isShield ? '🛡️ 方案：转化为护盾' : '⚔️ 方案：主花色 ' + targetSuit}
-                    <span style="color: var(--hp-color); margin-left: 10px;">总效能: ${totalVal}</span>
+                    ${effectHint}
+                    <span style="color: var(--hp-color); margin-left: 10px;">总效能: ${totalValue}</span>
                 </div>
                 ${previewHtml}
             </div>
@@ -413,7 +412,7 @@ function openCombinationModal(selectedCards, primarySuit, onConfirm) {
 
         item.onclick = () => {
             modal.classList.remove('show');
-            onConfirm({ targetSuit, totalValue: totalVal, isShield });
+            onConfirm({ targetSuit, totalValue, isShield });
         };
         container.appendChild(item);
     });
@@ -544,4 +543,18 @@ export function markNewCardsAsDealt(prevHandLength, currentCards) {
         allCards[i].style.setProperty('--deal-delay', `${(i - prevHandLength) * 0.08}s`);
     }
     if (currentCards.length > prevHandLength) audioManager.play('draw');
+}
+
+/** 斗地主式智能提示：高亮可参与合法组合的卡牌 */
+export function markSuggestedCards(handCards) {
+    const playable = findPlayableCombinations(handCards);
+    const container = document.getElementById('hand-container');
+    if (!container) return;
+    container.querySelectorAll('.poker-card').forEach((el, idx) => {
+        if (playable.has(idx)) {
+            el.classList.add('suggested');
+        } else {
+            el.classList.remove('suggested');
+        }
+    });
 }

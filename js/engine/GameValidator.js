@@ -49,3 +49,78 @@ export function validateAceSuit(aceCard, primarySuit, aSuit) {
         allowed: [...new Set([aceCard.suit, primarySuit].filter(Boolean))]
     };
 }
+
+/**
+ * 万化组合穷举计算器（严格合法版）
+ * 候选花色与 validateAceSuit 规则完全一致：
+ *   - 含普通牌（executeAttack 已校验同花色）→ [A自身花色, primarySuit] 去重
+ *   - 纯 A 单出 → 仅 [A自身花色]（唯一合法）
+ * @param {Array} selectedCards - 玩家选中的卡牌
+ * @returns {Array<{targetSuit, totalValue, isShield, effectHint, previewCards}>}
+ */
+export function calculateWildcardCombinations(selectedCards) {
+    const normalCards = selectedCards.filter(c => c.rank !== 'A' && !c.isJoker);
+    const aceCard = selectedCards.find(c => c.rank === 'A' && !c.isJoker);
+    if (!aceCard) return [];
+
+    // 候选花色：A 自身花色 + 普通牌主花色（普通牌同花色已由 executeAttack 保证）
+    const primarySuit = normalCards.length > 0 ? normalCards[0].suit : null;
+    const suits = [aceCard.suit, primarySuit].filter(Boolean);
+    const possibleSuits = (typeof _ !== 'undefined' ? _.uniq(suits) : [...new Set(suits)]);
+
+    const normalTotal = normalCards.reduce((sum, c) => sum + c.value, 0);
+    const EFFECT_HINTS = { '♣': '🛡️ 转化为护盾', '♠': '⚔️ 黑桃双倍伤害', '♥': '💗 红桃吸血回复', '♦': '🌾 方块五谷摸牌' };
+
+    return possibleSuits.map(targetSuit => ({
+        targetSuit,
+        totalValue: normalTotal + 1, // A 固定为 1
+        isShield: (targetSuit === '♣'),
+        effectHint: EFFECT_HINTS[targetSuit] || `⚔️ 主花色 ${targetSuit}`,
+        previewCards: selectedCards.map(c => ({
+            ...c,
+            suit: c.rank === 'A' ? targetSuit : c.suit
+        }))
+    }));
+}
+
+/**
+ * 斗地主式智能可用牌推荐
+ * 扫描手牌，找出所有合法出牌组合的索引
+ * @param {Array} handCards - 玩家当前手牌
+ * @returns {Set<number>} 可参与合法组合的卡牌索引
+ */
+export function findPlayableCombinations(handCards) {
+    const playableIndices = new Set();
+    const nonJokers = handCards.map((c, i) => ({ ...c, idx: i })).filter(c => !c.isJoker);
+
+    // 1. 单张出牌：任何非 Joker 都可以单独出
+    nonJokers.forEach(c => playableIndices.add(c.idx));
+
+    // 2. 同花色组合（3张或5张）
+    const bySuit = {};
+    nonJokers.forEach(c => {
+        if (!bySuit[c.suit]) bySuit[c.suit] = [];
+        bySuit[c.suit].push(c);
+    });
+
+    for (const suit in bySuit) {
+        const cards = bySuit[suit];
+        if (cards.length >= 3) {
+            // 同花色 3 张：任何一张都可以作为组合的一部分
+            cards.forEach(c => playableIndices.add(c.idx));
+        }
+        if (cards.length >= 5) {
+            // 同花色 5 张
+            cards.forEach(c => playableIndices.add(c.idx));
+        }
+    }
+
+    // 3. 含 A 组合：A + 任意数字牌
+    const aces = nonJokers.filter(c => c.rank === 'A');
+    if (aces.length > 0) {
+        // A 可以和任何普通牌组合
+        nonJokers.forEach(c => playableIndices.add(c.idx));
+    }
+
+    return playableIndices;
+}
