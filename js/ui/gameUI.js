@@ -75,7 +75,7 @@ export function createPlayerCard(p, idx, isSelf, isTargetable, state) {
     const isRed = displayChar.suit === '♦' || displayChar.suit === '♥';
     const suitClass = isRed ? 'suit-red' : 'suit-black';
 
-    const avatar = p.isEliminated ? '😭' : G.avatars[idx % G.avatars.length];
+    const avatar = p.isEliminated ? '😭' : (G.playerAvatars[idx] || G.avatars[idx % G.avatars.length]);
     const avatarCls = p.isEliminated ? '' : 'cute-bounce';
     const nameHtml = isSelf
         ? `<div class="name">${p.name} (你)</div>`
@@ -120,6 +120,47 @@ export function selectTarget(playerId, el) {
     document.querySelectorAll('.player-card.targeted').forEach(c => c.classList.remove('targeted'));
     G.selectedTargetId = playerId;
     el.classList.add('targeted');
+    updateActionButtonUI();
+}
+
+// ═══ 动态按钮文字（Task 2） ═══
+
+export function updateActionButtonUI() {
+    const btn = document.getElementById('attack-btn');
+    if (!btn) return;
+
+    const state = G.currentState;
+    if (!state || state.currentPlayerIndex !== state.myPlayerId) return;
+
+    const myHand = state.players[state.myPlayerId]?.hand;
+    if (!myHand || G.selectedCardIndices.length === 0) {
+        btn.textContent = '🃏 等待选牌...';
+        btn.disabled = true;
+        return;
+    }
+
+    const selectedCards = G.selectedCardIndices.map(i => myHand[i]).filter(Boolean);
+    const nonJokers = selectedCards.filter(c => !c.isJoker);
+    const hasJoker = selectedCards.some(c => c.isJoker);
+    const isClub = nonJokers.length > 0 && nonJokers.every(c => c.suit === '♣');
+
+    if (hasJoker) {
+        btn.textContent = '🃏 Joker 特殊行动';
+        btn.disabled = G.selectedTargetId < 0;
+    } else if (isClub) {
+        // ♣ 护盾：不需要选目标，清除已选目标
+        if (G.selectedTargetId >= 0) {
+            document.querySelectorAll('.player-card.targeted').forEach(c => c.classList.remove('targeted'));
+            G.selectedTargetId = -1;
+        }
+        btn.textContent = '🛡️ 给自己加护盾';
+        btn.disabled = false;
+    } else {
+        btn.textContent = G.selectedTargetId >= 0
+            ? '⚔️ 发起攻击！'
+            : '⚔️ 选择一个玩家，发起攻击';
+        btn.disabled = G.selectedTargetId < 0;
+    }
 }
 
 // ═══ 手牌 ═══
@@ -155,6 +196,7 @@ export function toggleCard(index, el) {
         el.classList.add('selected');
     }
     updateAValuePanel();
+    updateActionButtonUI();  // ★ 动态按钮文字
 }
 
 // ═══ 回合 UI ═══
@@ -171,8 +213,7 @@ export function updateTurnUI(state) {
         clearTimer();
     } else if (isMyTurn) {
         actionArea.style.visibility = 'visible';
-        btn.textContent = '⚔️ 选择一个玩家，攻击';
-        btn.disabled = false;
+        updateActionButtonUI();  // ★ 根据选中牌动态文字
         startTimer();
     } else {
         actionArea.style.visibility = 'visible';

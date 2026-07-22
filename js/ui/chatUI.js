@@ -71,31 +71,28 @@ export function addGameChat(cls, text) {
 }
 
 /** 发送大厅聊天 */
+/**
+ * 发送聊天 — 统一流程：
+ *   1. 所有人本地渲染一次（让自己立即看到）
+ *   2. 发送到网络
+ *   3. 房主 relay 时排除发送者（避免双份）
+ */
 export function sendWaitingChat() {
     const input = document.getElementById('waiting-chat-input');
     const text = input.value.trim();
     if (!text) return;
     const msg = { type: 'CHAT', payload: { senderId: G.p2p.myId, senderName: G.playerName, text } };
-    if (G.isHost) {
-        addChat(G.p2p.myId, G.playerName, text);
-        G.p2p.sendMessage(msg);
-    } else {
-        G.p2p.sendMessage(msg);
-    }
+    addChat(G.p2p.myId, G.playerName, text);  // ★ 所有人本地渲染
+    G.p2p.sendMessage(msg);
     input.value = '';
 }
 
-/** 发送游戏聊天 */
 export function sendGameChat() {
     const input = document.getElementById('game-chat-input');
     const text = input.value.trim();
     if (!text) return;
     const msg = { type: 'CHAT', payload: { senderId: G.p2p.myId, senderName: G.playerName, text } };
-    if (G.isHost) {
-        addChat(G.p2p.myId, G.playerName, text);
-        G.p2p.sendMessage(msg);
-    } else {
-        G.p2p.sendMessage(msg);
-    }
+    addChat(G.p2p.myId, G.playerName, text);  // ★ 所有人本地渲染
+    G.p2p.sendMessage(msg);
     input.value = '';
 }

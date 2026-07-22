@@ -23,6 +23,32 @@ setProcessPlayCard(processPlayCard);
 function initHomePage() {
     document.getElementById('btn-create-room').addEventListener('click', createRoom);
     document.getElementById('btn-join-room').addEventListener('click', joinRoom);
+    initAvatarPicker();
+}
+
+function initAvatarPicker() {
+    const preview = document.getElementById('avatar-preview');
+    const pickerDialog = document.getElementById('emoji-picker-dialog');
+    const picker = document.getElementById('emoji-picker');
+
+    if (!preview || !picker) return;
+
+    // 点击头像打开选择器
+    preview.addEventListener('click', () => {
+        pickerDialog.classList.add('show');
+    });
+
+    // 选择 emoji
+    picker.addEventListener('emoji-click', (e) => {
+        G.myAvatar = e.detail.unicode;
+        preview.textContent = G.myAvatar;
+        pickerDialog.classList.remove('show');
+    });
+
+    // 点击遮罩关闭
+    pickerDialog.addEventListener('click', (e) => {
+        if (e.target === pickerDialog) pickerDialog.classList.remove('show');
+    });
 }
 
 function createRoom() {
@@ -31,6 +57,7 @@ function createRoom() {
     G.myPlayerId = 0;
     G.playerNames = { 0: G.playerName };
     G.playerReady = { 0: true };
+    G.playerAvatars = { 0: G.myAvatar };
 
     G.p2p = new P2PManager();
     G.p2p.callbacks.onReady = (roomCode) => {
@@ -52,6 +79,7 @@ function createRoom() {
         G.peerToPlayer[peerId] = idx;
         G.playerToPeer[idx] = peerId;
         G.playerNames[idx] = '玩家' + (idx + 1);
+        G.playerAvatars[idx] = '🐱';
         G.playerReady[idx] = false;
         renderWaitingLobby();
         broadcastLobbyState();
@@ -64,6 +92,7 @@ function createRoom() {
         delete G.peerToPlayer[peerId];
         delete G.playerToPeer[idx];
         delete G.playerNames[idx];
+        delete G.playerAvatars[idx];
         delete G.playerReady[idx];
         if (G.gameStarted && G.gameEngine) {
             const p = G.gameEngine.players[idx];
@@ -104,7 +133,7 @@ function joinRoom() {
     G.p2p.callbacks.onReady = () => {
         document.getElementById('display-room-code').textContent = code;
         showPage('waiting');
-        G.p2p.sendMessage({ type: 'JOIN_REQ', payload: { playerName: G.playerName } });
+        G.p2p.sendMessage({ type: 'JOIN_REQ', payload: { playerName: G.playerName, avatar: G.myAvatar } });
     };
 
     G.p2p.callbacks.onMessage = handleClientMessage;

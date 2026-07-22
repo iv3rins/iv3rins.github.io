@@ -24,7 +24,7 @@ export function renderWaitingLobby() {
         const name = G.playerNames[i];
         const isHostSlot = i === 0;
         const isMe = i === G.myPlayerId;
-        const avatar = G.avatars[i % G.avatars.length];
+        const avatar = G.playerAvatars[i] || G.avatars[i % G.avatars.length];
         const slot = document.createElement('div');
         slot.className = 'player-slot occupied';
         if (isHostSlot) slot.classList.add('host');

@@ -73,7 +73,8 @@ body {
 }
 .home-box:hover { border-color: var(--primary); }
 .home-box h2 { margin-bottom: 20px; color: var(--hp); }
-.home-logo { font-size: 60px; animation: bounceHover 3s infinite; margin-bottom: 15px; }
+.home-logo { font-size: 60px; animation: bounceHover 3s infinite; margin-bottom: 15px; cursor: pointer; transition: transform .2s; }
+.home-logo:hover { transform: scale(1.2); }
 .input-group input, .join-group input {
     width: 100%; margin: 10px 0; padding: 12px;
     border: 2px solid #eee; border-radius: 15px; text-align: center;
@@ -188,3 +189,12 @@ body {
 .modal-box { background: #fff; padding: 30px 40px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,.3); text-align: center; max-width: 400px; animation: popIn .3s; }
 .modal-box h3 { color: var(--hp); margin-bottom: 15px; font-size: 22px; }
 .modal-box p { margin-bottom: 20px; font-size: 16px; line-height: 1.6; }
+/* Emoji picker */
+.emoji-picker-box {
+    background: #fff; padding: 20px; border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.3); text-align: center;
+    max-width: 380px; width: 95%; animation: popIn .3s;
+}
+.emoji-picker-box h3 { color: var(--hp); margin-bottom: 12px; }
+.emoji-picker-box emoji-picker { width: 100%; max-height: 320px; }
+.emoji-picker-box .btn { margin-top: 12px; }

@@ -21,6 +21,8 @@ export const G = {
     roundCount: 0,
     maxPlayers: 12,
     avatars: ['🐱', '🐶', '🐰', '🐻', '🦊', '🐼', '🐧', '🦁', '🐸', '🐨', '🐯', '🐷'],
+    myAvatar: '🐱',              // 玩家自选头像
+    playerAvatars: {},           // playerIndex → emoji（由房主维护，LOBBY_STATE/SYNC_STATE 广播）
     gameStarted: false,
     _pendingClear: false,
 };

@@ -20,6 +20,7 @@ export function handleHostMessage(data, senderId) {
             const idx = G.peerToPlayer[senderId];
             if (idx !== undefined) {
                 let name = data.payload.playerName;
+                const avatar = data.payload.avatar || '🐱';
                 const existingNames = Object.values(G.playerNames);
                 if (existingNames.includes(name)) {
                     let suffix = 2;
@@ -27,6 +28,7 @@ export function handleHostMessage(data, senderId) {
                     name = name + '(' + suffix + ')';
                 }
                 G.playerNames[idx] = name;
+                G.playerAvatars[idx] = avatar;
                 G.playerReady[idx] = false;
                 renderWaitingLobby();
                 broadcastLobbyState();
@@ -79,6 +81,7 @@ export function handleClientMessage(data, senderId) {
             const s = data.payload;
             G.playerNames = s.playerNames;
             G.playerReady = s.playerReady;
+            G.playerAvatars = s.playerAvatars || {};
             G.myPlayerId = s.myPlayerId;
             G.roomCode = s.roomCode;
             document.getElementById('display-room-code').textContent = s.roomCode;
@@ -132,6 +135,7 @@ export function broadcastLobbyState() {
                 roomCode: G.roomCode,
                 playerNames: G.playerNames,
                 playerReady: G.playerReady,
+                playerAvatars: G.playerAvatars,
                 myPlayerId: idx,
             }
         });
@@ -185,6 +189,7 @@ export function serializeState(engine, forEngineId) {
         winner: engine.winner ? { id: engine.winner.id, name: engine.winner.name } : null,
         myPlayerId: forEngineId,
         roundCount: G.roundCount,
+        playerAvatars: G.playerAvatars,
     };
 }
 
