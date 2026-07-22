@@ -238,20 +238,34 @@ export function updateTurnUI(state) {
     const isSpectating = me && me.isEliminated;
     const actionArea = document.getElementById('action-area');
     const btn = document.getElementById('attack-btn');
+    const aPanel = document.getElementById('a-value-panel');
 
     if (isSpectating) {
         actionArea.style.visibility = 'hidden';
         clearTimer();
     } else if (isMyTurn) {
         actionArea.style.visibility = 'visible';
-        updateActionButtonUI();  // ★ 根据选中牌动态文字
+        if (aPanel) aPanel.style.display = '';
+        updateActionButtonUI();
         startTimer();
     } else {
+        // 非自己回合：隐藏 A 面板，检测是否只选了 Joker 可插队
         actionArea.style.visibility = 'visible';
-        const cur = state.players[state.currentPlayerIndex];
-        btn.textContent = `⏳ 等待 ${cur?.name || '...'} 出牌...`;
-        btn.disabled = true;
+        if (aPanel) { aPanel.classList.remove('show'); aPanel.style.display = 'none'; }
         clearTimer();
+        // 检测是否选中了纯 Joker
+        const myHand = state.players[state.myPlayerId]?.hand;
+        const selectedCards = myHand && G.selectedCardIndices.length > 0
+            ? G.selectedCardIndices.map(i => myHand[i]).filter(Boolean) : [];
+        const onlyJoker = selectedCards.length > 0 && selectedCards.every(c => c.isJoker);
+        if (onlyJoker && G.selectedTargetId >= 0) {
+            btn.textContent = '🃏 使用 Joker (插队)';
+            btn.disabled = false;
+        } else {
+            const cur = state.players[state.currentPlayerIndex];
+            btn.textContent = `⏳ 等待 ${cur?.name || '...'} 出牌...`;
+            btn.disabled = true;
+        }
     }
 }
 

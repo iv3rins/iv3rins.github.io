@@ -35,3 +35,17 @@ export function getAceAllowedSuits(aceCard, otherCards) {
         .map(c => c.suit);
     return [...new Set([aceCard.suit, ...otherSuits])];
 }
+
+/**
+ * 校验 Ace 花色合法性：aSuit 必须等于 A 自身花色 或 普通牌的 primarySuit
+ */
+export function validateAceSuit(aceCard, primarySuit, aSuit) {
+    if (!aSuit) return { valid: false, error: 'A牌必须指定花色' };
+    if (aSuit === aceCard.suit) return { valid: true };
+    if (primarySuit && aSuit === primarySuit) return { valid: true };
+    return {
+        valid: false,
+        error: `A牌花色只能为 ${aceCard.suit}(自身) 或 ${primarySuit || '组合花色'}`,
+        allowed: [...new Set([aceCard.suit, primarySuit].filter(Boolean))]
+    };
+}

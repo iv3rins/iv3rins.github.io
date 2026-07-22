@@ -6,7 +6,7 @@
 import { Card } from './Card.js';
 import { Character } from './Character.js';
 import { Player } from './Player.js';
-import { validatePlay } from './GameValidator.js';
+import { validatePlay, validateAceSuit } from './GameValidator.js';
 
 const SUITS = ['♦', '♣', '♥', '♠'];
 const NORMAL_RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10'];
@@ -120,10 +120,17 @@ export class GameEngine {
         let totalDamage = validation.normalCards.reduce((sum, c) => sum + c.value, 0);
         if (validation.hasA) totalDamage += 1;
 
-        // 花色：Ace 优先用 aSuit，否则用普通牌花色
+        // 花色：Ace 优先用 aSuit，否则用普通牌花色。必须校验合法性
         let attackSuit = validation.primarySuit;
-        if (!attackSuit && validation.hasA) {
-            attackSuit = aSuit || '♦';
+        if (validation.hasA) {
+            const aceCard = cards.find(c => c.rank === 'A' && !c.isJoker);
+            if (aceCard && aSuit) {
+                const suitCheck = validateAceSuit(aceCard, validation.primarySuit, aSuit);
+                if (!suitCheck.valid) throw new Error(suitCheck.error);
+                attackSuit = aSuit;
+            } else if (!attackSuit) {
+                attackSuit = aceCard?.suit || '♦';
+            }
         }
         if (!attackSuit) throw new Error('无法确定攻击花色');
 

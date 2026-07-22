@@ -200,11 +200,17 @@ export function processPlayCard(attackerIdx, payload) {
     const engine = G.gameEngine;
     const attacker = engine.players[attackerIdx];
     if (!attacker) throw new Error('无效的攻击者');
-    if (engine.currentPlayerIndex !== attackerIdx) throw new Error('不是你的回合');
 
     const sorted = [...payload.cardIndices].sort((a, b) => b - a);
     const cards = sorted.map(i => attacker.hand[i]).filter(Boolean);
     if (cards.length !== payload.cardIndices.length) throw new Error('手牌索引无效');
+
+    const isPureJoker = cards.length > 0 && cards.every(c => c.isJoker);
+
+    // Joker 允许插队（不在自己回合也能救人），普通出牌必须是自己回合
+    if (!isPureJoker && engine.currentPlayerIndex !== attackerIdx) {
+        throw new Error('不是你的回合');
+    }
 
     const nonJokers = cards.filter(c => !c.isJoker);
     const isClub = nonJokers.length > 0 && nonJokers.every(c => c.suit === '♣');
