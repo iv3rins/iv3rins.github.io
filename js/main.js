@@ -9,6 +9,8 @@ import { GameEngine } from './engine/GameEngine.js';
 import { showPage, showModal, renderWaitingLobby } from './ui/lobbyUI.js';
 import { addSystemChat, addGameChat, sendWaitingChat, sendGameChat } from './ui/chatUI.js';
 import { setProcessPlayCard, executeAttack } from './ui/gameUI.js';
+import { Toast } from './ui/toast.js';
+import { AudioManager } from './audioManager.js';
 import {
     handleHostMessage, handleClientMessage,
     broadcastLobbyState, broadcastSyncState, broadcastGameOver,
@@ -125,7 +127,7 @@ function createRoom() {
 function joinRoom() {
     G.playerName = document.getElementById('player-name').value.trim() || '小猫猫';
     const code = document.getElementById('room-code').value.trim();
-    if (code.length !== 4) { alert('请输入4位邀请码！'); return; }
+    if (code.length !== 4) { Toast.show('请输入4位邀请码！', 'error'); return; }
     G.isHost = false;
     G.roomCode = code;
 
@@ -150,13 +152,13 @@ function joinRoom() {
 function initWaitingPage() {
     document.getElementById('btn-copy-code').addEventListener('click', () => {
         const code = document.getElementById('display-room-code').textContent;
-        navigator.clipboard.writeText(code).then(() => alert('🐾 邀请码 ' + code + ' 复制成功！'));
+        navigator.clipboard.writeText(code).then(() => Toast.show('🐾 邀请码 ' + code + ' 复制成功！', 'success'));
     });
 
     document.getElementById('btn-start-game').addEventListener('click', () => {
         if (G.isHost) {
             const count = Object.keys(G.playerNames).length;
-            if (count < 2) { alert('至少需要2名玩家才能开始！'); return; }
+            if (count < 2) { Toast.show('至少需要2名玩家才能开始！', 'error'); return; }
             startGame();
         } else {
             toggleReady();

@@ -4,13 +4,44 @@
  */
 import { G } from '../state.js';
 import { getAceAllowedSuits } from '../engine/GameValidator.js';
+import { Toast } from './toast.js';
+import { AudioManager } from '../audioManager.js';
 
 // ═══ 渲染入口 ═══
+
+let _prevState = null;  // 用于检测变化以触发 VFX
 
 export function renderState(state) {
     G.currentState = state;
     const me = state.players[state.myPlayerId];
     const isSpectating = me && me.isEliminated;
+
+    // ★ VFX 检测
+    if (_prevState) {
+        state.players.forEach((p, i) => {
+            const prev = _prevState.players[i];
+            if (!prev || p.isEliminated !== prev.isEliminated) return;
+            const curChar = p.characters[p.activeCharIndex];
+            const prevChar = prev.characters[prev.activeCharIndex];
+            if (!curChar || !prevChar) return;
+            const hpDelta = prevChar.hp - curChar.hp;
+            const shieldDelta = curChar.shield - prevChar.shield;
+            if (hpDelta > 0) {
+                showDamageFloat(i, hpDelta);
+            } else if (hpDelta < 0) {
+                showHealFloat(i, -hpDelta);
+            }
+        });
+        // 发牌动画：手牌数增加了
+        if (me && me.hand && _prevState.players[state.myPlayerId]?.hand) {
+            const prevLen = _prevState.players[state.myPlayerId].hand?.length || 0;
+            if (me.hand.length > prevLen) {
+                // 延迟等 DOM 渲染后再触发
+                setTimeout(() => markNewCardsAsDealt(prevLen, me.hand), 50);
+            }
+        }
+    }
+    _prevState = JSON.parse(JSON.stringify(state));
 
     const gamePage = document.getElementById('page-game');
     if (isSpectating) gamePage.classList.add('spectator-mode');
@@ -258,7 +289,7 @@ export function hideAValuePanel() {
 // ═══ 出牌执行 ═══
 
 export function executeAttack() {
-    if (G.selectedCardIndices.length === 0) { alert('请先选择要打出的牌！🐾'); return; }
+    if (G.selectedCardIndices.length === 0) { Toast.show('请先选择要打出的牌！🐾', 'error'); return; }
 
     const state = G.currentState;
     if (!state) return;
@@ -271,10 +302,10 @@ export function executeAttack() {
     const isClub = nonJokers.length > 0 && nonJokers.every(c => c.suit === '♣');
 
     if (!isClub && !hasJoker && G.selectedTargetId < 0) {
-        alert('请先选择一个攻击目标！🐾'); return;
+        Toast.show('请先选择一个攻击目标！🐾', 'error'); return;
     }
     if (hasJoker && G.selectedTargetId < 0) {
-        alert('Joker 需要指定目标！🐾'); return;
+        Toast.show('Joker 需要指定目标！🐾', 'error'); return;
     }
 
     // 飞行动画
@@ -310,7 +341,7 @@ export function executeAttack() {
 
     if (G.isHost) {
         try { processPlayCard(G.myPlayerId, payload); }
-        catch (err) { alert('出牌失败: ' + err.message); G._pendingClear = false; }
+        catch (err) { Toast.show('出牌失败: ' + err.message, 'error'); G._pendingClear = false; }
     } else {
         G.p2p.sendMessage({ type: 'PLAY_CARD', payload });
     }
@@ -344,4 +375,58 @@ function forceRandomPlay() {
         targets[Math.floor(Math.random() * targets.length)].click();
         setTimeout(executeAttack, 400);
     }
+}
+
+// ═══ VFX: 飘字 / 受击 / 回血 ═══
+
+export function showDamageFloat(playerId, amount) {
+    const card = document.querySelector(`.player-card[data-player-id="${playerId}"]`);
+    if (!card) return;
+    const el = document.createElement('div');
+    el.className = 'damage-text';
+    el.textContent = `-${amount}`;
+    card.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('fly'));
+    setTimeout(() => el.remove(), 900);
+    triggerHitShake(playerId);
+    AudioManager.play('attack');
+}
+
+export function showHealFloat(playerId, amount) {
+    const card = document.querySelector(`.player-card[data-player-id="${playerId}"]`);
+    if (!card) return;
+    const el = document.createElement('div');
+    el.className = 'heal-text';
+    el.textContent = `+${amount}`;
+    card.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('fly'));
+    setTimeout(() => el.remove(), 900);
+    triggerHealAnim(playerId);
+    AudioManager.play('heal');
+}
+
+function triggerHitShake(playerId) {
+    const card = document.querySelector(`.player-card[data-player-id="${playerId}"]`);
+    if (!card) return;
+    card.classList.add('hit-shake');
+    setTimeout(() => card.classList.remove('hit-shake'), 500);
+}
+
+function triggerHealAnim(playerId) {
+    const card = document.querySelector(`.player-card[data-player-id="${playerId}"]`);
+    if (!card) return;
+    card.classList.add('heal-anim');
+    setTimeout(() => card.classList.remove('heal-anim'), 700);
+}
+
+/** 给手牌中的新卡添加发牌动画 */
+export function markNewCardsAsDealt(prevHandLength, currentCards) {
+    const container = document.getElementById('hand-container');
+    if (!container) return;
+    const allCards = container.querySelectorAll('.poker-card');
+    for (let i = prevHandLength; i < allCards.length; i++) {
+        allCards[i].classList.add('card-deal-anim');
+        allCards[i].style.setProperty('--deal-delay', `${(i - prevHandLength) * 0.08}s`);
+    }
+    if (currentCards.length > prevHandLength) AudioManager.play('draw');
 }

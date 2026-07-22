@@ -11,6 +11,7 @@ import { addChat, addSystemChat, addGameChat } from './ui/chatUI.js';
 import { renderWaitingLobby } from './ui/lobbyUI.js';
 import { renderState, setProcessPlayCard } from './ui/gameUI.js';
 import { GameEngine } from './engine/GameEngine.js';
+import { Toast } from './ui/toast.js';
 
 // ═══ 房主消息处理 ═══
 
@@ -110,7 +111,7 @@ export function handleClientMessage(data, senderId) {
             break;
         }
         case 'ERROR': {
-            alert('操作失败: ' + data.payload.message);
+            Toast.show('操作失败: ' + data.payload.message, 'error');
             break;
         }
     }

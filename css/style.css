@@ -198,3 +198,30 @@ body {
 .emoji-picker-box h3 { color: var(--hp); margin-bottom: 12px; }
 .emoji-picker-box emoji-picker { width: 100%; max-height: 320px; }
 .emoji-picker-box .btn { margin-top: 12px; }
+
+/* ═══ Toast ═══ */
+.toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10001; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+.toast { padding: 10px 24px; border-radius: 12px; font-size: 14px; font-weight: bold; color: #fff; opacity: 0; transform: translateY(-16px); transition: all .3s cubic-bezier(.4,0,.2,1); box-shadow: 0 4px 12px rgba(0,0,0,.15); white-space: nowrap; }
+.toast.in { opacity: 1; transform: translateY(0); }
+.toast.out { opacity: 0; transform: translateY(-16px); }
+.toast-info { background: linear-gradient(135deg, #74b9ff, #a29bfe); }
+.toast-error { background: linear-gradient(135deg, #ff7675, #d63031); }
+.toast-success { background: linear-gradient(135deg, #55efc4, #00b894); }
+
+/* ═══ 飘字 (Damage VFX) ═══ */
+@keyframes floatUp { 0% { opacity: 1; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-40px) scale(1.3); } }
+.damage-text, .heal-text { position: absolute; top: 0; left: 50%; transform: translateX(-50%); font-size: 20px; font-weight: 900; z-index: 10; pointer-events: none; opacity: 0; }
+.damage-text.fly { animation: floatUp .8s ease-out forwards; color: #ff7675; text-shadow: 0 2px 6px rgba(255,118,117,.5); }
+.heal-text.fly { animation: floatUp .9s ease-out forwards; color: #55efc4; text-shadow: 0 2px 8px rgba(85,239,196,.6); }
+
+/* ═══ 受击震屏 ═══ */
+@keyframes hitShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-3px); } }
+.player-card.hit-shake { animation: hitShake .4s ease; box-shadow: 0 0 20px rgba(255,118,117,.7), 0 0 40px rgba(255,0,0,.3) !important; }
+
+/* ═══ 回血翻转 ═══ */
+@keyframes healFlip { 0% { transform: scale(1) rotateY(0deg); } 50% { transform: scale(1.3) rotateY(360deg); box-shadow: 0 0 20px #55efc4; } 100% { transform: scale(1) rotateY(720deg); } }
+.player-card.heal-anim { animation: healFlip .7s ease; }
+
+/* ═══ 发牌动画 ═══ */
+@keyframes cardDeal { 0% { opacity: 0; transform: translate(200px, -100px) rotate(-30deg) scale(.5); } 100% { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); } }
+.poker-card.card-deal-anim { animation: cardDeal .4s cubic-bezier(.34,1.56,.64,1) var(--deal-delay, 0s) both; }
