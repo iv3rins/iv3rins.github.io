@@ -55,6 +55,7 @@ function initAvatarPicker() {
 
 function createRoom() {
     G.playerName = document.getElementById('player-name').value.trim() || '小猫猫';
+    AudioManager.unlock();  // ★ 解锁音频上下文
     G.isHost = true;
     G.myPlayerId = 0;
     G.playerNames = { 0: G.playerName };
@@ -244,11 +245,14 @@ function initGamePage() {
 // ═══ 启动 ═══
 
 document.addEventListener('DOMContentLoaded', () => {
-    initHomePage();
-    initWaitingPage();
-    initGamePage();
-    initFullscreenBtn();
-    initChatDrawer();
+    try { initHomePage(); } catch(e) { console.error('initHomePage:', e); }
+    try { initWaitingPage(); } catch(e) { console.error('initWaitingPage:', e); }
+    try { initGamePage(); } catch(e) { console.error('initGamePage:', e); }
+    try { initFullscreenBtn(); } catch(e) { console.error('initFullscreenBtn:', e); }
+    try { initChatDrawer(); } catch(e) { console.error('initChatDrawer:', e); }
+    // Visible marker to confirm init ran
+    const logo = document.getElementById('avatar-preview');
+    if (logo) logo.title = 'PokeWar ready';
     console.log('🐾 PokeWar 初始化完成！');
 });
 

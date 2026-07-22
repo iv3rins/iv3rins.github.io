@@ -24,10 +24,28 @@ function _getAudio(name) {
 }
 
 export const AudioManager = {
+    /** 必须在第一次用户交互（如点击按钮）后调用一次以解锁 AudioContext */
+    unlock() {
+        try {
+            if (this._ctx && this._ctx.state === 'suspended') {
+                this._ctx.resume();
+            }
+        } catch(e) {}
+    },
+
     play(name) {
         try {
+            // 延迟创建 AudioContext（首次用户交互后自动解锁）
+            if (!this._ctx) {
+                this._ctx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (this._ctx.state === 'suspended') {
+                this._ctx.resume().catch(() => {});
+            }
             const audio = _getAudio(name);
             if (audio) audio.play().catch(() => {});
         } catch (e) { /* silent */ }
-    }
+    },
+
+    _ctx: null,
 };

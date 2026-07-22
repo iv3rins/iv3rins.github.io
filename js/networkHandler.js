@@ -224,7 +224,10 @@ export function processPlayCard(attackerIdx, payload) {
     }
 
     const nonJokers = cards.filter(c => !c.isJoker);
-    const isClub = nonJokers.length > 0 && nonJokers.every(c => c.suit === '♣');
+    const hasA = cards.some(c => c.rank === 'A' && !c.isJoker);
+    // 护盾判定：全♣ 或 A 万化为 ♣
+    const isClub = (nonJokers.length > 0 && nonJokers.every(c => c.suit === '♣') && !hasA)
+        || (hasA && payload.aSuit === '♣');
 
     if (cards.some(c => c.isJoker)) {
         const target = engine.players[payload.targetPlayerId];
