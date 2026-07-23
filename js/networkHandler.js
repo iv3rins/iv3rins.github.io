@@ -189,14 +189,15 @@ export function broadcastSyncState() {
     // 1. 广播给所有客户端
     Object.entries(G.playerToPeer).forEach(([lobbyIdxStr, peerId]) => {
         const lobbyIdx = parseInt(lobbyIdxStr);
-        if (lobbyIdx === 0) return; // 房主不在这里
+        if (lobbyIdx === 0) return;
         const engineIdx = Object.keys(G.engineToLobby).find(k => G.engineToLobby[k] === lobbyIdx);
         if (engineIdx !== undefined) {
             G.p2p.sendTo(peerId, { type: 'SYNC_STATE', payload: serializeState(G.gameEngine, parseInt(engineIdx)) });
         }
     });
-    // 2. ★ 房主本地状态始终刷新（即使没有客户端也要刷新 UI）
+    // 2. ★ 房主本地状态始终刷新
     G.currentState = serializeState(G.gameEngine, 0);
+    console.log('[broadcastSyncState] phase:', G.currentState.phase, 'hand:', G.currentState.players[0]?.hand?.length, 'starterSelected:', G.currentState.players[0]?.starterSelected);
     renderState(G.currentState);
 }
 

@@ -634,7 +634,8 @@ export function markSuggestedCards(handCards) {
 function showStarterModal(me) {
     const modal = document.getElementById('modal-starter');
     const container = document.getElementById('starter-options');
-    if (!modal || !container) return;
+    if (!modal || !container) { console.warn('[Starter] modal or container missing'); return; }
+    console.log('[Starter] showing modal for', me.name || 'player', 'isHost:', G.isHost, 'myPlayerId:', G.myPlayerId);
     container.innerHTML = '';
 
     me.characters.forEach((c, idx) => {
@@ -648,12 +649,15 @@ function showStarterModal(me) {
             <div class="starter-hp">${c.hp}/${c.maxHp} HP</div>
         `;
         card.onclick = () => {
-            // 发送选将消息
+            console.log('[Starter] click idx:', idx, 'isHost:', G.isHost);
             if (G.isHost) {
                 const result = G.gameEngine.selectStarter(G.myPlayerId, idx);
                 if (result.ok) {
                     modal.classList.remove('show');
                     broadcastSyncState();
+                } else {
+                    console.error('[Starter] selectStarter failed:', result.error);
+                    Toast.show(result.error || '选将失败', 'error');
                 }
             } else {
                 G.p2p.sendMessage({ type: 'SELECT_STARTER', payload: { charIndex: idx } });

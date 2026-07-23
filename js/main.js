@@ -203,26 +203,38 @@ function startGame() {
     G.myPlayerId = 0;
     showPage('game');
 
-    import('./networkHandler.js').then(mod => {
-        // ★ 必须先同步一次状态给所有客户端，否则客户端看不到选将界面
-        Object.entries(G.playerToPeer).forEach(([lobbyIdxStr, peerId]) => {
-            const lobbyIdx = parseInt(lobbyIdxStr);
-            if (lobbyIdx === 0) return;
-            const engineIdx = indices.indexOf(lobbyIdx);
-            G.p2p.sendTo(peerId, {
-                type: 'GAME_START',
-                payload: { enginePlayerId: engineIdx, playerNames: G.gameEngine.players.map(p => p.name) }
-            });
-            // ★ 紧接着发送初始状态同步
-            G.p2p.sendTo(peerId, {
-                type: 'SYNC_STATE',
-                payload: mod.serializeState(G.gameEngine, engineIdx)
-            });
+    // ★ 给所有客户端发送 GAME_START（含 enginePlayerId）
+    Object.entries(G.playerToPeer).forEach(([lobbyIdxStr, peerId]) => {
+        const lobbyIdx = parseInt(lobbyIdxStr);
+        if (lobbyIdx === 0) return;
+        const engineIdx = indices.indexOf(lobbyIdx);
+        G.p2p.sendTo(peerId, {
+            type: 'GAME_START',
+            payload: { enginePlayerId: engineIdx, playerNames: G.gameEngine.players.map(p => p.name) }
         });
-        // 房主本地状态
-        G.currentState = mod.serializeState(G.gameEngine, 0);
-        renderState(G.currentState);
     });
+
+    // ★ 同步广播初始状态（含客户端 SYNC_STATE + 房主本地渲染）
+    broadcastSyncState();
+
+    // ★ 兜底：确保房主本地状态必定渲染（即使 broadcastSyncState 因某些原因静默失败）
+    if (!G.currentState) {
+        console.warn('[startGame] broadcastSyncState 未设置 G.currentState，手动兜底');
+        G.currentState = {
+            players: G.gameEngine.players.map((p, i) => ({
+                id: p.id, name: p.name || ('玩家' + (p.id + 1)),
+                characters: p.characters.map(c => ({ rank: c.rank, suit: c.suit, maxHp: c.maxHp, hp: c.hp, shield: c.shield, isDead: c.isDead, isDying: c.isDying })),
+                activeCharIndex: p.activeCharIndex, starterSelected: p.starterSelected,
+                handCount: p.hand.length, isEliminated: p.isEliminated,
+                hand: (i === 0) ? p.hand.map(c => ({ suit: c.suit, rank: c.rank, isJoker: c.isJoker, value: c.value })) : null,
+            })),
+            currentPlayerIndex: G.gameEngine.currentPlayerIndex, deckCount: G.gameEngine.deck.length,
+            isGameOver: false, winner: null, myPlayerId: 0, roundCount: G.roundCount,
+            playerAvatars: G.playerAvatars, lastAction: null,
+            phase: G.gameEngine.phase, dyingInfo: null,
+        };
+        renderState(G.currentState);
+    }
 }
 
 function leaveRoom() {
