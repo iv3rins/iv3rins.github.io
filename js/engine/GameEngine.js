@@ -155,13 +155,19 @@ export class GameEngine {
         const isShield = (declaredSuit === '♣') || (!validation.hasA && validation.primarySuit === '♣');
         if (!isShield) throw new Error('只有梅花牌才能用于护盾');
 
-        // ★ 伤害/护盾值 = 普通牌总和 + aValue（有 A 时用自定义值，否则固定 1）
-        let totalShield = validation.normalCards.reduce((sum, c) => sum + c.value, 0);
-        if (validation.hasA) totalShield += (aValue || 1);
+        // ★ [impeccable] 类型守卫：确保 totalShield 为安全整数
+        let totalShield = validation.normalCards.reduce((sum, c) => {
+            const v = Number(c.value) || 0;
+            return sum + v;
+        }, 0);
+        if (validation.hasA) totalShield += (Number(aValue) || 1);
+        totalShield = Math.max(0, Math.floor(totalShield)); // NaN/负数兜底
 
         const activeChar = player.getActiveCharacter();
-        activeChar.shield += totalShield;
-        console.log('[playShield] 护盾结算 — player:', player.name, 'addShield:', totalShield, 'totalShield:', activeChar.shield);
+        if (!activeChar) throw new Error('[Engine] playShield: activeChar 为空');
+        activeChar.shield = (Number(activeChar.shield) || 0) + totalShield;
+
+        console.log('[Engine] playShield — player:', player.name, 'addShield:', totalShield, 'totalShield:', activeChar.shield, 'cards:', cards.map(c=>c.suit+c.rank+'='+c.value));
         this.lastAction = { type: 'shield', targetId: player.id, amount: totalShield };
         this._postPlayCleanup(player, player, cards);
     }
