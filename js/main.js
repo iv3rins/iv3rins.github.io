@@ -236,11 +236,9 @@ function startGame() {
         renderState(G.currentState);
     }
 
-    // ★ 开局弹窗：显示玩法教程
-    setTimeout(() => {
-        const tut = document.getElementById('modal-tutorial');
-        if (tut) tut.classList.add('show');
-    }, 800);
+    // ★ 开局弹窗：立即显示玩法教程（覆盖在选将弹窗之上，玩家看完再选将）
+    const tut = document.getElementById('modal-tutorial');
+    if (tut) tut.classList.add('show');
 }
 
 function leaveRoom() {
