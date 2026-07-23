@@ -96,7 +96,7 @@ export function handleHostMessage(data, senderId) {
             if (!result.ok) {
                 G.p2p.sendTo(senderId, { type: 'ERROR', payload: { message: result.error } });
             } else {
-                addGameChat('system', result.rescuerName + ' 用 Joker 救回了 ' + result.rescuedName + '！💊');
+                broadcastGameChat(result.rescuerName + ' 用 Joker 救回了 ' + result.rescuedName + '！💊');
                 broadcastSyncState();
             }
             break;
@@ -155,6 +155,7 @@ export function handleClientMessage(data, senderId) {
             Toast.show('操作失败: ' + data.payload.message, 'error');
             break;
         }
+        case 'PING': break; // ★ 心跳保活，忽略
     }
 }
 
@@ -244,6 +245,17 @@ export function serializeState(engine, forEngineId) {
     };
 }
 
+// ★ 广播战斗日志：本地渲染 + 发送给所有客户端
+function broadcastGameChat(text) {
+    addGameChat('system', text);
+    // 广播给所有客户端
+    const msg = { type: 'CHAT', payload: { senderId: 'system', senderName: '⚔️ 战斗', text } };
+    Object.entries(G.playerToPeer).forEach(([lobbyIdxStr, peerId]) => {
+        if (parseInt(lobbyIdxStr) === 0) return;
+        G.p2p.sendTo(peerId, msg);
+    });
+}
+
 // ═══ 出牌结算 ═══
 
 export function processPlayCard(attackerIdx, payload) {
@@ -277,31 +289,31 @@ export function processPlayCard(attackerIdx, payload) {
         const target = engine.players[payload.targetPlayerId];
         if (!target) throw new Error('Joker 需要指定目标');
         engine.playJoker(attacker, target, target.activeCharIndex, cards);
-        addGameChat('system', attacker.name + ' 使用了 Joker！');
+        broadcastGameChat(attacker.name + ' 使用了 Joker！');
     } else if (isClub) {
         console.log('[processPlayCard] ♣ 护盾路由 — attacker:', attacker.name, 'declaredSuit:', declaredSuit, 'aValue:', aValue, 'cards:', cards.map(c=>c.suit+c.rank));
         engine.playShield(attacker, cards, declaredSuit, aValue);
-        addGameChat('system', attacker.name + ' 获得了护盾！🛡️');
+        broadcastGameChat(attacker.name + ' 获得了护盾！🛡️');
     } else {
         console.log('[processPlayCard] ⚔ 攻击路由 — attacker:', attacker.name, 'target:', engine.players[payload.targetPlayerId]?.name, 'declaredSuit:', declaredSuit, 'aValue:', aValue);
         const target = engine.players[payload.targetPlayerId];
         if (!target) throw new Error('无效的目标');
         engine.playAttack(attacker, target, cards, declaredSuit, aValue);
-        addGameChat('system', attacker.name + ' 攻击了 ' + target.name + '！');
+        broadcastGameChat(attacker.name + ' 攻击了 ' + target.name + '！');
     }
 
     G.roundCount++;
 
     // ★ Bug3: 濒死时不推进回合，启动 10 秒救援倒计时
     if (engine.phase === 'WAITING_FOR_JOKER') {
-        addGameChat('system', '⚠️ ' + (engine.players[engine.dyingInfo.playerId].name || '玩家') + ' 濒死！等待 Joker 救援...');
+        broadcastGameChat('⚠️ ' + (engine.players[engine.dyingInfo.playerId].name || '玩家') + ' 濒死！等待 Joker 救援...');
         broadcastSyncState();
         // 10 秒后自动死亡
         setTimeout(() => {
             if (G.gameEngine && G.gameEngine.phase === 'WAITING_FOR_JOKER') {
                 const result = G.gameEngine.resolveDying();
                 if (result.ok) {
-                    addGameChat('system', '💀 无人救援，' + (engine.players[result.playerId].name || '玩家') + ' 的角色阵亡了...');
+                    broadcastGameChat('💀 无人救援，' + (engine.players[result.playerId].name || '玩家') + ' 的角色阵亡了...');
                     if (!G.gameEngine.isGameOver) G.gameEngine.nextTurn();
                     broadcastSyncState();
                     if (G.gameEngine.isGameOver) broadcastGameOver();

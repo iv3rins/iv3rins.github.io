@@ -12,6 +12,9 @@ export class P2PManager {
         this.hostConnection = null;
         this.isHost = false;
         this.myId = null;
+        this._roomId = null;          // ★ 用于重连
+        this._heartbeat = null;       // ★ 心跳定时器
+        this._reconnectTimer = null;  // ★ 重连定时器
         this.callbacks = {
             onPlayerJoin: null,
             onPlayerLeave: null,
@@ -22,14 +25,27 @@ export class P2PManager {
         };
     }
 
+    /** ★ 心跳：每 15 秒 ping，保持 WebRTC 通道活跃 */
+    _startHeartbeat() {
+        this._stopHeartbeat();
+        this._heartbeat = setInterval(() => {
+            this.sendMessage({ type: 'PING', payload: { ts: Date.now() } });
+        }, 15000);
+    }
+    _stopHeartbeat() {
+        if (this._heartbeat) { clearInterval(this._heartbeat); this._heartbeat = null; }
+    }
+
     createRoom(roomId) {
         this.isHost = true;
         const finalRoomId = roomId || Math.floor(1000 + Math.random() * 9000).toString();
+        this._roomId = finalRoomId;
         this.peer = new Peer(PEER_PREFIX + finalRoomId);
 
         this.peer.on('open', (id) => {
             this.myId = id;
             console.log('%c[P2P] 房主已就绪，房间号:', 'color:#4facfe', finalRoomId);
+            this._startHeartbeat();
             if (this.callbacks.onReady) this.callbacks.onReady(finalRoomId);
         });
 
@@ -56,6 +72,13 @@ export class P2PManager {
 
     joinRoom(roomId) {
         this.isHost = false;
+        this._roomId = roomId;
+        this._doJoin(roomId);
+    }
+
+    /** ★ 执行连接 + 失败后 3 秒自动重试 */
+    _doJoin(roomId) {
+        if (this.peer) this.peer.destroy();
         this.peer = new Peer();
 
         this.peer.on('open', (id) => {
@@ -66,22 +89,38 @@ export class P2PManager {
 
             this.hostConnection.on('open', () => {
                 console.log('%c[P2P] 成功连接到房主！', 'color:#2ecc71');
+                this._startHeartbeat();
+                // 清除重连定时器
+                if (this._reconnectTimer) { clearTimeout(this._reconnectTimer); this._reconnectTimer = null; }
                 if (this.callbacks.onReady) this.callbacks.onReady(roomId);
             });
             this.hostConnection.on('data', (data) => this._handleData(data, targetHostId));
             this.hostConnection.on('close', () => {
-                console.warn('与房主断开连接');
-                if (this.callbacks.onHostDisconnect) this.callbacks.onHostDisconnect();
+                console.warn('与房主断开连接，3 秒后重连...');
+                this._stopHeartbeat();
+                this._scheduleReconnect();
             });
             this.hostConnection.on('error', () => {
-                if (this.callbacks.onHostDisconnect) this.callbacks.onHostDisconnect();
+                this._stopHeartbeat();
+                this._scheduleReconnect();
             });
         });
 
+        this.peer.on('disconnected', () => this.peer.reconnect());
         this.peer.on('error', (err) => {
             console.error('加入房间失败:', err);
+            this._scheduleReconnect();
             if (this.callbacks.onPeerError) this.callbacks.onPeerError(err);
         });
+    }
+
+    _scheduleReconnect() {
+        if (this._reconnectTimer) return; // 已有重连在排队
+        console.log('[P2P] 3 秒后自动重连...');
+        this._reconnectTimer = setTimeout(() => {
+            this._reconnectTimer = null;
+            if (this._roomId) this._doJoin(this._roomId);
+        }, 3000);
     }
 
     sendMessage(data) {
@@ -105,6 +144,8 @@ export class P2PManager {
     }
 
     disconnect() {
+        this._stopHeartbeat();
+        if (this._reconnectTimer) { clearTimeout(this._reconnectTimer); this._reconnectTimer = null; }
         Object.values(this.connections).forEach(conn => {
             if (conn.open) conn.close();
         });
