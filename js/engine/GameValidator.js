@@ -1,8 +1,8 @@
 /**
  * GameValidator — 出牌合法性校验
- * Bug Fix: Ace 花色限制为二选一（A 自身花色 或 组合中其他牌花色）
+ * ★ 浸染机制重构：含 A 时豁免同花色校验，A 可将杂色牌全部浸染
  */
-export function validatePlay(cards) {
+export function validatePlay(cards, declaredSuit = null) {
     const normalCards = cards.filter(c => c.rank !== 'A' && !c.isJoker);
     const aCards = cards.filter(c => c.rank === 'A');
     const jokers = cards.filter(c => c.isJoker);
@@ -11,7 +11,11 @@ export function validatePlay(cards) {
     if (aCards.length > 1) return { valid: false, error: '一次出牌最多只能包含一张A' };
 
     if (normalCards.length === 0 && aCards.length === 1) {
-        return { valid: true, primarySuit: null, normalCards: [], hasA: true };
+        // 纯 A 单出：只能用自身花色
+        const allowedSuits = [aCards[0].suit];
+        if (declaredSuit && !allowedSuits.includes(declaredSuit))
+            return { valid: false, error: `纯A只能使用自身花色 ${aCards[0].suit}` };
+        return { valid: true, primarySuit: null, normalCards: [], hasA: true, declaredSuit: declaredSuit || aCards[0].suit };
     }
 
     const validLengths = [1, 3, 5];
@@ -19,11 +23,28 @@ export function validatePlay(cards) {
         return { valid: false, error: '合法组合只能是1张, 3张, 或5张（不计入A）' };
     }
 
+    const hasA = aCards.length === 1;
+
+    if (hasA) {
+        // ★ 浸染机制：有 A 时不校验同花色，校验 declaredSuit ∈ 组合中所有花色
+        const allSuits = [...new Set(cards.filter(c => !c.isJoker).map(c => c.suit))];
+        if (declaredSuit && !allSuits.includes(declaredSuit))
+            return { valid: false, error: `浸染花色必须为组合中出现过的花色: ${allSuits.join('/')}` };
+        return {
+            valid: true,
+            primarySuit: null,  // ★ 有 A 时不再强制 primarySuit
+            normalCards, hasA: true,
+            declaredSuit: declaredSuit || allSuits[0],
+            allSuits
+        };
+    }
+
+    // 无 A：正常同花色校验
     const primarySuit = normalCards[0].suit;
     const isSameSuit = normalCards.every(c => c.suit === primarySuit);
     if (!isSameSuit) return { valid: false, error: '多张牌出牌必须同花色' };
 
-    return { valid: true, primarySuit, normalCards, hasA: aCards.length === 1 };
+    return { valid: true, primarySuit, normalCards, hasA: false, declaredSuit: primarySuit };
 }
 
 /**
@@ -38,6 +59,7 @@ export function getAceAllowedSuits(aceCard, otherCards) {
 
 /**
  * 校验 Ace 花色合法性：aSuit 必须等于 A 自身花色 或 普通牌的 primarySuit
+ * ★ 浸染机制后：保留用于 GameEngine 后端二次校验
  */
 export function validateAceSuit(aceCard, primarySuit, aSuit) {
     if (!aSuit) return { valid: false, error: 'A牌必须指定花色' };
@@ -51,10 +73,8 @@ export function validateAceSuit(aceCard, primarySuit, aSuit) {
 }
 
 /**
- * 万化组合穷举计算器（严格合法版）
- * 候选花色与 validateAceSuit 规则完全一致：
- *   - 含普通牌（executeAttack 已校验同花色）→ [A自身花色, primarySuit] 去重
- *   - 纯 A 单出 → 仅 [A自身花色]（唯一合法）
+ * 万化组合穷举计算器（浸染机制版）
+ * ★ 含 A 时候选花色 = 组合中所有出现过的花色（A 可浸染杂色牌）
  * @param {Array} selectedCards - 玩家选中的卡牌
  * @returns {Array<{targetSuit, totalValue, isShield, effectHint, previewCards}>}
  */
@@ -63,10 +83,11 @@ export function calculateWildcardCombinations(selectedCards) {
     const aceCard = selectedCards.find(c => c.rank === 'A' && !c.isJoker);
     if (!aceCard) return [];
 
-    // 候选花色：A 自身花色 + 普通牌主花色（普通牌同花色已由 executeAttack 保证）
-    const primarySuit = normalCards.length > 0 ? normalCards[0].suit : null;
-    const suits = [aceCard.suit, primarySuit].filter(Boolean);
-    const possibleSuits = (typeof _ !== 'undefined' ? _.uniq(suits) : [...new Set(suits)]);
+    // ★ 浸染机制：候选花色 = 组合中所有出现过的花色（去重）
+    const possibleSuits = (typeof _ !== 'undefined'
+        ? _.uniq(selectedCards.filter(c => !c.isJoker).map(c => c.suit))
+        : [...new Set(selectedCards.filter(c => !c.isJoker).map(c => c.suit))]
+    );
 
     const normalTotal = normalCards.reduce((sum, c) => sum + c.value, 0);
     const EFFECT_HINTS = { '♣': '🛡️ 转化为护盾', '♠': '⚔️ 黑桃双倍伤害', '♥': '💗 红桃吸血回复', '♦': '🌾 方块五谷摸牌' };
@@ -78,7 +99,8 @@ export function calculateWildcardCombinations(selectedCards) {
         effectHint: EFFECT_HINTS[targetSuit] || `⚔️ 主花色 ${targetSuit}`,
         previewCards: selectedCards.map(c => ({
             ...c,
-            suit: c.rank === 'A' ? targetSuit : c.suit
+            // ★ 浸染：所有牌（含A和普通牌）变成目标花色，展示最终效果
+            suit: targetSuit
         }))
     }));
 }
@@ -86,6 +108,7 @@ export function calculateWildcardCombinations(selectedCards) {
 /**
  * 斗地主式智能可用牌推荐
  * 扫描手牌，找出所有合法出牌组合的索引
+ * ★ 浸染机制后：含 A 时任意杂色牌也可组队，全部高亮
  * @param {Array} handCards - 玩家当前手牌
  * @returns {Set<number>} 可参与合法组合的卡牌索引
  */
@@ -106,19 +129,17 @@ export function findPlayableCombinations(handCards) {
     for (const suit in bySuit) {
         const cards = bySuit[suit];
         if (cards.length >= 3) {
-            // 同花色 3 张：任何一张都可以作为组合的一部分
             cards.forEach(c => playableIndices.add(c.idx));
         }
         if (cards.length >= 5) {
-            // 同花色 5 张
             cards.forEach(c => playableIndices.add(c.idx));
         }
     }
 
-    // 3. 含 A 组合：A + 任意数字牌
+    // 3. 含 A 组合：A + 任意数字牌（浸染机制：杂色也可组队）
     const aces = nonJokers.filter(c => c.rank === 'A');
     if (aces.length > 0) {
-        // A 可以和任何普通牌组合
+        // ★ A 可以和任何普通牌组合（不再要求同花色）
         nonJokers.forEach(c => playableIndices.add(c.idx));
     }
 

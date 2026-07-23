@@ -333,13 +333,13 @@ export function executeAttack() {
     const nonJokers = selectedCards.filter(c => !c.isJoker);
     const hasA = selectedCards.some(c => c.rank === 'A' && !c.isJoker);
 
-    // 校验普通牌是否同花色
+    // ★ 浸染机制：有 A 时不校验同花色（A 可浸染杂色牌）
     let primarySuit = null;
-    if (nonJokers.length > 0) {
+    if (nonJokers.length > 0 && !hasA) {
         primarySuit = nonJokers[0].suit;
         const isSame = nonJokers.every(c => c.suit === primarySuit);
         if (!isSame && !hasJoker) {
-            Toast.show('多张普通牌必须同花色！', 'error');
+            Toast.show('多张普通牌必须同花色（或使用A浸染）！', 'error');
             return;
         }
     }

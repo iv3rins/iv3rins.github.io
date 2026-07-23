@@ -263,9 +263,10 @@ export function processPlayCard(attackerIdx, payload) {
 
     const nonJokers = cards.filter(c => !c.isJoker);
     const hasA = cards.some(c => c.rank === 'A' && !c.isJoker);
-    // 护盾判定：全♣ 或 A 万化为 ♣
-    const isClub = (nonJokers.length > 0 && nonJokers.every(c => c.suit === '♣') && !hasA)
-        || (hasA && payload.aSuit === '♣');
+    // ★ 浸染机制：declaredSuit 由前端弹窗传入，全♣ 或 declaredSuit='♣' 即护盾
+    const declaredSuit = payload.aSuit || null;  // 兼容旧字段名 aSuit
+    const isPureClubNoA = (nonJokers.length > 0 && nonJokers.every(c => c.suit === '♣') && !hasA);
+    const isClub = isPureClubNoA || (hasA && declaredSuit === '♣');
 
     if (cards.some(c => c.isJoker)) {
         const target = engine.players[payload.targetPlayerId];
@@ -273,12 +274,12 @@ export function processPlayCard(attackerIdx, payload) {
         engine.playJoker(attacker, target, target.activeCharIndex, cards);
         addGameChat('system', attacker.name + ' 使用了 Joker！');
     } else if (isClub) {
-        engine.playShield(attacker, cards, payload.aSuit || null);
+        engine.playShield(attacker, cards, declaredSuit);
         addGameChat('system', attacker.name + ' 获得了护盾！🛡️');
     } else {
         const target = engine.players[payload.targetPlayerId];
         if (!target) throw new Error('无效的目标');
-        engine.playAttack(attacker, target, cards, payload.aSuit || null);
+        engine.playAttack(attacker, target, cards, declaredSuit);
         addGameChat('system', attacker.name + ' 攻击了 ' + target.name + '！');
     }
 

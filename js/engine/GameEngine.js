@@ -150,18 +150,14 @@ export class GameEngine {
      * @param {Card[]} cards
      * @param {string} aSuit - Ace 花色选择（仅限 A 自身花色或组合花色）
      */
-    playShield(player, cards, aSuit = null) {
-        const validation = validatePlay(cards);
+    playShield(player, cards, declaredSuit = null) {
+        const validation = validatePlay(cards, declaredSuit);
         if (!validation.valid) throw new Error(validation.error);
 
-        // ★ Bug2 修复: 全♣ 或 A 万化为 ♣ 均可护盾
-        let isClub = validation.primarySuit === '♣';
-        if (validation.hasA && aSuit === '♣') {
-            isClub = true;
-        }
-        if (!isClub) throw new Error('只有梅花牌才能用于护盾');
+        // ★ 浸染机制：declaredSuit='♣' 即护盾（无需普通牌全♣）
+        const isShield = (declaredSuit === '♣') || (!validation.hasA && validation.primarySuit === '♣');
+        if (!isShield) throw new Error('只有梅花牌才能用于护盾');
 
-        // Ace 固定值=1
         let totalShield = validation.normalCards.reduce((sum, c) => sum + c.value, 0);
         if (validation.hasA) totalShield += 1;
 
@@ -173,28 +169,17 @@ export class GameEngine {
 
     /**
      * 执行攻击出牌
-     * Bug Fix: Ace 值固定为 1，花色仅限 A 自身花色或其他牌花色
+     * ★ 浸染机制重构：有 A 时直接信任 declaredSuit，不再二次校验
      */
-    playAttack(attacker, target, cards, aSuit = null) {
-        const validation = validatePlay(cards);
+    playAttack(attacker, target, cards, declaredSuit = null) {
+        const validation = validatePlay(cards, declaredSuit);
         if (!validation.valid) throw new Error(validation.error);
 
-        // 伤害 = 普通牌值 + Ace 固定值 1
         let totalDamage = validation.normalCards.reduce((sum, c) => sum + c.value, 0);
         if (validation.hasA) totalDamage += 1;
 
-        // 花色：Ace 优先用 aSuit，否则用普通牌花色。必须校验合法性
-        let attackSuit = validation.primarySuit;
-        if (validation.hasA) {
-            const aceCard = cards.find(c => c.rank === 'A' && !c.isJoker);
-            if (aceCard && aSuit) {
-                const suitCheck = validateAceSuit(aceCard, validation.primarySuit, aSuit);
-                if (!suitCheck.valid) throw new Error(suitCheck.error);
-                attackSuit = aSuit;
-            } else if (!attackSuit) {
-                attackSuit = aceCard?.suit || '♦';
-            }
-        }
+        // ★ 浸染机制：直接使用 validation.declaredSuit（已由 validatePlay 校验合法性）
+        const attackSuit = validation.declaredSuit;
         if (!attackSuit) throw new Error('无法确定攻击花色');
 
         const targetChar = target.getActiveCharacter();
