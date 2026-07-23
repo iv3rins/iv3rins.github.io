@@ -235,6 +235,12 @@ function startGame() {
         };
         renderState(G.currentState);
     }
+
+    // ★ 开局弹窗：显示玩法教程
+    setTimeout(() => {
+        const tut = document.getElementById('modal-tutorial');
+        if (tut) tut.classList.add('show');
+    }, 800);
 }
 
 function leaveRoom() {

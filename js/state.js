@@ -28,5 +28,4 @@ export const G = {
     playerAvatars: {},           // playerIndex → emoji（由房主维护，LOBBY_STATE/SYNC_STATE 广播）
     gameStarted: false,
     _pendingClear: false,
-    firstPlayDone: false,  // ★ 新手指引开关
 };

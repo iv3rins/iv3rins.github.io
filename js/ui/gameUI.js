@@ -67,15 +67,6 @@ export function renderState(state) {
                 vfx.remove();
                 cardEl.classList.remove('card-shake');
             }, 1200);
-
-            // ★ 首次行动后显示新手指引
-            if (!G.firstPlayDone) {
-                G.firstPlayDone = true;
-                setTimeout(() => {
-                    const tut = document.getElementById('modal-tutorial');
-                    if (tut) tut.classList.add('show');
-                }, 1500);
-            }
         }
     } else if (_prevState) {
         state.players.forEach((p, i) => {
@@ -439,8 +430,7 @@ export function openWanhuaModal() {
 
     const modal = document.getElementById('wanhua-modal');
     const container = document.getElementById('wanhua-suit-options');
-    const valueInput = document.getElementById('wanhua-value-input');
-    if (!modal || !container || !valueInput) return;
+    if (!modal || !container) return;
 
     container.innerHTML = '';
     _wanhuaSelectedSuit = null;
@@ -463,20 +453,15 @@ export function openWanhuaModal() {
         container.appendChild(btn);
     });
 
-    // 恢复上次选择
-    valueInput.value = G.aValue || 1;
-
-    // 确认合体
+    // 确认（aValue 固定为 1，点数 +1）
     document.getElementById('wanhua-confirm-btn').onclick = () => {
         if (!_wanhuaSelectedSuit) { Toast.show('请先选择一个花色！', 'error'); return; }
-        const val = parseInt(valueInput.value);
-        if (isNaN(val) || val < 1 || val > 13) { Toast.show('A 的点数必须在 1~13 之间！', 'error'); return; }
         G.declaredSuit = _wanhuaSelectedSuit;
-        G.aValue = val;
+        G.aValue = 1;  // ★ 固定 +1
         modal.classList.remove('show');
         audioManager.play('click');
         updateActionButtonUI();
-        Toast.show(`✨ 已合体为 ${_wanhuaSelectedSuit} 组合，A=${val} 点`, 'success');
+        Toast.show(`✨ 万化为 ${_wanhuaSelectedSuit} 组合（A=+1）`, 'success');
     };
 
     document.getElementById('wanhua-cancel-btn').onclick = () => {
