@@ -172,6 +172,7 @@ export function createPlayerCard(p, idx, isSelf, isTargetable, state) {
 
     const hpPct = displayChar.maxHp > 0 ? (displayChar.hp / displayChar.maxHp * 100) : 0;
     const shPct = displayChar.maxHp > 0 ? (displayChar.shield / displayChar.maxHp * 100) : 0;
+    if (displayChar.shield > 0 && isSelf) console.log('[renderCard] shield rendering — hp:', displayChar.hp, 'shield:', displayChar.shield, 'shPct:', shPct.toFixed(1)+'%');
 
     const roleHtml = p.isEliminated
         ? '<span class="role" style="color:#b2bec3">已淘汰</span>'
