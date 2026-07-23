@@ -44,56 +44,6 @@ export function renderState(state) {
         hideDyingModal();
     }
 
-    // ★ VFX: lastAction — 夸张飘字 + 音效
-    if (state.lastAction) {
-        const { type, targetId, amount } = state.lastAction;
-        const cardEl = document.querySelector(`.player-card[data-player-id="${targetId}"]`);
-        if (cardEl) {
-            const vfx = document.createElement('div');
-            vfx.className = `vfx-popup ${type === 'damage' ? 'vfx-dmg' : 'vfx-shd'}`;
-            vfx.textContent = type === 'damage' ? `-${amount}` : `+${amount} 🛡️`;
-            cardEl.appendChild(vfx);
-
-            if (type === 'damage') {
-                cardEl.classList.add('card-shake');
-                audioManager.play('attack');
-            } else {
-                audioManager.play('heal');
-                // 护盾额外音效
-                audioManager.play('shield');
-            }
-
-            setTimeout(() => {
-                vfx.remove();
-                cardEl.classList.remove('card-shake');
-            }, 1200);
-        }
-    } else if (_prevState) {
-        state.players.forEach((p, i) => {
-            const prev = _prevState.players[i];
-            if (!prev || p.isEliminated !== prev.isEliminated) return;
-            const curChar = p.characters[p.activeCharIndex];
-            const prevChar = prev.characters[prev.activeCharIndex];
-            if (!curChar || !prevChar) return;
-            const hpDelta = prevChar.hp - curChar.hp;
-            const shieldDelta = curChar.shield - prevChar.shield;
-            if (hpDelta > 0) {
-                showDamageFloat(i, hpDelta);
-            } else if (hpDelta < 0) {
-                showHealFloat(i, -hpDelta);
-            }
-        });
-        // 发牌动画：手牌数增加了
-        if (me && me.hand && _prevState.players[state.myPlayerId]?.hand) {
-            const prevLen = _prevState.players[state.myPlayerId].hand?.length || 0;
-            if (me.hand.length > prevLen) {
-                // 延迟等 DOM 渲染后再触发
-                setTimeout(() => markNewCardsAsDealt(prevLen, me.hand), 50);
-            }
-        }
-    }
-    _prevState = JSON.parse(JSON.stringify(state));
-
     const gamePage = document.getElementById('page-game');
     if (isSpectating) gamePage.classList.add('spectator-mode');
     else gamePage.classList.remove('spectator-mode');
@@ -109,12 +59,59 @@ export function renderState(state) {
 
     if (!isSpectating && me && me.hand) {
         renderHand(me.hand);
-        // ★ 智能提示：高亮可出牌
         if (state.currentPlayerIndex === state.myPlayerId) {
             markSuggestedCards(me.hand);
         }
     }
     else document.getElementById('hand-container').innerHTML = '';
+
+    // ★ VFX/音效必须在 renderOpponents/renderSelf 之后执行（否则 DOM 被 innerHTML='' 清掉）
+    if (state.lastAction) {
+        const { type, targetId, amount } = state.lastAction;
+        const cardEl = document.querySelector(`.player-card[data-player-id="${targetId}"]`);
+        if (cardEl) {
+            const vfx = document.createElement('div');
+            vfx.className = `vfx-popup ${type === 'damage' ? 'vfx-dmg' : 'vfx-shd'}`;
+            vfx.textContent = type === 'damage' ? `-${amount}` : `+${amount} 🛡️`;
+            cardEl.appendChild(vfx);
+
+            if (type === 'damage') {
+                cardEl.classList.add('card-shake');
+                audioManager.play('attack');
+            } else {
+                audioManager.play('heal');
+                audioManager.play('shield');
+            }
+
+            // ★ 屏幕特效：攻击=刀光，护盾=光圈
+            if (typeof playVisualEffect === 'function') {
+                playVisualEffect(targetId, type === 'damage' ? 'attack' : 'shield');
+            }
+
+            setTimeout(() => {
+                vfx.remove();
+                cardEl.classList.remove('card-shake');
+            }, 1200);
+        }
+    } else if (_prevState) {
+        state.players.forEach((p, i) => {
+            const prev = _prevState.players[i];
+            if (!prev || p.isEliminated !== prev.isEliminated) return;
+            const curChar = p.characters[p.activeCharIndex];
+            const prevChar = prev.characters[prev.activeCharIndex];
+            if (!curChar || !prevChar) return;
+            const hpDelta = prevChar.hp - curChar.hp;
+            if (hpDelta > 0) showDamageFloat(i, hpDelta);
+            else if (hpDelta < 0) showHealFloat(i, -hpDelta);
+        });
+        if (me && me.hand && _prevState.players[state.myPlayerId]?.hand) {
+            const prevLen = _prevState.players[state.myPlayerId].hand?.length || 0;
+            if (me.hand.length > prevLen) {
+                setTimeout(() => markNewCardsAsDealt(prevLen, me.hand), 50);
+            }
+        }
+    }
+    _prevState = JSON.parse(JSON.stringify(state));
 
     updateTurnUI(state);
 
@@ -735,3 +732,26 @@ function hideDyingModal() {
     if (modal) modal.classList.remove('show');
     if (_dyingTimer) { clearInterval(_dyingTimer); _dyingTimer = null; }
 }
+
+// ═══ 战斗屏幕特效 ═══
+(function initFxLayer() {
+    if (!document.getElementById('fx-layer')) {
+        const fx = document.createElement('div'); fx.id = 'fx-layer'; document.body.appendChild(fx);
+    }
+})();
+
+function playVisualEffect(targetPlayerId, effectType) {
+    const targetEl = document.querySelector(`.player-card[data-player-id="${targetPlayerId}"]`);
+    if (!targetEl) return;
+    const rect = targetEl.getBoundingClientRect();
+    const fxLayer = document.getElementById('fx-layer');
+    if (!fxLayer) return;
+    const fxNode = document.createElement('div');
+    fxNode.className = effectType === 'shield' ? 'shield-effect' : 'slash-effect';
+    fxNode.style.left = rect.left + rect.width / 2 + 'px';
+    fxNode.style.top = rect.top + rect.height / 2 + 'px';
+    fxLayer.appendChild(fxNode);
+    setTimeout(() => { if (fxNode.parentNode) fxNode.parentNode.removeChild(fxNode); }, 600);
+}
+// expose globally so renderState can call it
+window.playVisualEffect = playVisualEffect;

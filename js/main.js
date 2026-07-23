@@ -26,6 +26,10 @@ function initHomePage() {
     const clickSound = () => audioManager.play('click');
     document.getElementById('btn-create-room').addEventListener('click', () => { clickSound(); createRoom(); });
     document.getElementById('btn-join-room').addEventListener('click', () => { clickSound(); joinRoom(); });
+    document.getElementById('btn-show-tutorial').addEventListener('click', () => {
+        clickSound();
+        document.getElementById('modal-tutorial').classList.add('show');
+    });
     initAvatarPicker();
 }
 
@@ -260,10 +264,6 @@ function startGame() {
         };
         renderState(G.currentState);
     }
-
-    // ★ 开局弹窗：立即显示玩法教程（覆盖在选将弹窗之上，玩家看完再选将）
-    const tut = document.getElementById('modal-tutorial');
-    if (tut) tut.classList.add('show');
 }
 
 function leaveRoom() {
