@@ -9,7 +9,7 @@
 import { G } from './state.js';
 import { addChat, addSystemChat, addGameChat } from './ui/chatUI.js';
 import { renderWaitingLobby } from './ui/lobbyUI.js';
-import { renderState, setProcessPlayCard } from './ui/gameUI.js';
+import { renderState, setProcessPlayCard, injectBroadcastSyncState } from './ui/gameUI.js';
 import { GameEngine } from './engine/GameEngine.js';
 import { Toast } from './ui/toast.js';
 
@@ -317,3 +317,6 @@ export function showResultPage(payload) {
     document.getElementById('stat-rounds').textContent = payload.rounds + ' 回合';
     document.getElementById('stat-survivors').textContent = payload.survivors + ' 人';
 }
+
+// ★ 注入：让 gameUI.js 的选将逻辑能调 broadcastSyncState
+injectBroadcastSyncState(broadcastSyncState);

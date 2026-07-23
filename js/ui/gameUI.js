@@ -6,6 +6,10 @@ import { G } from '../state.js';
 import { findPlayableCombinations } from '../engine/GameValidator.js';
 import { Toast } from './toast.js';
 import { audioManager } from '../audioManager.js';
+// ★ 选将后广播状态（由 networkHandler.js 延迟注入以避免循环依赖）
+let _broadcastSyncState = null;
+export function injectBroadcastSyncState(fn) { _broadcastSyncState = fn; }
+function broadcastSyncState() { if (_broadcastSyncState) _broadcastSyncState(); else console.warn('[gameUI] broadcastSyncState 尚未注入'); }
 
 // ═══ 渲染入口 ═══
 
