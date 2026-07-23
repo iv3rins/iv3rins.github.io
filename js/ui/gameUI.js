@@ -155,9 +155,9 @@ export function createPlayerCard(p, idx, isSelf, isTargetable, state) {
     div.dataset.playerId = idx;
 
     const aliveChar = p.characters.find(c => !c.isDead && !c.isDying);
-    // ★ Bug4: activeCharIndex=-1 时用第一个角色显示
+    // ★ 优先用 activeCharIndex 指向的角色（护盾/HP 都在这个角色上）
     const charIdx = p.activeCharIndex >= 0 ? p.activeCharIndex : 0;
-    const displayChar = aliveChar || p.characters[charIdx] || p.characters[0];
+    const displayChar = p.characters[charIdx] || aliveChar || p.characters[0];
     const isRed = displayChar.suit === '♦' || displayChar.suit === '♥';
     const suitClass = isRed ? 'suit-red' : 'suit-black';
 
@@ -169,7 +169,7 @@ export function createPlayerCard(p, idx, isSelf, isTargetable, state) {
 
     const hpPct = displayChar.maxHp > 0 ? (displayChar.hp / displayChar.maxHp * 100) : 0;
     const shPct = displayChar.maxHp > 0 ? (displayChar.shield / displayChar.maxHp * 100) : 0;
-    if (displayChar.shield > 0 && isSelf) console.log('[renderCard] shield rendering — hp:', displayChar.hp, 'shield:', displayChar.shield, 'shPct:', shPct.toFixed(1)+'%');
+    console.log('[createPlayerCard]', p.name, 'idx:', idx, 'hp:', displayChar.hp, 'shield:', displayChar.shield, 'shPct:', shPct.toFixed(1) + '%', 'activeIdx:', p.activeCharIndex);
 
     const roleHtml = p.isEliminated
         ? '<span class="role" style="color:#b2bec3">已淘汰</span>'
@@ -184,7 +184,7 @@ export function createPlayerCard(p, idx, isSelf, isTargetable, state) {
         <div class="avatar ${avatarCls}">${avatar}</div>
         ${roleHtml}
         <div style="font-size:10px;color:#636e72">${displayChar.hp}/${displayChar.maxHp}${displayChar.shield > 0 ? ' +' + displayChar.shield + '🛡' : ''}</div>
-        <div class="status-bar">
+        <div class="status-bar" data-shield="${displayChar.shield}">
             <div class="status-hp" style="width:${hpPct}%"></div>
             <div class="status-shield" style="width:${shPct}%"></div>
         </div>
