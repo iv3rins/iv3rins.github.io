@@ -8,7 +8,7 @@ import { P2PManager } from './network/P2PManager.js';
 import { GameEngine } from './engine/GameEngine.js';
 import { showPage, showModal, renderWaitingLobby } from './ui/lobbyUI.js';
 import { addSystemChat, addGameChat, sendWaitingChat, sendGameChat } from './ui/chatUI.js';
-import { setProcessPlayCard, executeAttack } from './ui/gameUI.js';
+import { setProcessPlayCard, executeAttack, renderState, injectBroadcastSyncState } from './ui/gameUI.js';
 import { Toast } from './ui/toast.js';
 import { audioManager } from './audioManager.js';
 import {
@@ -221,7 +221,7 @@ function startGame() {
         });
         // 房主本地状态
         G.currentState = mod.serializeState(G.gameEngine, 0);
-        mod.renderState(G.currentState);
+        renderState(G.currentState);
     });
 }
 

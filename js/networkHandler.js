@@ -186,16 +186,18 @@ export function broadcastLobbyState() {
 
 export function broadcastSyncState() {
     if (!G.gameEngine) return;
+    // 1. 广播给所有客户端
     Object.entries(G.playerToPeer).forEach(([lobbyIdxStr, peerId]) => {
         const lobbyIdx = parseInt(lobbyIdxStr);
-        const engineIdx = (lobbyIdx === 0) ? 0 : Object.keys(G.engineToLobby).find(k => G.engineToLobby[k] === lobbyIdx);
-        if (lobbyIdx === 0) {
-            G.currentState = serializeState(G.gameEngine, 0);
-            renderState(G.currentState);
-        } else if (engineIdx !== undefined) {
+        if (lobbyIdx === 0) return; // 房主不在这里
+        const engineIdx = Object.keys(G.engineToLobby).find(k => G.engineToLobby[k] === lobbyIdx);
+        if (engineIdx !== undefined) {
             G.p2p.sendTo(peerId, { type: 'SYNC_STATE', payload: serializeState(G.gameEngine, parseInt(engineIdx)) });
         }
     });
+    // 2. ★ 房主本地状态始终刷新（即使没有客户端也要刷新 UI）
+    G.currentState = serializeState(G.gameEngine, 0);
+    renderState(G.currentState);
 }
 
 export function broadcastGameOver() {
