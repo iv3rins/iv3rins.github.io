@@ -55,12 +55,23 @@ export function renderState(state) {
                 audioManager.play('attack');
             } else {
                 audioManager.play('heal');
+                // 护盾额外音效
+                audioManager.play('shield');
             }
 
             setTimeout(() => {
                 vfx.remove();
                 cardEl.classList.remove('card-shake');
             }, 1200);
+
+            // ★ 首次行动后显示新手指引
+            if (!G.firstPlayDone) {
+                G.firstPlayDone = true;
+                setTimeout(() => {
+                    const tut = document.getElementById('modal-tutorial');
+                    if (tut) tut.classList.add('show');
+                }, 1500);
+            }
         }
     } else if (_prevState) {
         state.players.forEach((p, i) => {
@@ -301,11 +312,12 @@ export function toggleCard(index, el) {
     if (pos >= 0) {
         G.selectedCardIndices.splice(pos, 1);
         el.classList.remove('selected');
+        audioManager.play('select');
     } else {
         G.selectedCardIndices.push(index);
         el.classList.add('selected');
+        audioManager.play('select');
     }
-    audioManager.play('click');  // ★ 选牌音效
     updateActionButtonUI();
 }
 
@@ -367,24 +379,35 @@ export function executeAttack() {
         const isSame = nonJokers.every(c => c.suit === primarySuit);
         if (!isSame && !hasJoker) {
             Toast.show('多张普通牌必须同花色（或使用A浸染）！', 'error');
+            audioManager.play('error');
+            // ★ 自动清空选牌并刷新手牌
+            const myHand = state.players[state.myPlayerId]?.hand || [];
+            G.selectedCardIndices = [];
+            G.declaredSuit = null;
+            G.aValue = 1;
+            renderHand(myHand);
+            updateActionButtonUI();
             return;
         }
     }
 
-    // ★ 有 A 但未合体 → 拦截，提示先点万化
     if (hasA && !G.declaredSuit) {
         Toast.show('请先点击【万化】选择浸染花色！✨', 'error');
+        audioManager.play('error');
         return;
     }
 
-    // 目标校验
     const isShield = (hasA && G.declaredSuit === '♣')
         || (!hasA && nonJokers.length > 0 && nonJokers.every(c => c.suit === '♣'));
     if (!isShield && !hasJoker && G.selectedTargetId < 0) {
-        Toast.show('请先选择一个攻击目标！🐾', 'error'); return;
+        Toast.show('请先选择一个攻击目标！🐾', 'error');
+        audioManager.play('error');
+        return;
     }
     if (hasJoker && G.selectedTargetId < 0) {
-        Toast.show('Joker 需要指定目标！🐾', 'error'); return;
+        Toast.show('Joker 需要指定目标！🐾', 'error');
+        audioManager.play('error');
+        return;
     }
 
     // 直接出牌（合体状态已在弹窗中暂存到 G.declaredSuit / G.aValue）

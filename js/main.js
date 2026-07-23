@@ -248,6 +248,9 @@ function initGamePage() {
     document.getElementById('btn-restart').addEventListener('click', () => { clickSound(); location.reload(); });
     document.getElementById('btn-leave-room').addEventListener('click', () => { clickSound(); leaveRoom(); });
     document.getElementById('btn-modal-ok').addEventListener('click', () => location.reload());
+    // ★ 新手指引关闭
+    const tutOk = document.getElementById('btn-tutorial-ok');
+    if (tutOk) tutOk.addEventListener('click', () => { clickSound(); document.getElementById('modal-tutorial').classList.remove('show'); });
 }
 
 // ═══ 启动 ═══
