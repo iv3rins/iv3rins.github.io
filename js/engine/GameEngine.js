@@ -146,20 +146,18 @@ export class GameEngine {
 
     /**
      * ♣ 梅花护盾 — 对自己使用
-     * @param {Player} player
-     * @param {Card[]} cards
-     * @param {string} aSuit - Ace 花色选择（仅限 A 自身花色或组合花色）
+     * ★ 浸染机制：declaredSuit='♣' 即护盾，aValue 为 A 的自定义点数
      */
-    playShield(player, cards, declaredSuit = null) {
+    playShield(player, cards, declaredSuit = null, aValue = null) {
         const validation = validatePlay(cards, declaredSuit);
         if (!validation.valid) throw new Error(validation.error);
 
-        // ★ 浸染机制：declaredSuit='♣' 即护盾（无需普通牌全♣）
         const isShield = (declaredSuit === '♣') || (!validation.hasA && validation.primarySuit === '♣');
         if (!isShield) throw new Error('只有梅花牌才能用于护盾');
 
+        // ★ 伤害/护盾值 = 普通牌总和 + aValue（有 A 时用自定义值，否则固定 1）
         let totalShield = validation.normalCards.reduce((sum, c) => sum + c.value, 0);
-        if (validation.hasA) totalShield += 1;
+        if (validation.hasA) totalShield += (aValue || 1);
 
         const activeChar = player.getActiveCharacter();
         activeChar.shield += totalShield;
@@ -169,16 +167,16 @@ export class GameEngine {
 
     /**
      * 执行攻击出牌
-     * ★ 浸染机制重构：有 A 时直接信任 declaredSuit，不再二次校验
+     * ★ 浸染机制重构：信任 declaredSuit + aValue，不再二次校验
      */
-    playAttack(attacker, target, cards, declaredSuit = null) {
+    playAttack(attacker, target, cards, declaredSuit = null, aValue = null) {
         const validation = validatePlay(cards, declaredSuit);
         if (!validation.valid) throw new Error(validation.error);
 
+        // ★ 伤害 = 普通牌点数总和 + aValue（有 A 时用自定义值）
         let totalDamage = validation.normalCards.reduce((sum, c) => sum + c.value, 0);
-        if (validation.hasA) totalDamage += 1;
+        if (validation.hasA) totalDamage += (aValue || 1);
 
-        // ★ 浸染机制：直接使用 validation.declaredSuit（已由 validatePlay 校验合法性）
         const attackSuit = validation.declaredSuit;
         if (!attackSuit) throw new Error('无法确定攻击花色');
 

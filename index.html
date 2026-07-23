@@ -76,7 +76,10 @@
             <div class="board-center">
                 <div class="deck-info" id="deck-info">🎴 牌堆: -- | 回合: --</div>
                 <div class="action-area" id="action-area">
-                    <button class="btn" id="attack-btn">⚔️ 选择一个玩家，攻击</button>
+                    <div class="action-btns">
+                        <button class="btn btn-ghost" id="wanhua-btn" style="display:none">✨ 万化选项</button>
+                        <button class="btn" id="attack-btn">⚔️ 选择一个玩家，攻击</button>
+                    </div>
                     <div class="timer-bar-bg"><div class="timer-bar-fill" id="turn-timer"></div></div>
                 </div>
             </div>
@@ -130,24 +133,21 @@
         </div>
     </div>
 
-    <!-- A牌万化选择弹窗 -->
-    <div id="modal-wildcard" class="modal-overlay">
-        <div class="modal-box">
-            <h3>🃏 请选择 A 牌万化花色</h3>
-            <p id="wildcard-desc">请选择这张 A 牌在当前组合中代表的花色：</p>
-            <div id="wildcard-options" style="display: flex; gap: 15px; justify-content: center; margin: 20px 0;"></div>
-            <button class="btn btn-secondary" id="btn-cancel-wildcard">取消</button>
-        </div>
-    </div>
-
-    <!-- 万化组合方案选择弹窗 -->
-    <div id="modal-combination" class="modal-overlay">
-        <div class="modal-box" style="max-width: 600px; width: 90%;">
-            <h3>🃏 请选择万化组合方案</h3>
-            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px;">检测到您使用了 A 牌，请选择最终生效的牌组效果：</p>
-            <div id="combo-list-container" style="display: flex; flex-direction: column; gap: 12px; max-height: 50vh; overflow-y: auto; padding: 5px;"></div>
-            <div style="margin-top: 20px;">
-                <button class="btn btn-secondary" id="btn-cancel-combo">取消出牌</button>
+    <!-- 万化浸染选择弹窗 (默认隐藏) -->
+    <div id="wanhua-modal" class="modal-overlay">
+        <div class="modal-box wanhua-modal-content">
+            <div class="wanhua-header">
+                <h3>✨ 万能浸染 ✨</h3>
+                <p>请选择你要将这组牌同化为什么花色？</p>
+            </div>
+            <div id="wanhua-suit-options" class="wanhua-suit-options"></div>
+            <div class="wanhua-value-section">
+                <label for="wanhua-value-input">给 A 赋予的点数：</label>
+                <input type="number" id="wanhua-value-input" min="1" max="13" value="1" placeholder="1~13">
+            </div>
+            <div class="wanhua-actions">
+                <button id="wanhua-cancel-btn" class="btn btn-secondary">取消</button>
+                <button id="wanhua-confirm-btn" class="btn">✨ 确认合体 ✨</button>
             </div>
         </div>
     </div>

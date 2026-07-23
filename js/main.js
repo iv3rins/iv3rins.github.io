@@ -233,6 +233,11 @@ function hideLoading() {
 
 function initGamePage() {
     document.getElementById('attack-btn').addEventListener('click', executeAttack);
+    // ★ 万化按钮
+    const wanhuaBtn = document.getElementById('wanhua-btn');
+    if (wanhuaBtn) wanhuaBtn.addEventListener('click', () => {
+        import('./ui/gameUI.js').then(m => m.openWanhuaModal());
+    });
     document.getElementById('btn-game-chat-send').addEventListener('click', sendGameChat);
     document.getElementById('game-chat-input').addEventListener('keydown', e => {
         if (e.key === 'Enter') sendGameChat();

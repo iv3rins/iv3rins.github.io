@@ -343,3 +343,33 @@ body {
 /* ═══ Bug3: 濒死弹窗 ═══ */
 #modal-dying .modal-box { border: 3px solid #ff4757; animation: dyingPulse 1s infinite; }
 @keyframes dyingPulse { 0%,100% { box-shadow: 0 0 10px rgba(255,71,87,0.3); } 50% { box-shadow: 0 0 30px rgba(255,71,87,0.6); } }
+
+/* ═══ 万化浸染弹窗 ═══ */
+.action-btns { display: flex; gap: 10px; align-items: center; }
+.btn-ghost { background: transparent; border: 2px dashed var(--primary); color: var(--primary); }
+.btn-ghost:hover { background: rgba(255,182,193,0.15); }
+
+.wanhua-modal-content { max-width: 480px; width: 90%; text-align: center; }
+.wanhua-header h3 { margin: 0 0 6px; font-size: 20px; }
+.wanhua-header p { color: #888; font-size: 13px; margin: 0 0 15px; }
+
+.wanhua-suit-options { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 15px 0; }
+.combo-card-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 14px 20px; border: 2px solid #eee; border-radius: 14px;
+    background: #fdf6f6; cursor: pointer; transition: all .18s ease;
+    font-family: inherit; min-width: 100px;
+}
+.combo-card-btn:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 5px 14px rgba(255,182,193,.35); }
+.combo-card-btn.active { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(255,182,193,.4), 0 5px 14px rgba(255,182,193,.4); }
+.combo-card-btn .suit-icon { font-size: 30px; line-height: 1; }
+.combo-card-btn .suit-icon.red { color: #dc2626; }
+.combo-card-btn .suit-icon.black { color: #1e293b; }
+.combo-card-btn .suit-text { font-size: 13px; font-weight: bold; color: #555; }
+
+.wanhua-value-section { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 15px 0; font-size: 14px; }
+.wanhua-value-section input {
+    width: 70px; padding: 6px 10px; border: 2px solid var(--primary); border-radius: 8px;
+    font-family: inherit; font-size: 15px; text-align: center; outline: none;
+}
+.wanhua-actions { display: flex; gap: 12px; justify-content: center; margin-top: 18px; }

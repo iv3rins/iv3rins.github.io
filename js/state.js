@@ -17,6 +17,9 @@ export const G = {
     currentState: null,
     selectedTargetId: -1,
     selectedCardIndices: [],
+    // ★ 万化合体状态（弹窗确认后暂存，出牌时随 payload 发送）
+    declaredSuit: null,   // 玩家选定的最终浸染花色
+    aValue: 1,            // 玩家给 A 赋予的点数（1~13）
     timerTimeout: null,
     roundCount: 0,
     maxPlayers: 12,
