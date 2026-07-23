@@ -253,24 +253,93 @@ body {
 
 /* ═══ 横屏低矮：极限压缩 ═══ */
 @media screen and (max-height: 500px) {
-    .player-card { width: 95px; padding: 4px; border-radius: 10px; }
-    .player-card .avatar { font-size: 20px; }
+    .player-card { width: 90px; padding: 3px; border-radius: 10px; }
+    .player-card .avatar { font-size: 18px; }
     .player-card .name { font-size: 10px; margin-bottom: 1px; }
-    .player-card .role { font-size: 13px; margin: 1px 0; }
-    .status-bar { height: 5px; margin-top: 2px; }
-    .hand-count { width: 17px; height: 17px; line-height: 17px; font-size: 9px; bottom: -6px; right: -6px; }
+    .player-card .role { font-size: 12px; margin: 1px 0; }
+    .status-bar { height: 4px; margin-top: 2px; }
+    .hand-count { width: 16px; height: 16px; line-height: 16px; font-size: 9px; bottom: -5px; right: -5px; }
     .current-turn-indicator { width: 18px; height: 18px; line-height: 18px; font-size: 10px; top: -8px; left: -8px; }
-    .self-area .player-card { width: 105px; padding: 6px; }
-    .game-bottom { flex-direction: row; align-items: center; gap: 8px; padding: 5px 10px 8px; }
-    .hand-area { padding-top: 20px; }
-    .poker-card { width: 62px; height: 80px; font-size: 18px; margin-left: -15px; }
-    .poker-card.selected { margin: 0 12px; }
-    .poker-card:hover { margin: 0 5px; }
-    .opponents-area { max-height: 32vh; gap: 6px; padding: 8px 10px; }
+    .self-area .player-card { width: 100px; padding: 5px; }
+    .game-bottom { flex-direction: row; align-items: center; gap: 8px; padding: 4px 8px 6px; }
+    .hand-area { padding-top: 15px; }
+    .poker-card { width: 55px; height: 72px; font-size: 16px; margin-left: -18px; }
+    .poker-card.selected { margin: 0 8px; }
+    .poker-card:hover { margin: 0 4px; }
+    .opponents-area { max-height: 30vh; gap: 4px; padding: 4px 8px; }
+    .board-center { gap: 3px; }
+    .deck-info { font-size: 10px; padding: 2px 8px; }
+    .timer-bar-bg { width: 160px; height: 5px; }
+    .btn { padding: 5px 12px; font-size: 12px; }
+    .action-btns { gap: 6px; }
+    .player-card .status-bar { height: 4px; }
+    .player-card [style*="font-size:10px"] { font-size: 8px !important; }
+    .char-dots span { width: 6px !important; height: 6px !important; }
+}
+
+/* ═══ 移动端横屏全面适配 ═══ */
+@media screen and (max-width: 768px) and (orientation: landscape) {
+    /* 主布局 */
+    .game-main { width: 100%; }
+    .game-bottom { padding: 4px 8px 6px; gap: 8px; }
+
+    /* 对手区紧凑 */
+    .opponents-area { max-height: 28vh; gap: 4px; padding: 4px 6px; }
+    .player-card { width: 82px; padding: 3px; border-radius: 10px; border-width: 2px; }
+    .player-card .avatar { font-size: 18px; }
+    .player-card .name { font-size: 9px; margin-bottom: 1px; }
+    .player-card .role { font-size: 12px; margin: 1px 0; }
+    .player-card [style*="font-size:10px"] { font-size: 8px !important; }
+    .status-bar { height: 4px; margin-top: 2px; }
+    .hand-count { width: 16px; height: 16px; line-height: 16px; font-size: 8px; bottom: -5px; right: -5px; }
+    .current-turn-indicator { width: 18px; height: 18px; line-height: 18px; font-size: 10px; top: -7px; left: -7px; }
+
+    /* 自己区域 */
+    .self-area .player-card { width: 95px; padding: 5px; border-width: 3px; }
+
+    /* 手牌 */
+    .hand-area { padding: 12px 5px 0; }
+    .poker-card { width: 50px; height: 68px; font-size: 15px; margin-left: -16px; border-width: 1.5px; border-radius: 6px; }
+    .poker-card.selected { transform: translateY(-16px) scale(1.05); margin: 0 6px; }
+    .poker-card:hover { transform: translateY(-8px); margin: 0 3px; }
+
+    /* 中央控制区 */
     .board-center { gap: 4px; }
-    .deck-info { font-size: 11px; padding: 3px 10px; }
-    .timer-bar-bg { width: 200px; height: 6px; }
-    .btn { padding: 6px 14px; font-size: 13px; }
+    .deck-info { font-size: 10px; padding: 2px 8px; }
+    .action-area { gap: 6px; }
+    .action-btns { gap: 6px; }
+    .timer-bar-bg { width: 140px; height: 5px; }
+    .btn { padding: 5px 12px; font-size: 12px; border-radius: 16px; }
+
+    /* 聊天抽屉 */
+    .chat-box { width: 240px; }
+    .chat-messages { font-size: 12px; padding: 8px; gap: 8px; }
+    .chat-bubble { padding: 6px 10px; font-size: 12px; }
+
+    /* 万化弹窗 */
+    .wanhua-modal-content { max-width: 320px; }
+    .combo-card-btn { padding: 8px 14px; min-width: 80px; }
+    .combo-card-btn .suit-icon { font-size: 24px; }
+    .combo-card-btn .suit-text { font-size: 11px; }
+    .wanhua-value-section input { width: 55px; font-size: 14px; }
+
+    /* 选将弹窗 */
+    .starter-card { width: 75px; height: 105px; }
+    .starter-card .starter-suit { font-size: 24px; }
+    .starter-card .starter-rank { font-size: 18px; }
+    .starter-card .starter-hp { font-size: 10px; }
+
+    /* 飘字 VFX 缩小 */
+    .vfx-popup { font-size: 22px; }
+
+    /* 大厅 */
+    .waiting-container { padding: 15px 20px; gap: 15px; }
+    .main-area { padding: 15px; border-radius: 15px; }
+    .players-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
+    .player-slot { height: 120px; border-radius: 12px; }
+    .player-slot .avatar { font-size: 32px; }
+    .room-header h2 { font-size: 20px; }
+    .room-code-display { font-size: 16px; padding: 6px 15px; }
 }
 
 /* ═══ 移动端聊天抽屉 ═══ */

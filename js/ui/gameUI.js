@@ -221,10 +221,10 @@ export function updateActionButtonUI() {
 
     const myHand = state.players[state.myPlayerId]?.hand;
     if (!myHand || G.selectedCardIndices.length === 0) {
-        btn.textContent = '🃏 等待选牌...';
+        btn.textContent = '出牌';
         btn.disabled = true;
         if (wanhuaBtn) wanhuaBtn.style.display = 'none';
-        G.declaredSuit = null; // 清空合体状态
+        G.declaredSuit = null;
         return;
     }
 
@@ -233,43 +233,37 @@ export function updateActionButtonUI() {
     const hasJoker = selectedCards.some(c => c.isJoker);
     const aCount = selectedCards.filter(c => c.rank === 'A' && !c.isJoker).length;
 
-    // ★ 动态万化按钮：恰好 1 张 A 时显示
+    // ★ 万化按钮：恰好 1 张 A 时显示，文字简洁
     if (wanhuaBtn) {
         wanhuaBtn.style.display = (aCount === 1 && !hasJoker) ? '' : 'none';
-        wanhuaBtn.textContent = G.declaredSuit ? `✨ ${G.declaredSuit}组合 (A=${G.aValue})` : '✨ 万化选项';
+        wanhuaBtn.textContent = G.declaredSuit ? `✨ ${G.declaredSuit}` : '万化';
     }
-    // 选中变化且未确认合体 → 清空旧合体状态
     if (aCount !== 1) G.declaredSuit = null;
 
-    // 纯 ♣（无 A）→ 护盾提示
     const isPureClub = nonJokers.length > 0 && nonJokers.every(c => c.suit === '♣') && aCount === 0;
 
     if (hasJoker) {
-        btn.textContent = '🃏 Joker 特殊行动';
+        btn.textContent = '出牌';
         btn.disabled = G.selectedTargetId < 0;
     } else if (isPureClub) {
         if (G.selectedTargetId >= 0) {
             document.querySelectorAll('.player-card.targeted').forEach(c => c.classList.remove('targeted'));
             G.selectedTargetId = -1;
         }
-        btn.textContent = '🛡️ 给自己加护盾';
+        btn.textContent = '出牌';
         btn.disabled = false;
     } else if (aCount === 1 && !G.declaredSuit) {
-        // ★ 有 A 但未合体 → 攻击按钮禁用，提示先点万化
-        btn.textContent = '⚠️ 请先点击【万化选项】合体';
+        btn.textContent = '出牌';
         btn.disabled = true;
     } else if (aCount === 1 && G.declaredSuit === '♣') {
-        // 合体为梅花 → 护盾
         if (G.selectedTargetId >= 0) {
             document.querySelectorAll('.player-card.targeted').forEach(c => c.classList.remove('targeted'));
             G.selectedTargetId = -1;
         }
-        btn.textContent = `🛡️ ${G.declaredSuit}护盾合体 (效能${calcComboValue(selectedCards)})`;
+        btn.textContent = '出牌';
         btn.disabled = false;
     } else {
-        btn.textContent = G.selectedTargetId >= 0
-            ? `⚔️ 发起攻击！${G.declaredSuit ? '(' + G.declaredSuit + '组合)' : ''}`
-            : '⚔️ 选择一个玩家，发起攻击';
+        btn.textContent = '出牌';
         btn.disabled = G.selectedTargetId < 0;
     }
 }
@@ -311,7 +305,8 @@ export function toggleCard(index, el) {
         G.selectedCardIndices.push(index);
         el.classList.add('selected');
     }
-    updateActionButtonUI();  // ★ 动态按钮文字
+    audioManager.play('click');  // ★ 选牌音效
+    updateActionButtonUI();
 }
 
 // ═══ 回合 UI ═══
@@ -378,7 +373,7 @@ export function executeAttack() {
 
     // ★ 有 A 但未合体 → 拦截，提示先点万化
     if (hasA && !G.declaredSuit) {
-        Toast.show('请先点击【万化选项】选择浸染花色！✨', 'error');
+        Toast.show('请先点击【万化】选择浸染花色！✨', 'error');
         return;
     }
 
@@ -449,17 +444,17 @@ export function openWanhuaModal() {
         if (!_wanhuaSelectedSuit) { Toast.show('请先选择一个花色！', 'error'); return; }
         const val = parseInt(valueInput.value);
         if (isNaN(val) || val < 1 || val > 13) { Toast.show('A 的点数必须在 1~13 之间！', 'error'); return; }
-        // ★ 暂存合体状态
         G.declaredSuit = _wanhuaSelectedSuit;
         G.aValue = val;
         modal.classList.remove('show');
-        updateActionButtonUI(); // 刷新按钮文字
+        audioManager.play('click');
+        updateActionButtonUI();
         Toast.show(`✨ 已合体为 ${_wanhuaSelectedSuit} 组合，A=${val} 点`, 'success');
     };
 
-    // 取消
     document.getElementById('wanhua-cancel-btn').onclick = () => {
         modal.classList.remove('show');
+        audioManager.play('click');
     };
 
     modal.classList.add('show');

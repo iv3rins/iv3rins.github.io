@@ -23,8 +23,9 @@ setProcessPlayCard(processPlayCard);
 // ═══ 主页 ═══
 
 function initHomePage() {
-    document.getElementById('btn-create-room').addEventListener('click', createRoom);
-    document.getElementById('btn-join-room').addEventListener('click', joinRoom);
+    const clickSound = () => audioManager.play('click');
+    document.getElementById('btn-create-room').addEventListener('click', () => { clickSound(); createRoom(); });
+    document.getElementById('btn-join-room').addEventListener('click', () => { clickSound(); joinRoom(); });
     initAvatarPicker();
 }
 
@@ -232,18 +233,20 @@ function hideLoading() {
 // ═══ 游戏初始化 ═══
 
 function initGamePage() {
-    document.getElementById('attack-btn').addEventListener('click', executeAttack);
-    // ★ 万化按钮
+    // ★ 按钮音效
+    const clickSound = () => audioManager.play('click');
+    document.getElementById('attack-btn').addEventListener('click', () => { clickSound(); executeAttack(); });
     const wanhuaBtn = document.getElementById('wanhua-btn');
     if (wanhuaBtn) wanhuaBtn.addEventListener('click', () => {
+        clickSound();
         import('./ui/gameUI.js').then(m => m.openWanhuaModal());
     });
-    document.getElementById('btn-game-chat-send').addEventListener('click', sendGameChat);
+    document.getElementById('btn-game-chat-send').addEventListener('click', () => { clickSound(); sendGameChat(); });
     document.getElementById('game-chat-input').addEventListener('keydown', e => {
         if (e.key === 'Enter') sendGameChat();
     });
-    document.getElementById('btn-restart').addEventListener('click', () => location.reload());
-    document.getElementById('btn-leave-room').addEventListener('click', leaveRoom);
+    document.getElementById('btn-restart').addEventListener('click', () => { clickSound(); location.reload(); });
+    document.getElementById('btn-leave-room').addEventListener('click', () => { clickSound(); leaveRoom(); });
     document.getElementById('btn-modal-ok').addEventListener('click', () => location.reload());
 }
 
