@@ -200,21 +200,29 @@ function startGame() {
         G.gameEngine.players[engineIdx].name = G.playerNames[lobbyIdx];
     });
 
-    Object.entries(G.playerToPeer).forEach(([lobbyIdxStr, peerId]) => {
-        const lobbyIdx = parseInt(lobbyIdxStr);
-        if (lobbyIdx === 0) return;
-        const engineIdx = indices.indexOf(lobbyIdx);
-        G.p2p.sendTo(peerId, {
-            type: 'GAME_START',
-            payload: { enginePlayerId: engineIdx, playerNames: G.gameEngine.players.map(p => p.name) }
-        });
-    });
-
     G.myPlayerId = 0;
     showPage('game');
-    addGameChat('system', '🎮 游戏开始！请先选择首发角色！⚔️');
-    // ★ Bug4: 广播初始状态（SELECTING_STARTER 阶段），所有人看到选将弹窗
-    broadcastSyncState();
+
+    import('./networkHandler.js').then(mod => {
+        // ★ 必须先同步一次状态给所有客户端，否则客户端看不到选将界面
+        Object.entries(G.playerToPeer).forEach(([lobbyIdxStr, peerId]) => {
+            const lobbyIdx = parseInt(lobbyIdxStr);
+            if (lobbyIdx === 0) return;
+            const engineIdx = indices.indexOf(lobbyIdx);
+            G.p2p.sendTo(peerId, {
+                type: 'GAME_START',
+                payload: { enginePlayerId: engineIdx, playerNames: G.gameEngine.players.map(p => p.name) }
+            });
+            // ★ 紧接着发送初始状态同步
+            G.p2p.sendTo(peerId, {
+                type: 'SYNC_STATE',
+                payload: mod.serializeState(G.gameEngine, engineIdx)
+            });
+        });
+        // 房主本地状态
+        G.currentState = mod.serializeState(G.gameEngine, 0);
+        mod.renderState(G.currentState);
+    });
 }
 
 function leaveRoom() {

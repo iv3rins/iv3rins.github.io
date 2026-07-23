@@ -188,13 +188,14 @@ export function broadcastSyncState() {
     if (!G.gameEngine) return;
     Object.entries(G.playerToPeer).forEach(([lobbyIdxStr, peerId]) => {
         const lobbyIdx = parseInt(lobbyIdxStr);
-        if (lobbyIdx === 0) return;
-        const engineIdx = Object.keys(G.engineToLobby).find(k => G.engineToLobby[k] === lobbyIdx);
-        G.p2p.sendTo(peerId, { type: 'SYNC_STATE', payload: serializeState(G.gameEngine, parseInt(engineIdx)) });
+        const engineIdx = (lobbyIdx === 0) ? 0 : Object.keys(G.engineToLobby).find(k => G.engineToLobby[k] === lobbyIdx);
+        if (lobbyIdx === 0) {
+            G.currentState = serializeState(G.gameEngine, 0);
+            renderState(G.currentState);
+        } else if (engineIdx !== undefined) {
+            G.p2p.sendTo(peerId, { type: 'SYNC_STATE', payload: serializeState(G.gameEngine, parseInt(engineIdx)) });
+        }
     });
-    const hostState = serializeState(G.gameEngine, 0);
-    G.currentState = hostState;
-    renderState(hostState);
 }
 
 export function broadcastGameOver() {
