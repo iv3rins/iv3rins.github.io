@@ -279,9 +279,11 @@ export function processPlayCard(attackerIdx, payload) {
         engine.playJoker(attacker, target, target.activeCharIndex, cards);
         addGameChat('system', attacker.name + ' 使用了 Joker！');
     } else if (isClub) {
+        console.log('[processPlayCard] ♣ 护盾路由 — attacker:', attacker.name, 'declaredSuit:', declaredSuit, 'aValue:', aValue, 'cards:', cards.map(c=>c.suit+c.rank));
         engine.playShield(attacker, cards, declaredSuit, aValue);
         addGameChat('system', attacker.name + ' 获得了护盾！🛡️');
     } else {
+        console.log('[processPlayCard] ⚔ 攻击路由 — attacker:', attacker.name, 'target:', engine.players[payload.targetPlayerId]?.name, 'declaredSuit:', declaredSuit, 'aValue:', aValue);
         const target = engine.players[payload.targetPlayerId];
         if (!target) throw new Error('无效的目标');
         engine.playAttack(attacker, target, cards, declaredSuit, aValue);

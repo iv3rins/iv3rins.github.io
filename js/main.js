@@ -156,11 +156,36 @@ function joinRoom() {
 
 // ═══ 等待大厅 ═══
 
-function initWaitingPage() {
-    document.getElementById('btn-copy-code').addEventListener('click', () => {
-        const code = document.getElementById('display-room-code').textContent;
-        navigator.clipboard.writeText(code).then(() => Toast.show('🐾 邀请码 ' + code + ' 复制成功！', 'success'));
+// ★ BUG4 修复：事件代理，避免按钮尚未渲染时绑定失败
+document.addEventListener('click', (e) => {
+    const copyBtn = e.target.closest('#btn-copy-code');
+    if (!copyBtn) return;
+    const roomCodeEl = document.getElementById('display-room-code');
+    const code = roomCodeEl ? roomCodeEl.textContent.trim() : '';
+    if (!code || code === '----') { Toast.show('请先生成邀请码', 'error'); return; }
+
+    const copyText = (str) => {
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(str);
+        }
+        // 降级：非 HTTPS 环境（局域网测试）
+        const ta = document.createElement('textarea');
+        ta.value = str; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); return Promise.resolve(); }
+        finally { document.body.removeChild(ta); }
+    };
+
+    copyText(code).then(() => {
+        Toast.show('🐾 邀请码 ' + code + ' 复制成功！', 'success');
+    }).catch((err) => {
+        console.error('复制失败:', err);
+        Toast.show('复制失败，请手动复制', 'error');
     });
+});
+
+function initWaitingPage() {
+    // ★ 复制按钮已改用全局事件代理，无需在此重新绑定
 
     document.getElementById('btn-start-game').addEventListener('click', () => {
         if (G.isHost) {

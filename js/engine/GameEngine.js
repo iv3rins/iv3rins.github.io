@@ -161,6 +161,7 @@ export class GameEngine {
 
         const activeChar = player.getActiveCharacter();
         activeChar.shield += totalShield;
+        console.log('[playShield] 护盾结算 — player:', player.name, 'addShield:', totalShield, 'totalShield:', activeChar.shield);
         this.lastAction = { type: 'shield', targetId: player.id, amount: totalShield };
         this._postPlayCleanup(player, player, cards);
     }
