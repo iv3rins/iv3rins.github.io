@@ -332,8 +332,26 @@ export function renderHand(cards) {
             }, delay);
         }
     });
-    // ★ 渲染后调用推荐提示
+    // ★ 渲染后调用推荐提示 + 强制重排
+    container.offsetHeight; // 读取布局属性，强制浏览器完成 reflow
     highlightRecommendedCards(cards);
+}
+
+// ═══ 全屏中央出牌播报 ═══
+export function playActionBroadcast(attackerName, targetName, suit, rank, actionType) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;pointer-events:none;';
+    const isRed = suit === '♦' || suit === '♥';
+    overlay.innerHTML = `
+        <div style="font-size:64px;font-weight:900;color:${isRed ? 'var(--suit-red)' : 'var(--suit-black)'};text-shadow:0 4px 12px rgba(0,0,0,.3);animation:broadcastPopIn 0.5s cubic-bezier(.34,1.56,.64,1) forwards">${suit}${rank}</div>
+        <div style="font-size:20px;color:var(--text-primary);font-weight:bold;margin-top:12px;animation: broadcastFadeIn 0.5s 0.2s ease both">【${attackerName}】对【${targetName}】${actionType === 'shield' ? '使用护盾' : '打出攻击'}！</div>
+    `;
+    document.body.appendChild(overlay);
+    setTimeout(() => {
+        overlay.style.transition = 'opacity 0.4s ease';
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.remove(), 400);
+    }, 1500);
 }
 
 /**

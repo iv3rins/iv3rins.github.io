@@ -250,6 +250,8 @@ function startGame() {
     const maxLives = (modeRadio && modeRadio.value === 'quick') ? 1 : 3;
 
     G.gameEngine = new GameEngine(count, maxLives);
+    // ★ 统一渲染出口：任何状态变更后自动触发 broadcastSyncState
+    G.gameEngine.onStateChange = () => broadcastSyncState();
     G.roundCount = 0;
     G.gameStarted = true;
 

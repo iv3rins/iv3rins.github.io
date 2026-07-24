@@ -28,6 +28,7 @@ export class GameEngine {
         this.phase = 'SELECTING_STARTER';  // SELECTING_STARTER | PLAYING | WAITING_FOR_JOKER | GAME_OVER
         this.dyingInfo = null;             // { playerId, charIndex, timestamp }
         this._disconnectTimers = {};       // playerId → setTimeout (30s 断线死亡)
+        this.onStateChange = null;         // ★ 统一渲染回调: (engine) => void
         
         this._initGame();
     }
@@ -337,6 +338,8 @@ export class GameEngine {
         if (attacker.hand.length === 0 || normals.length === 0) {
             this.drawCards(attacker, 3);
         }
+        // ★ 统一渲染出口
+        if (this.onStateChange) this.onStateChange(this);
     }
 
     nextTurn() {
