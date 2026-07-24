@@ -235,8 +235,8 @@ export class GameEngine {
                 }
             }
         }
-        // ♥ 红桃吸血
-        else if (attackSuit === '♥' && !isImmune) {
+        // ♥ 红桃吸血（不受免疫影响 — 吸血是攻击者自身效果）
+        if (attackSuit === '♥') {
             attackerChar.hp = Math.min(attackerChar.maxHp, attackerChar.hp + actualDamageDealt);
         }
 
