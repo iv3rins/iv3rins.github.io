@@ -18,45 +18,58 @@ export function renderWaitingLobby() {
     const grid = document.getElementById('players-grid');
     if (!grid) return;
     grid.innerHTML = '';
-    const indices = Object.keys(G.playerNames).map(Number).sort((a, b) => a - b);
+
+    // ★ 防御：从 ROOM_UPDATE 解析玩家（可能是对象而非数组）
+    const playerNames = G.playerNames || {};
+    const playerReady = G.playerReady || {};
+    const playerAvatars = G.playerAvatars || {};
+    const indices = Object.keys(playerNames).map(Number).sort((a, b) => a - b);
+    const totalPlayers = indices.length;
 
     indices.forEach(i => {
-        const name = G.playerNames[i];
+        const name = playerNames[i] || ('玩家' + (i + 1));
         const isHostSlot = i === 0;
         const isMe = i === G.myPlayerId;
-        const avatar = G.playerAvatars[i] || G.avatars[i % G.avatars.length];
+        const avatar = playerAvatars[i] || G.avatars[i % G.avatars.length];
+        const isReady = !!playerReady[i];
         const slot = document.createElement('div');
         slot.className = 'player-slot occupied';
         if (isHostSlot) slot.classList.add('host');
         slot.innerHTML = `
             ${isHostSlot
                 ? '<div class="status-badge host-badge">👑 房主</div>'
-                : `<div class="status-badge">${G.playerReady[i] ? '已准备' : '未准备'}</div>`}
+                : `<div class="status-badge">${isReady ? '已准备' : '未准备'}</div>`}
             <div class="avatar cute-bounce">${avatar}</div>
             <div class="name">${name}${isMe ? ' (你)' : ''}</div>
         `;
         grid.appendChild(slot);
     });
 
-    for (let i = indices.length; i < 4; i++) {
+    // 空座位占位（补至至少 4 个视觉槽位）
+    const emptySlots = Math.max(0, 4 - totalPlayers);
+    for (let i = 0; i < emptySlots; i++) {
         const slot = document.createElement('div');
         slot.className = 'player-slot empty';
         slot.innerHTML = '<div class="avatar">🪑</div><div class="name">等待加入...</div>';
         grid.appendChild(slot);
     }
 
+    // ★ 修复按钮文字：防御性计算，确保不会出现 (0/-1)
     const btn = document.getElementById('btn-start-game');
+    if (!btn) return;
+
     if (G.isHost) {
-        const nonHostReady = indices.filter(i => i !== 0).every(i => G.playerReady[i]);
-        const canStart = indices.length >= 2 && nonHostReady;
+        const nonHostReady = indices.filter(i => i !== 0 && playerReady[i]).length;
+        const nonHostTotal = Math.max(0, totalPlayers - 1); // ★ 防御：确保不为负
+        const canStart = totalPlayers >= 2 && [...indices].every(i => !!playerReady[i]);
         btn.textContent = canStart
-            ? `🚀 开始游戏 (${indices.length}人)`
-            : `⏳ 等待准备 (${indices.filter(i => i !== 0 && G.playerReady[i]).length}/${indices.length - 1})`;
+            ? `🚀 开始游戏 (${totalPlayers}人)`
+            : `⏳ 等待准备 (${nonHostReady}/${nonHostTotal})`;
         btn.disabled = !canStart;
-        btn.className = canStart ? 'btn btn-ready' : 'btn';
     } else {
-        btn.textContent = G.playerReady[G.myPlayerId] ? '✅ 已准备 (点击取消)' : '📦 点击准备';
+        // 非房主
+        const myReady = !!playerReady[G.myPlayerId];
+        btn.textContent = myReady ? '✅ 已准备 (点击取消)' : '📦 点击准备';
         btn.disabled = false;
-        btn.className = G.playerReady[G.myPlayerId] ? 'btn btn-ready' : 'btn';
     }
 }

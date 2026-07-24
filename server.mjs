@@ -171,11 +171,14 @@ wss.on('connection', (ws, req) => {
                 rooms.set(code, room);
                 currentRoom = room;
                 const pid = room.addPlayer(ws, msg.payload.playerName || '房主', msg.payload.avatar || '🐱');
+                // 1. 先告诉房主房间已创建
                 ws.send(JSON.stringify({
                     type: 'room_created',
                     payload: { roomCode: code, myPlayerId: pid, isHost: true }
                 }));
-                console.log(`[Room ${code}] 创建成功 — 房主:${pid}`);
+                // 2. ★ 立即广播 ROOM_UPDATE 让房主看到自己在座位里
+                room.broadcastToAll({ type: 'ROOM_UPDATE', payload: getRoomState(room) });
+                console.log(`[Room ${code}] 创建成功 — 房主:${pid} 名:${msg.payload.playerName}`);
                 break;
             }
 
@@ -222,6 +225,17 @@ wss.on('connection', (ws, req) => {
                 if (!currentRoom) break;
                 if (currentRoom.hostWs !== ws) {
                     ws.send(JSON.stringify({ type: 'ERROR', payload: { message: '只有房主可以开始游戏' } }));
+                    break;
+                }
+                // ★ 防御：检查人数 ≥ 2
+                if (currentRoom.players.size < 2) {
+                    ws.send(JSON.stringify({ type: 'ERROR', payload: { message: '至少需要 2 名玩家才能开始' } }));
+                    break;
+                }
+                // ★ 防御：检查所有人已准备
+                const allReady = [...currentRoom.players.values()].every(p => p.ready);
+                if (!allReady) {
+                    ws.send(JSON.stringify({ type: 'ERROR', payload: { message: '还有玩家未准备' } }));
                     break;
                 }
                 const maxLives = msg.payload.maxLives || 3;
@@ -302,10 +316,11 @@ wss.on('connection', (ws, req) => {
                 }
             }
 
-            // 空房间清理
+            // ★ 空房间清理：销毁并清空引用
             if (currentRoom.players.size === 0) {
                 rooms.delete(currentRoom.code);
                 console.log(`[Room ${currentRoom.code}] 房间销毁 (无玩家)`);
+                currentRoom = null;
             }
         }
     });
