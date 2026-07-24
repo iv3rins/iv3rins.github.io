@@ -316,6 +316,33 @@ export function renderHand(cards) {
         div.addEventListener('click', () => toggleCard(i, div));
         container.appendChild(div);
     });
+    // ★ 渲染后调用推荐提示
+    highlightRecommendedCards(cards);
+}
+
+/**
+ * ★ 系统推荐出牌：自动找出同花色或万化A，加上 gold 发光边框
+ */
+export function highlightRecommendedCards(cards) {
+    if (!G.currentState) return;
+    const me = G.currentState.players[G.myPlayerId];
+    if (!me || G.currentState.currentPlayerIndex !== G.myPlayerId) return;
+
+    const nonJokers = cards.filter(c => !c.isJoker);
+    const suitCounts = {};
+    nonJokers.forEach(c => { if (c.suit) suitCounts[c.suit] = (suitCounts[c.suit]||0)+1; });
+    const primarySuit = Object.entries(suitCounts).sort((a,b)=>b[1]-a[1])[0]?.[0];
+
+    const handEls = document.querySelectorAll('#hand-container .poker-card');
+    handEls.forEach(el => el.classList.remove('recommended'));
+
+    nonJokers.forEach((card, i) => {
+        const el = handEls[i];
+        if (!el) return;
+        if (card.rank === 'A' || card.suit === primarySuit) {
+            el.classList.add('recommended');
+        }
+    });
 }
 
 export function toggleCard(index, el) {
@@ -572,31 +599,38 @@ export function playCardFlyAnimation(attackerId, targetId, suit, rank) {
     const aRect = attackerCard.getBoundingClientRect();
     const tRect = targetCard.getBoundingClientRect();
 
+    // 起点：attacker 头像中心
+    const sx = aRect.left + aRect.width / 2;
+    const sy = aRect.top + aRect.height / 2;
+    // 终点：target 头像中心
+    const ex = tRect.left + tRect.width / 2;
+    const ey = tRect.top + tRect.height / 2;
+
     const flyCard = document.createElement('div');
     const isRed = suit === '♦' || suit === '♥';
     flyCard.className = 'flying-card';
     flyCard.style.background = isRed ? '#fff0f0' : '#f0f0ff';
     flyCard.style.color = isRed ? '#dc2626' : '#1e293b';
-    flyCard.style.left = (aRect.left + aRect.width / 2 - 26) + 'px';
-    flyCard.style.top = (aRect.top + aRect.height / 2 - 36) + 'px';
+    flyCard.style.left = (sx - 26) + 'px';
+    flyCard.style.top = (sy - 36) + 'px';
     flyCard.textContent = suit + rank;
+    // 注入终点坐标到 CSS 自定义属性
+    flyCard.style.setProperty('--fly-dx', (ex - sx) + 'px');
+    flyCard.style.setProperty('--fly-dy', (ey - sy) + 'px');
     document.body.appendChild(flyCard);
 
-    // ★ 强制重绘后启动飞行动画
-    flyCard.offsetWidth;
-    const dx = tRect.left + tRect.width / 2 - (aRect.left + aRect.width / 2);
-    const dy = tRect.top + tRect.height / 2 - (aRect.top + aRect.height / 2);
-    flyCard.style.transform = `translate(${dx}px, ${dy}px) scale(1.5) rotate(720deg)`;
+    // ★ requestAnimationFrame 触发 @keyframes cardFly
+    requestAnimationFrame(() => {
+        flyCard.style.animation = 'cardFly 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
+    });
 
-    // ★ 抵达目标时触发震动+销毁
+    // ★ 落地：震动 + 音效 + 销毁
     setTimeout(() => {
-        flyCard.classList.add('impact');
-        // 受击震动
         targetCard.classList.add('hit-shake');
         setTimeout(() => targetCard.classList.remove('hit-shake'), 500);
-        audioManager.play('attack');
-        setTimeout(() => flyCard.remove(), 400);
-    }, 400);
+        try { audioManager.play('attack'); } catch(e) {}
+        flyCard.remove();
+    }, 500);
 }
 
 // ═══ VFX: 飘字 / 受击 / 回血 ═══
