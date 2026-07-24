@@ -161,29 +161,28 @@ body {
 
 /* ═══ Apple Bento 网格布局 ═══ */
 .game-bento-layout {
-    flex: 1; width: calc(100% - 300px);
     display: grid;
-    grid-template-columns: minmax(200px, 240px) 1fr;
-    grid-template-rows: auto 1fr;
-    gap: 14px;
-    padding: 14px 20px;
-    pointer-events: none;
+    grid-template-columns: 250px 1fr 250px;
+    gap: 20px;
+    height: calc(100vh - 260px);
+    padding: 20px;
+    box-sizing: border-box;
 }
 .bento-panel {
-    background: var(--bg-panel, rgba(255,255,255,0.72));
-    backdrop-filter: var(--backdrop-blur, blur(24px));
-    -webkit-backdrop-filter: var(--backdrop-blur, blur(24px));
-    border: var(--border-panel, 1px solid rgba(255,255,255,0.6));
-    border-radius: var(--bento-radius, 24px);
-    padding: var(--bento-padding, 18px);
-    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    padding: 15px;
     overflow-y: auto;
-    box-shadow: 0 4px 24px rgba(0,0,0,.04);
+    pointer-events: auto;
 }
-#bento-opponents { grid-row: 1 / 3; }
-#bento-self { grid-row: 2; }
+/* 中央战斗区高亮 */
 .bento-battle {
-    grid-column: 2; grid-row: 1 / 3;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 204, 0, 0.3);
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
 }
