@@ -89,6 +89,7 @@ export class P2PManager {
 
             this.hostConnection.on('open', () => {
                 console.log('%c[P2P] 成功连接到房主！', 'color:#2ecc71');
+                this._retryCount = 0;  // 重置重试计数
                 this._startHeartbeat();
                 // 清除重连定时器
                 if (this._reconnectTimer) { clearTimeout(this._reconnectTimer); this._reconnectTimer = null; }
@@ -115,8 +116,16 @@ export class P2PManager {
     }
 
     _scheduleReconnect() {
-        if (this._reconnectTimer) return; // 已有重连在排队
-        console.log('[P2P] 3 秒后自动重连...');
+        this._retryCount = (this._retryCount || 0) + 1;
+        if (this._retryCount > 3) {
+            console.error('[P2P] 重试 3 次均失败，放弃重连');
+            if (this.callbacks.onConnectionFailed) {
+                this.callbacks.onConnectionFailed(this._retryCount);
+            }
+            return;
+        }
+        if (this._reconnectTimer) return;
+        console.log(`[P2P] 第 ${this._retryCount}/3 次重连，3 秒后...`);
         this._reconnectTimer = setTimeout(() => {
             this._reconnectTimer = null;
             if (this._roomId) this._doJoin(this._roomId);

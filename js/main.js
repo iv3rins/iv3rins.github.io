@@ -23,6 +23,16 @@ setProcessPlayCard(processPlayCard);
 // ═══ 主页 ═══
 
 function initHomePage() {
+    // ★ 首次用户交互时解锁浏览器音频播放权限
+    const unlockAudio = () => {
+        const s = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+        s.volume = 0; s.play().then(() => s.remove()).catch(() => {});
+        document.removeEventListener('click', unlockAudio);
+        document.removeEventListener('keydown', unlockAudio);
+    };
+    document.addEventListener('click', unlockAudio, { once: true });
+    document.addEventListener('keydown', unlockAudio, { once: true });
+
     const clickSound = () => audioManager.play('click');
     document.getElementById('btn-create-room').addEventListener('click', () => { clickSound(); createRoom(); });
     document.getElementById('btn-join-room').addEventListener('click', () => { clickSound(); joinRoom(); });
@@ -166,6 +176,9 @@ function joinRoom() {
     G.p2p.callbacks.onHostDisconnect = () => showModal('房主已断开连接，房间已解散。');
     G.p2p.callbacks.onPeerError = (err) => {
         if (err.type === 'peer-unavailable') showModal('找不到该房间，请检查邀请码！');
+    };
+    G.p2p.callbacks.onConnectionFailed = () => {
+        showModal('📡 官方公共网络拥挤，连接断开，请刷新页面重试');
     };
 
     G.p2p.joinRoom(code);
