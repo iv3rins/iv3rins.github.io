@@ -10,7 +10,7 @@ import { validatePlay, validateAceSuit } from './GameValidator.js';
 
 const SUITS = ['♦', '♣', '♥', '♠'];
 const NORMAL_RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10'];
-const MAX_HAND_SIZE = 7;
+const MAX_HAND_SIZE = 7; // ★ 手牌上限已设定为 7
 
 export class GameEngine {
     constructor(numPlayers, maxLives = 3) {
@@ -22,20 +22,24 @@ export class GameEngine {
         this.currentPlayerIndex = 0;
         this.isGameOver = false;
         this.winner = null;
-        // ★ Bug3+4: 阶段状态机
+        
+        // 阶段状态机
         this.phase = 'SELECTING_STARTER';  // SELECTING_STARTER | PLAYING | WAITING_FOR_JOKER | GAME_OVER
         this.dyingInfo = null;             // { playerId, charIndex, timestamp }
-        this._disconnectTimers = {};       // ★ playerId → setTimeout (30s 断线死亡)
+        this._disconnectTimers = {};       // playerId → setTimeout (30s 断线死亡)
+        
         this._initGame();
     }
 
-    /** ★ 玩家断线：30 秒内未重连则淘汰 */
+    /** 玩家断线：30 秒内未重连则淘汰 */
     startDisconnectTimer(playerId) {
         if (this._disconnectTimers[playerId]) return;
         const player = this.players[playerId];
         if (!player || player.isEliminated) return;
+        
         player._disconnected = true;
         console.log('[Engine] 玩家断线 — player:', playerId, '30s倒计时');
+        
         this._disconnectTimers[playerId] = setTimeout(() => {
             console.log('[Engine] 断线超时，淘汰玩家 — player:', playerId);
             this.killPlayer(playerId);
@@ -43,7 +47,7 @@ export class GameEngine {
         }, 30000);
     }
 
-    /** ★ 玩家重连：清除死亡倒计时 */
+    /** 玩家重连：清除死亡倒计时 */
     cancelDisconnectTimer(playerId) {
         if (this._disconnectTimers[playerId]) {
             clearTimeout(this._disconnectTimers[playerId]);
@@ -54,7 +58,7 @@ export class GameEngine {
         console.log('[Engine] 玩家重连 — player:', playerId);
     }
 
-    /** ★ 强制淘汰玩家 */
+    /** 强制淘汰玩家 */
     killPlayer(playerId) {
         const player = this.players[playerId];
         if (!player || player.isEliminated) return;
@@ -70,17 +74,19 @@ export class GameEngine {
         const deckCount = Math.ceil(this.numPlayers / 4);
         this._generateDeck(deckCount);
         this._dealCharacters();
+        // 初始发5张牌（打牌过程最高可补到7张）
         this.players.forEach(p => this.drawCards(p, 5));
-        // ★ Bug4: 不设置 activeCharIndex，等所有玩家选将
+        
         this.currentPlayerIndex = Math.floor(Math.random() * this.numPlayers);
     }
 
-    // ★ Bug4: 选将
+    // 选将
     selectStarter(playerId, charIndex) {
         if (this.phase !== 'SELECTING_STARTER') return { ok: false, error: '当前不是选将阶段' };
         const player = this.players[playerId];
         if (!player) return { ok: false, error: '无效玩家' };
         if (player.starterSelected) return { ok: false, error: '已选过将' };
+        
         if (player.selectStarter(charIndex)) {
             // 检查是否所有人都选完了
             if (this.players.every(p => p.starterSelected)) {
@@ -91,13 +97,14 @@ export class GameEngine {
         return { ok: false, error: '无效角色索引' };
     }
 
-    // ★ Bug3: Joker 救援
+    // Joker 救援
     rescueWithJoker(rescuerId, jokerCardIdx) {
         if (this.phase !== 'WAITING_FOR_JOKER' || !this.dyingInfo) {
             return { ok: false, error: '当前无人濒死' };
         }
         const rescuer = this.players[rescuerId];
         if (!rescuer || rescuer.isEliminated) return { ok: false, error: '无效救援者' };
+        
         const jokerCard = rescuer.hand[jokerCardIdx];
         if (!jokerCard || !jokerCard.isJoker) return { ok: false, error: '请选择 Joker' };
 
@@ -105,10 +112,10 @@ export class GameEngine {
         const targetChar = target.characters[this.dyingInfo.charIndex];
         if (!targetChar.isDying) return { ok: false, error: '目标已脱离濒死' };
 
-        // 移除 Joker
+        // 移除 Joker 并触发救援
         rescuer.hand.splice(jokerCardIdx, 1);
         this.discardPile.push(jokerCard);
-        // 救援：回复 50% 最大血量
+        
         targetChar.rescue(Math.floor(targetChar.maxHp / 2));
 
         this.phase = 'PLAYING';
@@ -116,17 +123,20 @@ export class GameEngine {
         const rescuerName = rescuer.name || '玩家' + rescuer.id;
         this.dyingInfo = null;
         this.lastAction = { type: 'rescue', targetId: target.id, amount: targetChar.hp, rescuerId };
+        
         return { ok: true, rescuedName, rescuerName };
     }
 
-    // ★ Bug3: 濒死超时，真正死亡
+    // 濒死超时，真正判定死亡
     resolveDying() {
         if (this.phase !== 'WAITING_FOR_JOKER' || !this.dyingInfo) return { ok: false };
         const target = this.players[this.dyingInfo.playerId];
         const targetChar = target.characters[this.dyingInfo.charIndex];
+        
         targetChar.die();
         this.phase = 'PLAYING';
         this.dyingInfo = null;
+        
         target.checkElimination();
         this.checkWinCondition();
         return { ok: true, playerId: target.id };
@@ -152,7 +162,6 @@ export class GameEngine {
                 const randomSuit = SUITS[Math.floor(Math.random() * SUITS.length)];
                 p.characters.push(new Character(rank, randomSuit, this.maxLives));
             });
-            // ★ Bug4: 不设置 activeCharIndex，等玩家选将（Player 构造函数已设为 -1）
         });
     }
 
@@ -182,7 +191,6 @@ export class GameEngine {
 
     /**
      * ♣ 梅花护盾 — 对自己使用
-     * ★ 浸染机制：declaredSuit='♣' 即护盾，aValue 为 A 的自定义点数
      */
     playShield(player, cards, declaredSuit = null, aValue = null) {
         const validation = validatePlay(cards, declaredSuit);
@@ -191,32 +199,31 @@ export class GameEngine {
         const isShield = (declaredSuit === '♣') || (!validation.hasA && validation.primarySuit === '♣');
         if (!isShield) throw new Error('只有梅花牌才能用于护盾');
 
-        // ★ [impeccable] 类型守卫：确保 totalShield 为安全整数
         let totalShield = validation.normalCards.reduce((sum, c) => {
             const v = Number(c.value) || 0;
             return sum + v;
         }, 0);
+        
         if (validation.hasA) totalShield += (Number(aValue) || 1);
-        totalShield = Math.max(0, Math.floor(totalShield)); // NaN/负数兜底
+        totalShield = Math.max(0, Math.floor(totalShield));
 
         const activeChar = player.getActiveCharacter();
         if (!activeChar) throw new Error('[Engine] playShield: activeChar 为空');
+        
         activeChar.shield = (Number(activeChar.shield) || 0) + totalShield;
 
-        console.log('[Engine] playShield — player:', player.name, 'addShield:', totalShield, 'totalShield:', activeChar.shield, 'cards:', cards.map(c=>c.suit+c.rank+'='+c.value));
+        console.log('[Engine] playShield — player:', player.name, 'addShield:', totalShield, 'totalShield:', activeChar.shield);
         this.lastAction = { type: 'shield', targetId: player.id, amount: totalShield };
         this._postPlayCleanup(player, player, cards);
     }
 
     /**
      * 执行攻击出牌
-     * ★ 浸染机制重构：信任 declaredSuit + aValue，不再二次校验
      */
     playAttack(attacker, target, cards, declaredSuit = null, aValue = null) {
         const validation = validatePlay(cards, declaredSuit);
         if (!validation.valid) throw new Error(validation.error);
 
-        // ★ 伤害 = 普通牌点数总和 + aValue（有 A 时用自定义值）
         let totalDamage = validation.normalCards.reduce((sum, c) => sum + c.value, 0);
         if (validation.hasA) totalDamage += (aValue || 1);
 
@@ -237,7 +244,7 @@ export class GameEngine {
         const ignoreShield = (attackSuit === '♣' && isImmune);
         const actualDamageDealt = targetChar.takeDamage(finalDamage, ignoreShield);
 
-        // ★ Bug3: 濒死检测 — hp=0 但未死
+        // 濒死检测
         if (targetChar.isDying) {
             this.phase = 'WAITING_FOR_JOKER';
             this.dyingInfo = {
@@ -247,17 +254,15 @@ export class GameEngine {
             };
         }
 
-        // ♦ 方块：五谷丰登 — 摸牌总数 = 最终伤害值
+        // ♦ 方块：五谷丰登
         if (attackSuit === '♦' && !isImmune) {
             let remaining = finalDamage;
             const alivePlayers = this.players.filter(p => !p.isEliminated);
-            if (alivePlayers.length === 0) { /* no one to draw */ }
-            else {
-                // 从攻击者开始，按回合顺序循环
+            if (alivePlayers.length > 0) {
                 const startIdx = this.players.indexOf(attacker);
                 let idx = startIdx;
                 let loops = 0;
-                const maxLoops = alivePlayers.length * 3; // 安全上限
+                const maxLoops = alivePlayers.length * 3; 
                 while (remaining > 0 && loops < maxLoops) {
                     loops++;
                     const p = this.players[idx];
@@ -265,13 +270,13 @@ export class GameEngine {
                         this.drawCards(p, 1);
                         remaining--;
                     }
-                    // 全场手牌都满了 → 终止
                     if (alivePlayers.every(ap => ap.hand.length >= MAX_HAND_SIZE)) break;
                     idx = (idx + 1) % this.numPlayers;
                 }
             }
         }
-        // ♥ 红桃吸血（不受免疫影响 — 吸血是攻击者自身效果）
+        
+        // ♥ 红桃吸血
         if (attackSuit === '♥') {
             attackerChar.hp = Math.min(attackerChar.maxHp, attackerChar.hp + actualDamageDealt);
         }
@@ -299,17 +304,20 @@ export class GameEngine {
     _postPlayCleanup(attacker, target, cardsPlayed) {
         attacker.removeCardsFromHand(cardsPlayed);
         this.discardPile.push(...cardsPlayed);
-        // ★ Bug3: 濒死时暂停淘汰判定和回合推进
+        
         if (this.phase === 'WAITING_FOR_JOKER') return;
+        
         target.checkElimination();
         this.checkWinCondition();
         if (this.isGameOver) return;
-        if (attacker.needsReplenish()) this.drawCards(attacker, 3);
+        
+        // ★ BUG修复：使用 MAX_HAND_SIZE 常量补牌
+        const toDraw = Math.max(0, MAX_HAND_SIZE - attacker.hand.length);
+        if (toDraw > 0) this.drawCards(attacker, toDraw);
     }
 
     nextTurn() {
-        if (this.isGameOver) return;
-        if (this.phase !== 'PLAYING') return; // ★ Bug3/4: 非 PLAYING 阶段不推进
+        if (this.isGameOver || this.phase !== 'PLAYING') return;
         do {
             this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.numPlayers;
         } while (this.players[this.currentPlayerIndex].isEliminated);
