@@ -93,9 +93,7 @@ export class UIManager {
                 div.innerHTML = `<span>${card.suit}</span><span>${card.rank}</span>`;
             }
 
-            div.addEventListener('click', () => {
-                if (window.__toggleCard) window.__toggleCard(i, div);
-            });
+            div.addEventListener('click', () => this._onCardClick(i, div));
             container.appendChild(div);
         });
 
@@ -180,12 +178,40 @@ export class UIManager {
 
     // ═══ 辅助 ═══
 
-    /** 显示/隐藏确定取消面板 */
+    /** 显示/隐藏确定取消面板 + 按钮状态 */
     toggleActionPanel(show) {
         const panel = document.getElementById('action-panel');
         if (!panel) return;
         if (show) panel.classList.remove('hidden');
-        else panel.classList.add('hidden');
+        else {
+            panel.classList.add('hidden');
+            this._updateConfirmButton(0);
+        }
+    }
+
+    /** 手牌点击：toggle selected → 更新按钮 */
+    _onCardClick(index, el) {
+        el.classList.toggle('selected');
+        const count = document.querySelectorAll('#my-hand-cards .apple-card.selected').length;
+        const panel = document.getElementById('action-panel');
+        if (panel) {
+            if (count > 0) panel.classList.remove('hidden');
+            else panel.classList.add('hidden');
+        }
+        this._updateConfirmButton(count);
+    }
+
+    /** 强制更新确认按钮 disabled 状态 + 文字 */
+    _updateConfirmButton(selectedCount) {
+        const btn = document.getElementById('btn-confirm');
+        if (!btn) return;
+        if (selectedCount > 0) {
+            btn.disabled = false;
+            btn.textContent = `出牌 (${selectedCount})`;
+        } else {
+            btn.disabled = true;
+            btn.textContent = '请选牌';
+        }
     }
 
     /** 渲染牌堆信息 */

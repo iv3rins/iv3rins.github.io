@@ -312,18 +312,46 @@ body {
     display: flex; gap: 30px;
     pointer-events: auto; z-index: 120;
 }
-#action-panel button {
-    width: 100px; height: 100px;
-    border-radius: 50%;
-    font-size: 20px; font-weight: 900;
-    border: 4px solid rgba(255,255,255,.3);
-    cursor: pointer; font-family: inherit;
-    box-shadow: 0 5px 15px rgba(0,0,0,.5);
-    transition: transform .1s;
+/* ★ 确认按钮 — 禁用态（死灰） */
+#btn-confirm {
+    width: 120px; height: 50px;
+    border-radius: 25px;
+    font-size: 18px; font-weight: 900;
+    border: none; outline: none;
+    background: #444;
+    color: #888;
+    cursor: not-allowed;
+    opacity: 0.5;
+    box-shadow: none;
+    transition: all 0.2s ease-in-out;
+    font-family: inherit;
 }
-#action-panel button:active { transform: scale(.9); }
-#btn-confirm { background: radial-gradient(circle, #e53935, #b71c1c); color: #fff; }
-#btn-cancel { background: radial-gradient(circle, #43a047, #1b5e20); color: #fff; }
+/* ★ 确认按钮 — 激活态（血红渐变发光） */
+#btn-confirm:not(:disabled) {
+    background: linear-gradient(135deg, #ff3b30, #d32f2f);
+    color: #ffffff;
+    cursor: pointer;
+    opacity: 1;
+    box-shadow: 0 4px 20px rgba(255,59,48,0.65);
+    transform: scale(1.05);
+}
+#btn-confirm:not(:disabled):active {
+    transform: scale(0.95);
+}
+/* 取消按钮 */
+#btn-cancel {
+    width: 100px; height: 50px;
+    border-radius: 25px;
+    font-size: 16px; font-weight: 700;
+    border: 2px solid rgba(255,255,255,.2);
+    background: rgba(255,255,255,.08);
+    color: #ccc;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+}
+#btn-cancel:hover { background: rgba(255,255,255,.15); }
+#btn-cancel:active { transform: scale(0.95); }
 .hidden { display: none !important; }
 
 #page-game:not(.spectator-mode) .spectator-notice { display:none; }
