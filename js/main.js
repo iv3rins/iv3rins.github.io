@@ -263,22 +263,12 @@ function startGame() {
     // ★ 同步广播初始状态（含客户端 SYNC_STATE + 房主本地渲染）
     broadcastSyncState();
 
-    // ★ 兜底：确保房主本地状态必定渲染（即使 broadcastSyncState 因某些原因静默失败）
+    // ★ 兜底：确保房主本地状态必定渲染
     if (!G.currentState) {
         console.warn('[startGame] broadcastSyncState 未设置 G.currentState，手动兜底');
-        G.currentState = {
-            players: G.gameEngine.players.map((p, i) => ({
-                id: p.id, name: p.name || ('玩家' + (p.id + 1)),
-                characters: p.characters.map(c => ({ rank: c.rank, suit: c.suit, maxHp: c.maxHp, hp: c.hp, shield: c.shield, isDead: c.isDead, isDying: c.isDying })),
-                activeCharIndex: p.activeCharIndex, starterSelected: p.starterSelected,
-                handCount: p.hand.length, isEliminated: p.isEliminated,
-                hand: (i === 0) ? p.hand.map(c => ({ suit: c.suit, rank: c.rank, isJoker: c.isJoker, value: c.value })) : null,
-            })),
-            currentPlayerIndex: G.gameEngine.currentPlayerIndex, deckCount: G.gameEngine.deck.length,
-            isGameOver: false, winner: null, myPlayerId: 0, roundCount: G.roundCount,
-            playerAvatars: G.playerAvatars, lastAction: null,
-            phase: G.gameEngine.phase, dyingInfo: null,
-        };
+        G.currentState = G.gameEngine.getMaskedState(0);
+        G.currentState.playerAvatars = G.playerAvatars;
+        G.currentState.roundCount = G.roundCount;
         renderState(G.currentState);
     }
 }
@@ -319,19 +309,22 @@ function initGamePage() {
     if (tutOk) tutOk.addEventListener('click', () => { clickSound(); document.getElementById('modal-tutorial').classList.remove('show'); });
 }
 
-// ═══ 启动 ═══
-
-document.addEventListener('DOMContentLoaded', () => {
+// ═══ 启动 (module脚本是defer的，DOMContentLoaded可能已触发) ═══
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAll);
+} else {
+    initAll();
+}
+function initAll() {
     try { initHomePage(); } catch(e) { console.error('initHomePage:', e); }
     try { initWaitingPage(); } catch(e) { console.error('initWaitingPage:', e); }
     try { initGamePage(); } catch(e) { console.error('initGamePage:', e); }
     try { initFullscreenBtn(); } catch(e) { console.error('initFullscreenBtn:', e); }
     try { initChatDrawer(); } catch(e) { console.error('initChatDrawer:', e); }
-    // Visible marker to confirm init ran
     const logo = document.getElementById('avatar-preview');
     if (logo) logo.title = 'PokeWar ready';
     console.log('🐾 PokeWar 初始化完成！');
-});
+}
 
 // ═══ 全屏按钮 ═══
 

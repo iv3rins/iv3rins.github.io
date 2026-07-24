@@ -355,4 +355,35 @@ export class GameEngine {
             this.isGameOver = true;
         }
     }
+
+    /** ★ P2P 状态脱敏：为目标玩家隐藏其他人的手牌 */
+    getMaskedState(forPlayerId) {
+        const state = {
+            players: this.players.map((p, i) => ({
+                id: p.id, name: p.name || ('玩家' + (p.id + 1)),
+                characters: p.characters.map(c => ({
+                    rank: c.rank, suit: c.suit, maxHp: c.maxHp,
+                    hp: c.hp, shield: c.shield, isDead: c.isDead, isDying: c.isDying,
+                    lives: c.lives, maxLives: c.maxLives,
+                })),
+                activeCharIndex: p.activeCharIndex,
+                starterSelected: p.starterSelected,
+                handCount: p.hand.length,
+                isEliminated: p.isEliminated,
+                // ★ 仅目标玩家能看到自己的真实手牌
+                hand: (i === forPlayerId) ? p.hand.map(c => ({
+                    suit: c.suit, rank: c.rank, isJoker: c.isJoker, value: c.value,
+                })) : Array(p.hand.length).fill({ isHidden: true }),
+            })),
+            currentPlayerIndex: this.currentPlayerIndex,
+            deckCount: this.deck.length,
+            isGameOver: this.isGameOver,
+            winner: this.winner ? { id: this.winner.id, name: this.winner.name } : null,
+            myPlayerId: forPlayerId,
+            phase: this.phase,
+            dyingInfo: this.dyingInfo,
+            lastAction: this.lastAction || null,
+        };
+        return state;
+    }
 }

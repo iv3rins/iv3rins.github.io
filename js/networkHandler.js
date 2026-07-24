@@ -187,17 +187,17 @@ export function broadcastLobbyState() {
 
 export function broadcastSyncState() {
     if (!G.gameEngine) return;
-    // 1. 广播给所有客户端
+    // 1. 给每个客户端发送专属脱敏状态
     Object.entries(G.playerToPeer).forEach(([lobbyIdxStr, peerId]) => {
         const lobbyIdx = parseInt(lobbyIdxStr);
         if (lobbyIdx === 0) return;
         const engineIdx = Object.keys(G.engineToLobby).find(k => G.engineToLobby[k] === lobbyIdx);
         if (engineIdx !== undefined) {
-            G.p2p.sendTo(peerId, { type: 'SYNC_STATE', payload: serializeState(G.gameEngine, parseInt(engineIdx)) });
+            G.p2p.sendTo(peerId, { type: 'SYNC_STATE', payload: G.gameEngine.getMaskedState(parseInt(engineIdx)) });
         }
     });
-    // 2. ★ 房主本地状态始终刷新
-    G.currentState = serializeState(G.gameEngine, 0);
+    // 2. 房主本地状态：用未经脱敏的完整状态渲染自己
+    G.currentState = G.gameEngine.getMaskedState(0);
     console.log('[broadcastSyncState] phase:', G.currentState.phase, 'hand:', G.currentState.players[0]?.hand?.length, 'starterSelected:', G.currentState.players[0]?.starterSelected);
     renderState(G.currentState);
 }
