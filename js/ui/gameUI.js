@@ -563,6 +563,42 @@ function forceRandomPlay() {
     }
 }
 
+// ═══ 飞牌暴击动效 (Choreography) ═══
+export function playCardFlyAnimation(attackerId, targetId, suit, rank) {
+    const attackerCard = document.querySelector(`.player-card[data-player-id="${attackerId}"]`);
+    const targetCard = document.querySelector(`.player-card[data-player-id="${targetId}"]`);
+    if (!attackerCard || !targetCard) return;
+
+    const aRect = attackerCard.getBoundingClientRect();
+    const tRect = targetCard.getBoundingClientRect();
+
+    const flyCard = document.createElement('div');
+    const isRed = suit === '♦' || suit === '♥';
+    flyCard.className = 'flying-card';
+    flyCard.style.background = isRed ? '#fff0f0' : '#f0f0ff';
+    flyCard.style.color = isRed ? '#dc2626' : '#1e293b';
+    flyCard.style.left = (aRect.left + aRect.width / 2 - 26) + 'px';
+    flyCard.style.top = (aRect.top + aRect.height / 2 - 36) + 'px';
+    flyCard.textContent = suit + rank;
+    document.body.appendChild(flyCard);
+
+    // ★ 强制重绘后启动飞行动画
+    flyCard.offsetWidth;
+    const dx = tRect.left + tRect.width / 2 - (aRect.left + aRect.width / 2);
+    const dy = tRect.top + tRect.height / 2 - (aRect.top + aRect.height / 2);
+    flyCard.style.transform = `translate(${dx}px, ${dy}px) scale(1.5) rotate(720deg)`;
+
+    // ★ 抵达目标时触发震动+销毁
+    setTimeout(() => {
+        flyCard.classList.add('impact');
+        // 受击震动
+        targetCard.classList.add('hit-shake');
+        setTimeout(() => targetCard.classList.remove('hit-shake'), 500);
+        audioManager.play('attack');
+        setTimeout(() => flyCard.remove(), 400);
+    }, 400);
+}
+
 // ═══ VFX: 飘字 / 受击 / 回血 ═══
 
 export function showDamageFloat(playerId, amount) {

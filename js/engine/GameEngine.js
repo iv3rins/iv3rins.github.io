@@ -286,8 +286,10 @@ export class GameEngine {
                 while (remaining > 0 && loops < alivePlayers.length * 3) {
                     loops++;
                     const p = this.players[idx];
-                    if (!p.isEliminated && p.hand.length < MAX_HAND_SIZE) { this.drawCards(p, 1); remaining--; }
-                    if (alivePlayers.every(ap => ap.hand.length >= MAX_HAND_SIZE)) break;
+                    // ★ 已打出但未扣除的牌不计入手牌上限
+                    const effectiveCount = p.hand.length - (p.id === attacker.id ? cards.length : 0);
+                    if (!p.isEliminated && effectiveCount < MAX_HAND_SIZE) { this.drawCards(p, 1); remaining--; }
+                    if (alivePlayers.every(ap => (ap.hand.length - (ap.id === attacker.id ? cards.length : 0)) >= MAX_HAND_SIZE)) break;
                     idx = (idx + 1) % this.numPlayers;
                 }
             }

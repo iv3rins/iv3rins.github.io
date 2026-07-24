@@ -30,6 +30,16 @@ function initHomePage() {
         clickSound();
         document.getElementById('modal-tutorial').classList.add('show');
     });
+    document.getElementById('btn-toggle-theme').addEventListener('click', () => {
+        clickSound();
+        const cur = document.documentElement.getAttribute('data-theme');
+        const next = cur === 'dark' ? '' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('pokeWarTheme', next);
+    });
+    // ★ 页面加载时恢复主题
+    const savedTheme = localStorage.getItem('pokeWarTheme');
+    if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
     initAvatarPicker();
 }
 
