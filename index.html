@@ -83,18 +83,24 @@
         </div>
     </div>
 
-    <!-- 游戏对局 -->
+    <!-- 游戏对局 — Apple Bento 网格布局 -->
     <div class="page-view" id="page-game">
-        <!-- ★ 顶层：对手头像与出牌展示区 -->
-        <div id="battlefield">
-            <div id="opponents-container"></div>
-            <div id="deck-info">🎴 牌堆: -- | 回合: --</div>
-            <button class="btn btn-ghost" id="wanhua-btn" style="display:none">✨ 万化</button>
+        <div class="game-bento-layout">
+            <!-- 左上：对手仪表盘 -->
+            <div class="bento-panel" id="bento-opponents"></div>
+
+            <!-- 右上：战场信息 + 万化按钮 -->
+            <div class="bento-panel bento-battle" id="battlefield">
+                <div id="deck-info">🎴 牌堆: -- | 回合: --</div>
+                <button class="btn btn-ghost" id="wanhua-btn" style="display:none">✨ 万化</button>
+            </div>
+
+            <!-- 左下：自己状态 -->
+            <div class="bento-panel" id="bento-self"></div>
         </div>
 
-        <!-- ★ 底层：玩家专属操作台 -->
+        <!-- ★ 底部：手牌 + 浮动操作面板 -->
         <div id="my-dashboard">
-            <div id="my-avatar-area"></div>
             <div id="my-hand-cards"></div>
             <div id="action-panel" class="hidden">
                 <button id="btn-confirm">确定</button>

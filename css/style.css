@@ -157,7 +157,59 @@ body {
 
 /* ═══ 游戏对局 ═══ */
 #page-game { display:none; }
-#page-game.active { display:flex; }
+#page-game.active { display:flex; flex-direction:column; }
+
+/* ═══ Apple Bento 网格布局 ═══ */
+.game-bento-layout {
+    flex: 1; width: calc(100% - 300px);
+    display: grid;
+    grid-template-columns: minmax(200px, 240px) 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 14px;
+    padding: 14px 20px;
+    pointer-events: none;
+}
+.bento-panel {
+    background: var(--bg-panel, rgba(255,255,255,0.72));
+    backdrop-filter: var(--backdrop-blur, blur(24px));
+    -webkit-backdrop-filter: var(--backdrop-blur, blur(24px));
+    border: var(--border-panel, 1px solid rgba(255,255,255,0.6));
+    border-radius: var(--bento-radius, 24px);
+    padding: var(--bento-padding, 18px);
+    pointer-events: auto;
+    overflow-y: auto;
+    box-shadow: 0 4px 24px rgba(0,0,0,.04);
+}
+#bento-opponents { grid-row: 1 / 3; }
+#bento-self { grid-row: 2; }
+.bento-battle {
+    grid-column: 2; grid-row: 1 / 3;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+}
+
+/* ── Bento 玩家卡片 ── */
+.bento-card {
+    background: var(--card-bg, rgba(255,255,255,0.75));
+    border: var(--card-border, 1px solid rgba(0,0,0,.08));
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 10px;
+    text-align: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,.04);
+    transition: transform .15s ease;
+    position: relative;
+}
+.bento-card.targetable:hover { transform: translateY(-4px); }
+.bento-card.is-self { border: 2px solid var(--color-primary, #007aff); }
+.bento-avatar { font-size: 36px; margin-bottom: 4px; }
+.bento-name { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+.bento-role { font-size: 16px; font-weight: 900; margin: 4px 0; }
+.bento-hp { font-size: 11px; color: var(--text-secondary); }
+.bento-bar { height: 6px; border-radius: 3px; background: rgba(0,0,0,.06); margin-top: 6px; position: relative; overflow: hidden; }
+.bento-hp-bar { height: 100%; background: var(--color-hp, #ff3b30); transition: width .3s ease; border-radius: 3px; }
+.bento-shield-bar { height: 100%; position: absolute; top:0; left:0; background: var(--color-shield, #007aff); opacity: .8; transition: width .3s ease; }
+.bento-hand-count { position: absolute; bottom: -6px; right: -6px; background: var(--text-primary); color: #fff; border-radius: 50%; width: 20px; height: 20px; line-height: 20px; font-size: 10px; font-weight: 700; }
 
 /* ── 顶层：战场/对手区 ── */
 #battlefield {
@@ -223,27 +275,33 @@ body {
 .hand-count { position:absolute;bottom:-8px;right:-8px;background:var(--text-primary);color:var(--surface-1);border-radius:50%;width:22px;height:22px;line-height:22px;text-align:center;font-size:11px;font-weight:bold; }
 .current-turn-indicator { position:absolute;top:-12px;left:-12px;background:var(--success);color:var(--surface-1);border-radius:50%;width:26px;height:26px;line-height:26px;text-align:center;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,.2);z-index:2; }
 
-/* ── 卡牌 ── */
-.poker-card {
-    width: 100px; height: 140px;
-    background: linear-gradient(160deg, #2a2a35 40%, #1a1a22);
-    border: 2px solid #333;
-    border-radius: 8px;
-    color: #fff;
-    box-shadow: -2px 0 10px rgba(0,0,0,.6);
+/* ── Apple 风卡牌（沉底手牌） ── */
+.apple-card {
+    width: var(--card-width, 100px);
+    height: var(--card-height, 140px);
+    background: var(--card-bg, rgba(255,255,255,0.75));
+    border: var(--card-border, 1px solid rgba(0,0,0,.08));
+    border-radius: 10px;
+    color: var(--card-color, #1d1d1f);
+    box-shadow: var(--card-shadow, 0 8px 32px rgba(0,0,0,.08));
     display: flex; flex-direction: column;
     justify-content: center; align-items: center;
     font-size: 28px; font-weight: 900;
-    transition: transform .1s ease-out;
+    transition: transform .1s ease-out, box-shadow .15s ease;
     margin-left: -22px;
     position: relative; cursor: pointer; flex-shrink: 0;
     z-index: 1; user-select: none;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 }
-.poker-card:hover { transform: translateY(-15px); z-index: 50; }
-.poker-card.selected {
-    transform: translateY(-30px) !important;
+.apple-card:hover {
+    transform: translateY(var(--card-hover-lift, -12px));
+    z-index: 50;
+}
+.apple-card.selected {
+    transform: translateY(var(--card-selected-lift, -28px)) !important;
     border-color: #ffcc00;
-    box-shadow: 0 0 15px rgba(255,204,0,.8);
+    box-shadow: 0 0 18px var(--card-selected-glow, rgba(255,204,0,0.6));
     z-index: 60;
 }
 
