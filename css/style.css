@@ -77,10 +77,18 @@ body {
 @keyframes floatTrophy { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
 @keyframes pulseTarget { 0%{box-shadow:0 0 0 0 rgba(255,118,117,.4)} 70%{box-shadow:0 0 0 10px rgba(255,118,117,0)} 100%{box-shadow:0 0 0 0 rgba(255,118,117,0)} }
 
-/* ═══ 花色颜色 ═══ */
-.suit-red { color:var(--suit-red); }
-.suit-black { color:var(--suit-black); }
-.card-joker { color:var(--joker); }
+/* ═══ 花色颜色 — 强制对比度 ═══ */
+.suit-red { color:var(--suit-red) !important; }
+.suit-black { color:var(--suit-black) !important; }
+.card-joker { color:var(--joker) !important; }
+
+/* 确保扑克牌继承花色颜色 */
+.poker-card.suit-red { color:var(--suit-red); }
+.poker-card.suit-black { color:var(--suit-black); }
+
+/* 确保玩家卡角色文字继承花色 */
+.player-card .role.suit-red { color:var(--suit-red); }
+.player-card .role.suit-black { color:var(--suit-black); }
 
 /* ═══ 按钮 ═══ */
 .btn {
