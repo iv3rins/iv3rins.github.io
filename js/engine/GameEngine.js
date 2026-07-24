@@ -132,12 +132,31 @@ export class GameEngine {
         if (this.phase !== 'WAITING_FOR_JOKER' || !this.dyingInfo) return { ok: false };
         const target = this.players[this.dyingInfo.playerId];
         const targetChar = target.characters[this.dyingInfo.charIndex];
+        const killerId = this.dyingInfo.attackerId;
         
         targetChar.die();
         this.phase = 'PLAYING';
         this.dyingInfo = null;
         
+        // ★ 规则3 — 角色阵亡：清空手牌
+        while (target.hand.length > 0) {
+            this.discardPile.push(target.hand.pop());
+        }
         target.checkElimination();
+        
+        // ★ 死者如有新角色上场，摸 5 张初始牌
+        if (!target.isEliminated) {
+            this.drawCards(target, 5);
+        }
+        
+        // ★ 击杀奖励：凶手摸 3 张
+        if (killerId !== undefined && killerId !== null) {
+            const killer = this.players[killerId];
+            if (killer && !killer.isEliminated) {
+                this.drawCards(killer, 3);
+            }
+        }
+        
         this.checkWinCondition();
         return { ok: true, playerId: target.id };
     }
@@ -254,7 +273,7 @@ export class GameEngine {
         // 濒死检测
         if (targetChar.isDying) {
             this.phase = 'WAITING_FOR_JOKER';
-            this.dyingInfo = { playerId: target.id, charIndex: target.activeCharIndex, timestamp: Date.now() };
+            this.dyingInfo = { playerId: target.id, charIndex: target.activeCharIndex, timestamp: Date.now(), attackerId: attacker.id };
         }
 
         // ♦ 方块：五谷丰登（免疫时无效，除非有A）
@@ -307,7 +326,12 @@ export class GameEngine {
         
         target.checkElimination();
         this.checkWinCondition();
-        // ★ 不再在此自动摸牌 — 摸牌仅在 nextTurn(回合开始) 和 ♦攻击时触发
+
+        // ★ 规则2 — 空城补给：手里没牌 或 只剩Joker → 摸3张
+        const normals = attacker.hand.filter(c => !c.isJoker);
+        if (attacker.hand.length === 0 || normals.length === 0) {
+            this.drawCards(attacker, 3);
+        }
     }
 
     nextTurn() {
@@ -315,11 +339,7 @@ export class GameEngine {
         do {
             this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.numPlayers;
         } while (this.players[this.currentPlayerIndex].isEliminated);
-        // ★ 回合开始时摸 2 张牌
-        const player = this.players[this.currentPlayerIndex];
-        if (player && !player.isEliminated) {
-            this.drawCards(player, 2);
-        }
+        // ★ 不在此摸牌 — 卡牌补给仅通过 ♦攻击 / 空城补给 / 角色阵亡奖励触发
     }
 
     checkWinCondition() {

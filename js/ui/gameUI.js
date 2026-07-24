@@ -184,7 +184,12 @@ export function createPlayerCard(p, idx, isSelf, isTargetable, state) {
         <div class="avatar ${avatarCls}">${avatar}</div>
         ${roleHtml}
         <div style="font-size:10px;color:#636e72">${displayChar.hp}/${displayChar.maxHp}${displayChar.shield > 0 ? ' +' + displayChar.shield + '🛡' : ''}</div>
-        ${displayChar.lives !== undefined && displayChar.maxLives > 1 ? '<div style="font-size:10px">' + '❤️'.repeat(Math.max(0, displayChar.lives)) + '🤍'.repeat(Math.max(0, (displayChar.maxLives||3)-displayChar.lives)) + '</div>' : ''}
+        ${(() => {
+            const lives = displayChar.lives !== undefined ? displayChar.lives : 0;
+            const max = displayChar.maxLives || 3;
+            let h = ''; for (let i = 0; i < max; i++) h += (i < lives ? '❤️' : '🤍');
+            return '<div style="font-size:10px">' + h + '</div>';
+        })()}
         <div class="status-bar" data-shield="${displayChar.shield}">
             <div class="status-hp" style="width:${hpPct}%"></div>
             ${displayChar.shield > 0 ? `<div class="status-shield" style="width:${shPct}%"></div>` : ''}
