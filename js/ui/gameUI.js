@@ -636,6 +636,16 @@ function showStarterModal(me) {
     const container = document.getElementById('starter-options');
     if (!modal || !container) { console.warn('[Starter] modal or container missing'); return; }
     console.log('[Starter] showing modal for', me.name || 'player', 'isHost:', G.isHost, 'myPlayerId:', G.myPlayerId);
+
+    // ★ 动态副标题 — 快速模式 vs 常规模式
+    const subtitle = document.getElementById('starter-subtitle');
+    if (subtitle) {
+        const maxLives = G.currentState?.players?.[G.myPlayerId]?.characters?.[0]?.maxLives || 3;
+        subtitle.textContent = maxLives === 1
+            ? '⚡ 快速模式：选择您的出战角色（一局定胜负，仅有一条命）'
+            : '选择一个角色作为首发，其余两个待机：';
+    }
+
     container.innerHTML = '';
 
     me.characters.forEach((c, idx) => {
