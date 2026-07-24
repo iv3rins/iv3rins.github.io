@@ -1,0 +1,25 @@
+{
+  "name": "kingdomwar",
+  "version": "2.0.0",
+  "type": "module",
+  "description": "PokeWar — WebSocket 权威服务器架构卡牌对战游戏",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iv3rins/iv3rins.github.io.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iv3rins/iv3rins.github.io/issues"
+  },
+  "homepage": "https://github.com/iv3rins/iv3rins.github.io#readme",
+  "dependencies": {
+    "ws": "^8.21.1"
+  }
+}

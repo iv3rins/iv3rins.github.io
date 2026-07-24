@@ -1,24 +1,15 @@
 /**
- * PokeWar — 主入口
- * 绑定 DOM 事件 + 引导全模块
+ * PokeWar — 主入口 (WebSocket 权威服务器架构)
+ * 客户端退化为纯渲染视图。所有 game logic 在服务器执行。
  */
-
 import { G } from './state.js';
-import { P2PManager } from './network/P2PManager.js';
-import { GameEngine } from './engine/GameEngine.js';
+import { WSClient } from './network/WSClient.js';
 import { showPage, showModal, renderWaitingLobby } from './ui/lobbyUI.js';
 import { addSystemChat, addGameChat, sendWaitingChat, sendGameChat } from './ui/chatUI.js';
-import { setProcessPlayCard, executeAttack, renderState, injectBroadcastSyncState } from './ui/gameUI.js';
+import { executeAttack, renderState, playActionBroadcast } from './ui/gameUI.js';
 import { Toast } from './ui/toast.js';
 import { audioManager } from './audioManager.js';
-import {
-    handleHostMessage, handleClientMessage,
-    broadcastLobbyState, broadcastSyncState, broadcastGameOver,
-    processPlayCard, showResultPage,
-} from './networkHandler.js';
-
-// 注入 processPlayCard 给 gameUI（避免循环依赖）
-setProcessPlayCard(processPlayCard);
+import { handleServerMessage } from './networkHandler.js';
 
 // ═══ 主页 ═══
 
@@ -60,100 +51,70 @@ function initAvatarPicker() {
 
     if (!preview || !picker) return;
 
-    // 点击头像打开选择器
-    preview.addEventListener('click', () => {
-        pickerDialog.classList.add('show');
-    });
+    preview.addEventListener('click', () => { pickerDialog.classList.add('show'); });
 
-    // 选择 emoji
     picker.addEventListener('emoji-click', (e) => {
         G.myAvatar = e.detail.unicode;
         preview.textContent = G.myAvatar;
         pickerDialog.classList.remove('show');
     });
 
-    // 点击遮罩关闭
     pickerDialog.addEventListener('click', (e) => {
         if (e.target === pickerDialog) pickerDialog.classList.remove('show');
     });
 }
 
+// ═══ 房间操作 ═══
+
 function createRoom() {
     G.playerName = document.getElementById('player-name').value.trim() || '小猫猫';
     G.isHost = true;
     G.myPlayerId = 0;
-    G.playerNames = { 0: G.playerName };
-    G.playerReady = { 0: true };
-    G.playerAvatars = { 0: G.myAvatar };
 
     showLoading();
-    G.p2p = new P2PManager();
-    G.p2p.callbacks.onReady = (roomCode) => {
-        G.roomCode = roomCode;
-        G.peerToPlayer[G.p2p.myId] = 0;
-        G.playerToPeer[0] = G.p2p.myId;
-        document.getElementById('display-room-code').textContent = roomCode;
-        showPage('waiting');
-        document.getElementById('game-mode-selector').style.display = 'block';
-        renderWaitingLobby();
-        addSystemChat('房间创建成功！快邀请小伙伴加入吧~ 🐾');
-        hideLoading();
+    G.ws = new WSClient('ws://64.90.30.38:8080');
+
+    G.ws.callbacks.onOpen = () => {
+        // 连接成功后发送创建房间请求
+        G.ws.send({
+            type: 'create_room',
+            payload: { playerName: G.playerName, avatar: G.myAvatar }
+        });
     };
 
-    G.p2p.callbacks.onPlayerJoin = (peerId) => {
-        // ★ 重连检测：如果该 peer 之前存在且游戏已开始，取消断线倒计时
-        if (G.gameStarted && G.gameEngine && G.peerToPlayer[peerId] !== undefined) {
-            const idx = G.peerToPlayer[peerId];
-            G.gameEngine.cancelDisconnectTimer(idx);
-            addGameChat('system', (G.playerNames[idx] || '玩家') + ' 重新连接！🎉');
-            broadcastSyncState();
-            return;
-        }
-        if (G.gameStarted) return;
-        // ★ 如果 JOIN_REQ 已经提前分配了槽位，跳过
-        if (G.peerToPlayer[peerId] !== undefined) return;
-        const used = Object.values(G.peerToPlayer);
-        let idx = 1;
-        while (used.includes(idx)) idx++;
-        if (idx >= G.maxPlayers) return;
-        G.peerToPlayer[peerId] = idx;
-        G.playerToPeer[idx] = peerId;
-        G.playerNames[idx] = '玩家' + (idx + 1);
-        G.playerAvatars[idx] = '🐱';
-        G.playerReady[idx] = false;
-        renderWaitingLobby();
-        broadcastLobbyState();
-    };
-
-    G.p2p.callbacks.onPlayerLeave = (peerId) => {
-        const idx = G.peerToPlayer[peerId];
-        if (idx === undefined) return;
-        const name = G.playerNames[idx] || '玩家';
-        delete G.peerToPlayer[peerId];
-        delete G.playerToPeer[idx];
-        delete G.playerNames[idx];
-        delete G.playerAvatars[idx];
-        delete G.playerReady[idx];
-        if (G.gameStarted && G.gameEngine) {
-            // ★ 使用 30 秒重连倒计时，而非立即淘汰
-            G.gameEngine.startDisconnectTimer(idx);
-            addGameChat('system', name + ' 断线了，30秒内重连可继续游戏 ⏳');
-            G.gameEngine.checkWinCondition();
-            broadcastSyncState();
-            if (G.gameEngine.isGameOver) broadcastGameOver();
-        } else {
-            addSystemChat(name + ' 离开了房间 😿');
+    G.ws.callbacks.onMessage = (msg) => {
+        if (msg.type === 'room_created') {
+            G.roomCode = msg.payload.roomCode;
+            G.myPlayerId = msg.payload.myPlayerId;
+            document.getElementById('display-room-code').textContent = G.roomCode;
+            showPage('waiting');
+            document.getElementById('game-mode-selector').style.display = 'block';
             renderWaitingLobby();
-            broadcastLobbyState();
+            addSystemChat('房间创建成功！快邀请小伙伴加入吧~ 🐾');
+            hideLoading();
+        } else if (msg.type === 'ROOM_UPDATE') {
+            // 同步房间玩家列表
+            G.playerNames = {};
+            G.playerReady = {};
+            G.playerAvatars = {};
+            const players = msg.payload.players || {};
+            for (const [idStr, p] of Object.entries(players)) {
+                const id = parseInt(idStr);
+                G.playerNames[id] = p.name;
+                G.playerReady[id] = p.ready;
+                G.playerAvatars[id] = p.avatar;
+            }
+            renderWaitingLobby();
+        } else {
+            handleServerMessage(msg);
         }
     };
 
-    G.p2p.callbacks.onMessage = handleHostMessage;
-    G.p2p.callbacks.onPeerError = (err) => {
-        if (err.type === 'unavailable-id') showModal('房间号被占用，请重试！');
+    G.ws.callbacks.onReconnectFailed = () => {
+        showModal('📡 无法连接到服务器，请刷新页面重试');
     };
 
-    G.p2p.createRoom();
+    G.ws.connect();
 }
 
 function joinRoom() {
@@ -164,29 +125,50 @@ function joinRoom() {
     G.roomCode = code;
 
     showLoading();
-    G.p2p = new P2PManager();
-    G.p2p.callbacks.onReady = () => {
-        document.getElementById('display-room-code').textContent = code;
-        showPage('waiting');
-        G.p2p.sendMessage({ type: 'JOIN_REQ', payload: { playerName: G.playerName, avatar: G.myAvatar } });
-        hideLoading();
+    G.ws = new WSClient('ws://64.90.30.38:8080');
+
+    G.ws.callbacks.onOpen = () => {
+        G.ws.send({
+            type: 'join_room',
+            payload: { roomCode: code, playerName: G.playerName, avatar: G.myAvatar }
+        });
     };
 
-    G.p2p.callbacks.onMessage = handleClientMessage;
-    G.p2p.callbacks.onHostDisconnect = () => showModal('房主已断开连接，房间已解散。');
-    G.p2p.callbacks.onPeerError = (err) => {
-        if (err.type === 'peer-unavailable') showModal('找不到该房间，请检查邀请码！');
-    };
-    G.p2p.callbacks.onConnectionFailed = () => {
-        showModal('📡 官方公共网络拥挤，连接断开，请刷新页面重试');
+    G.ws.callbacks.onMessage = (msg) => {
+        if (msg.type === 'room_joined') {
+            G.myPlayerId = msg.payload.myPlayerId;
+            document.getElementById('display-room-code').textContent = code;
+            showPage('waiting');
+            hideLoading();
+        } else if (msg.type === 'ROOM_UPDATE') {
+            G.playerNames = {};
+            G.playerReady = {};
+            G.playerAvatars = {};
+            const players = msg.payload.players || {};
+            for (const [idStr, p] of Object.entries(players)) {
+                const id = parseInt(idStr);
+                G.playerNames[id] = p.name;
+                G.playerReady[id] = p.ready;
+                G.playerAvatars[id] = p.avatar;
+            }
+            renderWaitingLobby();
+        } else if (msg.type === 'ERROR') {
+            Toast.show(msg.payload.message, 'error');
+            hideLoading();
+        } else {
+            handleServerMessage(msg);
+        }
     };
 
-    G.p2p.joinRoom(code);
+    G.ws.callbacks.onReconnectFailed = () => {
+        showModal('📡 无法连接到服务器，请刷新页面重试');
+    };
+
+    G.ws.connect();
 }
 
 // ═══ 等待大厅 ═══
 
-// ★ BUG4 修复：事件代理，避免按钮尚未渲染时绑定失败
 document.addEventListener('click', (e) => {
     const copyBtn = e.target.closest('#btn-copy-code');
     if (!copyBtn) return;
@@ -198,7 +180,6 @@ document.addEventListener('click', (e) => {
         if (navigator.clipboard && window.isSecureContext) {
             return navigator.clipboard.writeText(str);
         }
-        // 降级：非 HTTPS 环境（局域网测试）
         const ta = document.createElement('textarea');
         ta.value = str; ta.style.position = 'fixed'; ta.style.left = '-9999px';
         document.body.appendChild(ta); ta.select();
@@ -215,8 +196,6 @@ document.addEventListener('click', (e) => {
 });
 
 function initWaitingPage() {
-    // ★ 复制按钮已改用全局事件代理，无需在此重新绑定
-
     document.getElementById('btn-start-game').addEventListener('click', () => {
         if (G.isHost) {
             const count = Object.keys(G.playerNames).length;
@@ -235,61 +214,20 @@ function initWaitingPage() {
 }
 
 function toggleReady() {
-    G.p2p.sendMessage({ type: 'TOGGLE_READY', payload: {} });
-    G.playerReady[G.myPlayerId] = !G.playerReady[G.myPlayerId];
-    renderWaitingLobby();
+    if (G.ws) G.ws.send({ type: 'toggle_ready', payload: {} });
 }
 
 function startGame() {
-    if (!G.isHost || !G.p2p) return;
-    const indices = Object.keys(G.playerNames).map(Number).sort((a, b) => a - b);
-    const count = indices.length;
-
-    // ★ 读取游戏模式：quick=1命, classic=3命
+    if (!G.isHost || !G.ws) return;
     const modeRadio = document.querySelector('input[name="gameMode"]:checked');
     const maxLives = (modeRadio && modeRadio.value === 'quick') ? 1 : 3;
 
-    G.gameEngine = new GameEngine(count, maxLives);
-    // ★ 统一渲染出口：任何状态变更后自动触发 broadcastSyncState
-    G.gameEngine.onStateChange = () => broadcastSyncState();
-    G.roundCount = 0;
-    G.gameStarted = true;
-
-    G.engineToLobby = {};
-    indices.forEach((lobbyIdx, engineIdx) => {
-        G.engineToLobby[engineIdx] = lobbyIdx;
-        G.gameEngine.players[engineIdx].name = G.playerNames[lobbyIdx];
-    });
-
-    G.myPlayerId = 0;
-    showPage('game');
-
-    // ★ 给所有客户端发送 GAME_START（含 enginePlayerId）
-    Object.entries(G.playerToPeer).forEach(([lobbyIdxStr, peerId]) => {
-        const lobbyIdx = parseInt(lobbyIdxStr);
-        if (lobbyIdx === 0) return;
-        const engineIdx = indices.indexOf(lobbyIdx);
-        G.p2p.sendTo(peerId, {
-            type: 'GAME_START',
-            payload: { enginePlayerId: engineIdx, playerNames: G.gameEngine.players.map(p => p.name) }
-        });
-    });
-
-    // ★ 同步广播初始状态（含客户端 SYNC_STATE + 房主本地渲染）
-    broadcastSyncState();
-
-    // ★ 兜底：确保房主本地状态必定渲染
-    if (!G.currentState) {
-        console.warn('[startGame] broadcastSyncState 未设置 G.currentState，手动兜底');
-        G.currentState = G.gameEngine.getMaskedState(0);
-        G.currentState.playerAvatars = G.playerAvatars;
-        G.currentState.roundCount = G.roundCount;
-        renderState(G.currentState);
-    }
+    G.ws.send({ type: 'start_game', payload: { maxLives } });
+    // 服务器会广播 GAME_START 和 SYNC_STATE，不必本地初始化引擎
 }
 
 function leaveRoom() {
-    if (G.p2p) G.p2p.disconnect();
+    if (G.ws) G.ws.disconnect();
     location.reload();
 }
 
@@ -304,7 +242,6 @@ function hideLoading() {
 // ═══ 游戏初始化 ═══
 
 function initGamePage() {
-    // ★ 按钮音效
     const clickSound = () => audioManager.play('click');
     document.getElementById('attack-btn').addEventListener('click', () => { clickSound(); executeAttack(); });
     const wanhuaBtn = document.getElementById('wanhua-btn');
@@ -330,7 +267,7 @@ function initGamePage() {
     });
 }
 
-// ═══ 启动 (module脚本是defer的，DOMContentLoaded可能已触发) ═══
+// ═══ 启动 ═══
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAll);
 } else {

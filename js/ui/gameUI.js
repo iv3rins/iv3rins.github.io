@@ -11,8 +11,6 @@ let _broadcastSyncState = null;
 export function injectBroadcastSyncState(fn) { _broadcastSyncState = fn; }
 function broadcastSyncState() { if (_broadcastSyncState) _broadcastSyncState(); else console.warn('[gameUI] broadcastSyncState 尚未注入'); }
 
-// ═══ 渲染入口 ═══
-
 let _prevState = null;  // 用于检测变化以触发 VFX
 
 export function renderState(state) {
@@ -605,6 +603,7 @@ function dispatchPlayAction(selectedCards, chosenSuit, hasJoker, nonJokers, stat
 
     // ★ payload 携带 declaredSuit + aValue（有 A 时）
     const payload = {
+        action: 'PLAY_CARD',
         targetPlayerId: isShield ? state.myPlayerId : G.selectedTargetId,
         cardIndices: [...G.selectedCardIndices],
         aSuit: chosenSuit,
@@ -620,18 +619,18 @@ function dispatchPlayAction(selectedCards, chosenSuit, hasJoker, nonJokers, stat
     G.selectedCardIndices = [];
     G.selectedTargetId = -1;
 
-    if (G.isHost) {
-        try { processPlayCard(G.myPlayerId, payload); }
-        catch (err) { Toast.show('出牌失败: ' + err.message, 'error'); G._pendingClear = false; }
+    // ★ 统一通过 WebSocket 发送到权威服务器（主机和客户端走同一条路径）
+    if (G.ws && G.ws.isConnected) {
+        G.ws.send({ type: 'player_action', payload });
     } else {
-        G.p2p.sendMessage({ type: 'PLAY_CARD', payload });
+        Toast.show('未连接到服务器！', 'error');
+        G._pendingClear = false;
     }
 }
 
 // 由 main.js 注入（避免循环依赖）
-let processPlayCard = null;
-export function setProcessPlayCard(fn) { processPlayCard = fn; }
-export function getProcessPlayCard() { return processPlayCard; }
+let _wsClient = null;
+export function injectWSClient(ws) { _wsClient = ws; }
 
 // ═══ 倒计时 ═══
 
@@ -772,7 +771,7 @@ function showStarterModal(me) {
     const modal = document.getElementById('modal-starter');
     const container = document.getElementById('starter-options');
     if (!modal || !container) { console.warn('[Starter] modal or container missing'); return; }
-    console.log('[Starter] showing modal for', me.name || 'player', 'isHost:', G.isHost, 'myPlayerId:', G.myPlayerId);
+    console.log('[Starter] showing modal for', me.name || 'player', 'myPlayerId:', G.myPlayerId);
 
     // ★ 动态副标题 — 快速模式 vs 常规模式
     const subtitle = document.getElementById('starter-subtitle');
@@ -796,19 +795,13 @@ function showStarterModal(me) {
             <div class="starter-hp">${c.hp}/${c.maxHp} HP</div>
         `;
         card.onclick = () => {
-            console.log('[Starter] click idx:', idx, 'isHost:', G.isHost);
-            if (G.isHost) {
-                const result = G.gameEngine.selectStarter(G.myPlayerId, idx);
-                if (result.ok) {
-                    modal.classList.remove('show');
-                    broadcastSyncState();
-                } else {
-                    console.error('[Starter] selectStarter failed:', result.error);
-                    Toast.show(result.error || '选将失败', 'error');
-                }
-            } else {
-                G.p2p.sendMessage({ type: 'SELECT_STARTER', payload: { charIndex: idx } });
+            console.log('[Starter] click idx:', idx);
+            // ★ 统一通过 WebSocket 发送
+            if (G.ws && G.ws.isConnected) {
+                G.ws.send({ type: 'player_action', payload: { action: 'SELECT_STARTER', charIndex: idx } });
                 modal.classList.remove('show');
+            } else {
+                Toast.show('未连接到服务器！', 'error');
             }
         };
         container.appendChild(card);
@@ -865,15 +858,11 @@ function showDyingModal(state) {
         rescueBtn.className = 'btn';
         rescueBtn.textContent = `💊 使用 Joker 救援 (${myJokers.length}张)`;
         rescueBtn.onclick = () => {
-            if (G.isHost) {
-                const result = G.gameEngine.rescueWithJoker(G.myPlayerId, myJokers[0].idx);
-                if (result.ok) {
-                    hideDyingModal();
-                    broadcastSyncState();
-                }
-            } else {
-                G.p2p.sendMessage({ type: 'JOKER_RESCUE', payload: { jokerCardIdx: myJokers[0].idx } });
+            // ★ 统一通过 WebSocket 发送
+            if (G.ws && G.ws.isConnected) {
+                G.ws.send({ type: 'player_action', payload: { action: 'JOKER_RESCUE', jokerCardIdx: myJokers[0].idx } });
             }
+            hideDyingModal();
         };
         actions.appendChild(rescueBtn);
     }

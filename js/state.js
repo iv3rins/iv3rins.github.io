@@ -1,17 +1,13 @@
 /**
- * 全局状态管理 — 单例 G 对象
+ * 全局状态管理 — 单例 G 对象 (WS 权威服务器架构)
  */
-
 export const G = {
-    p2p: null,
+    ws: null,                  // ★ WSClient 实例 (替代 p2p)
     isHost: false,
     playerName: '',
     roomCode: '',
     myPlayerId: -1,
-    gameEngine: null,          // 仅房主
-    peerToPlayer: {},          // peerId → playerIndex (房主)
-    playerToPeer: {},          // playerIndex → peerId (房主)
-    engineToLobby: {},         // engineIndex → lobbyIndex (房主)
+    gameEngine: null,          // ★ 仅服务器端使用
     playerNames: {},           // playerIndex → name
     playerReady: {},           // playerIndex → bool
     currentState: null,
@@ -25,7 +21,7 @@ export const G = {
     maxPlayers: 12,
     avatars: ['🐱', '🐶', '🐰', '🐻', '🦊', '🐼', '🐧', '🦁', '🐸', '🐨', '🐯', '🐷'],
     myAvatar: '🐱',              // 玩家自选头像
-    playerAvatars: {},           // playerIndex → emoji（由房主维护，LOBBY_STATE/SYNC_STATE 广播）
+    playerAvatars: {},           // playerIndex → emoji
     gameStarted: false,
     _pendingClear: false,
 };
