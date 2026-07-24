@@ -280,13 +280,25 @@ function calcComboValue(cards) {
 
 // ═══ 手牌 ═══
 
+let _prevHandCount = 0;
+
 export function renderHand(cards) {
     const container = document.getElementById('hand-container');
+    const prevCount = container.children.length;
     container.innerHTML = '';
+    
     cards.forEach((card, i) => {
         const div = document.createElement('div');
         div.className = 'poker-card';
         div.dataset.index = i;
+
+        // ★ Staggered dealing: 新卡牌从屏幕外飞入，逐张延迟
+        const isNewCard = (i >= prevCount - 1 || prevCount === 0);
+        if (isNewCard) {
+            div.classList.add('deal-stagger');
+            div.style.animationDelay = (i * 50) + 'ms';
+        }
+
         if (G.selectedCardIndices && G.selectedCardIndices.length > 0 && G.selectedCardIndices.includes(i)) div.classList.add('selected');
         if (card.isJoker) {
             div.classList.add('card-joker');
@@ -552,12 +564,12 @@ export function showDamageFloat(playerId, amount) {
     const card = document.querySelector(`.player-card[data-player-id="${playerId}"]`);
     if (!card) return;
     const el = document.createElement('div');
-    el.className = 'damage-text';
+    el.className = 'damage-float';
     el.textContent = `-${amount}`;
     card.appendChild(el);
-    requestAnimationFrame(() => el.classList.add('fly'));
-    setTimeout(() => el.remove(), 900);
-    triggerHitShake(playerId);
+    // ★ [emil-design-eng] 受击震动：Spring Shake 物理反馈
+    card.classList.add('hit-shake');
+    setTimeout(() => { card.classList.remove('hit-shake'); el.remove(); }, 1000);
     audioManager.play('attack');
 }
 
@@ -565,12 +577,10 @@ export function showHealFloat(playerId, amount) {
     const card = document.querySelector(`.player-card[data-player-id="${playerId}"]`);
     if (!card) return;
     const el = document.createElement('div');
-    el.className = 'heal-text';
+    el.className = 'damage-float shield-float';
     el.textContent = `+${amount}`;
     card.appendChild(el);
-    requestAnimationFrame(() => el.classList.add('fly'));
-    setTimeout(() => el.remove(), 900);
-    triggerHealAnim(playerId);
+    setTimeout(() => el.remove(), 1000);
     audioManager.play('heal');
 }
 

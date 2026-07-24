@@ -461,3 +461,49 @@ body {
 .mode-desc { color: #b2bec3; font-size: 11px; margin-top: 4px; }
 .mode-options input[type="radio"]:checked + .mode-content { background: #fff0f3; border-color: #ffb6c1; box-shadow: 0 6px 15px rgba(255,182,193,.4); transform: translateY(-4px) scale(1.02); }
 .mode-options input[type="radio"]:checked + .mode-content .mode-name { color: #ff7675; }
+
+/* ═══ 逐张发牌动画 (Staggered Dealing) ═══ */
+@keyframes cardDealIn {
+    0% { transform: translateY(-120%) scale(0.6); opacity: 0; }
+    60% { transform: translateY(8%) scale(1.03); opacity: 1; }
+    80% { transform: translateY(-3%) scale(0.98); }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+.poker-card.deal-stagger {
+    animation: cardDealIn 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    opacity: 0; /* hidden until animation starts */
+}
+
+/* ═══ 受击震动 (Hit Impact Spring Shake) ═══ */
+@keyframes hitShake {
+    0% { transform: translateX(0); }
+    12.5% { transform: translateX(-6px) rotate(-1deg); }
+    25% { transform: translateX(5px) rotate(0.8deg); }
+    37.5% { transform: translateX(-4px) rotate(-0.5deg); }
+    50% { transform: translateX(3px) rotate(0.3deg); }
+    62.5% { transform: translateX(-2px); }
+    75% { transform: translateX(1px); }
+    87.5% { transform: translateX(-0.5px); }
+    100% { transform: translateX(0) rotate(0); }
+}
+.player-card.hit-shake {
+    animation: hitShake 500ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+/* ═══ 飘字伤害 (Floating Damage) ═══ */
+@keyframes floatDamage {
+    0% { opacity: 1; transform: translate(-50%, 0) scale(0.5); }
+    20% { opacity: 1; transform: translate(-50%, -10px) scale(1.2); }
+    100% { opacity: 0; transform: translate(-50%, -40px) scale(0.8); }
+}
+.damage-float {
+    position: absolute; top: 0; left: 50%;
+    font-size: 22px; font-weight: 900;
+    color: #ff4757;
+    text-shadow: 0 2px 4px rgba(0,0,0,.3);
+    pointer-events: none; z-index: 10;
+    animation: floatDamage 1s ease-out forwards;
+}
+.shield-float {
+    color: #00cec9;
+}

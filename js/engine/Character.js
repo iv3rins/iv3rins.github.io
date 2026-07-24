@@ -31,6 +31,7 @@ export class Character {
     takeDamage(damage, ignoreShield = false) {
         if (this.isDead) return { actualDamage: 0, hpDamage: 0 };
         const raw = Math.max(0, Number(damage) || 0);
+        const shieldBefore = this.shield;
         let hpDamage;
 
         if (ignoreShield) {
@@ -48,7 +49,8 @@ export class Character {
             this.isDying = true;
         }
 
-        return { actualDamage: raw, hpDamage };
+        const shieldAbsorbed = shieldBefore - this.shield;
+        return { actualDamage: shieldAbsorbed + hpDamage, hpDamage };
     }
 
     /**

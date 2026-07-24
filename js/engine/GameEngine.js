@@ -307,11 +307,7 @@ export class GameEngine {
         
         target.checkElimination();
         this.checkWinCondition();
-        if (this.isGameOver) return;
-        
-        // ★ BUG修复：使用 MAX_HAND_SIZE 常量补牌
-        const toDraw = Math.max(0, MAX_HAND_SIZE - attacker.hand.length);
-        if (toDraw > 0) this.drawCards(attacker, toDraw);
+        // ★ 不再在此自动摸牌 — 摸牌仅在 nextTurn(回合开始) 和 ♦攻击时触发
     }
 
     nextTurn() {
@@ -319,6 +315,11 @@ export class GameEngine {
         do {
             this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.numPlayers;
         } while (this.players[this.currentPlayerIndex].isEliminated);
+        // ★ 回合开始时摸 2 张牌
+        const player = this.players[this.currentPlayerIndex];
+        if (player && !player.isEliminated) {
+            this.drawCards(player, 2);
+        }
     }
 
     checkWinCondition() {
