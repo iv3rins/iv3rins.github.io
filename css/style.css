@@ -257,9 +257,8 @@ body {
 /* ═══ 悬浮图标 ═══ */
 .btn-icon { position:fixed;z-index:10000;width:40px;height:40px;border-radius:50%;border:2px solid var(--surface-1);background:rgba(0,0,0,.4);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px); }
 .btn-icon:hover { background:rgba(0,0,0,.6);transform:scale(1.1); }
-#btn-fullscreen { top:10px;right:10px; }
-#mobile-chat-toggle { top:10px;right:58px;display:none; }
-#btn-game-tutorial { top:10px;right:106px; }
+/* 悬浮按钮现在由 .top-bar 统一管理布局，无需独立 fixed 定位 */
+#mobile-chat-toggle { display: none; } /* 桌面端隐藏，移动端媒体查询中覆盖 */
 .orientation-prompt { display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:var(--bg-base);z-index:9999;flex-direction:column;justify-content:center;align-items:center;text-align:center;font-weight:bold;color:var(--text-secondary);font-size:16px; }
 .rotate-icon { font-size:40px;animation:spin 2s linear infinite; }
 .chat-box.show-mobile-chat { right:0!important; }
@@ -412,13 +411,74 @@ body {
     .damage-float { font-size: 16px; }
 }
 
-/* ═══ 全屏出牌播报 ═══ */
+/* ═══ 全屏出牌播报 — 超高对比度 ═══ */
+.broadcast-overlay {
+    position: fixed; top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 10001; pointer-events: none;
+    opacity: 0; transform: scale(0.9);
+    transition: opacity 0.35s ease, transform 0.35s cubic-bezier(.34,1.56,.64,1);
+}
+.broadcast-overlay.broadcast-in {
+    opacity: 1; transform: scale(1);
+}
+.broadcast-overlay.broadcast-out {
+    opacity: 0; transform: scale(1.1);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.broadcast-backdrop {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(520px, 90vw); min-height: 180px;
+    background: rgba(0, 0, 0, 0.75);
+    border-radius: 24px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+    z-index: -1;
+}
+.broadcast-card-icon {
+    font-size: 5rem; font-weight: 900;
+    text-shadow:
+        0 4px 15px rgba(0,0,0,0.9),
+        0 0 40px rgba(0,0,0,0.5),
+        0 0 80px rgba(255,255,255,0.3);
+    line-height: 1; margin-bottom: 10px;
+    animation: broadcastPopIn 0.5s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+.broadcast-text {
+    font-size: 1.8rem; font-weight: 900;
+    color: #ffffff;
+    text-shadow:
+        0 4px 12px rgba(0,0,0,0.95),
+        0 2px 6px rgba(0,0,0,0.8);
+    text-align: center;
+    padding: 0 20px;
+    animation: broadcastFadeIn 0.5s 0.2s ease both;
+}
 @keyframes broadcastPopIn {
     0% { transform: scale(0.3) rotate(-15deg); opacity: 0; }
     60% { transform: scale(1.15) rotate(3deg); opacity: 1; }
     100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 @keyframes broadcastFadeIn {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(15px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══ 悬浮按钮顶部栏 ═══ */
+.top-bar {
+    position: fixed; top: 8px; right: 8px;
+    z-index: 10000; display: flex; gap: 6px;
+}
+.top-bar .btn-icon {
+    position: static; /* 取消独立的 fixed 定位 */
+}
+/* ★ 移动端 top-bar 适配 */
+@media screen and (max-width: 900px) {
+    .broadcast-card-icon { font-size: 3rem; }
+    .broadcast-text { font-size: 1.2rem; }
+    .broadcast-backdrop { width: min(340px, 92vw); min-height: 120px; }
 }

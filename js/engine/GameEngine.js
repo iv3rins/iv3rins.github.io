@@ -93,6 +93,8 @@ export class GameEngine {
             // 检查是否所有人都选完了
             if (this.players.every(p => p.starterSelected)) {
                 this.phase = 'PLAYING';
+                // ★ 统一渲染出口：阶段切换时通知 UI
+                if (this.onStateChange) this.onStateChange(this);
             }
             return { ok: true, allSelected: this.phase === 'PLAYING' };
         }

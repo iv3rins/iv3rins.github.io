@@ -362,17 +362,29 @@ export function renderHand(cards) {
 // ═══ 全屏中央出牌播报 ═══
 export function playActionBroadcast(attackerName, targetName, suit, rank, actionType) {
     const overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;pointer-events:none;';
+    overlay.className = 'broadcast-overlay';
     const isRed = suit === '♦' || suit === '♥';
+    const isJoker = (suit === '🃏' || suit === null);
+    const suitColor = isJoker ? '#cba6f7' : (isRed ? '#ff6b6b' : '#ffffff');
+    const actionText = actionType === 'shield' ? '🛡️ 使用护盾' : actionType === 'joker' ? '🃏 使用 Joker' : '⚔️ 打出攻击';
+
     overlay.innerHTML = `
-        <div style="font-size:64px;font-weight:900;color:${isRed ? 'var(--suit-red)' : 'var(--suit-black)'};text-shadow:0 4px 12px rgba(0,0,0,.3);animation:broadcastPopIn 0.5s cubic-bezier(.34,1.56,.64,1) forwards">${suit}${rank}</div>
-        <div style="font-size:20px;color:var(--text-primary);font-weight:bold;margin-top:12px;animation: broadcastFadeIn 0.5s 0.2s ease both">【${attackerName}】对【${targetName}】${actionType === 'shield' ? '使用护盾' : '打出攻击'}！</div>
+        <div class="broadcast-backdrop"></div>
+        <div class="broadcast-card-icon" style="color:${suitColor}">${isJoker ? '🃏' : suit + rank}</div>
+        <div class="broadcast-text">【${attackerName}】对【${targetName}】${actionText}！</div>
     `;
     document.body.appendChild(overlay);
+
+    // 入场动画
+    requestAnimationFrame(() => {
+        overlay.classList.add('broadcast-in');
+    });
+
+    // 退场
     setTimeout(() => {
-        overlay.style.transition = 'opacity 0.4s ease';
-        overlay.style.opacity = '0';
-        setTimeout(() => overlay.remove(), 400);
+        overlay.classList.remove('broadcast-in');
+        overlay.classList.add('broadcast-out');
+        setTimeout(() => overlay.remove(), 500);
     }, 1500);
 }
 
