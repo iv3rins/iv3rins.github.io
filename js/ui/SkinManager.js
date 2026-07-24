@@ -63,7 +63,8 @@ const SKINS = {
 
 class SkinManager {
     constructor() {
-        this.currentSkin = localStorage.getItem('pokeWarSkin') || 'default-apple';
+        const saved = (typeof localStorage !== 'undefined') ? localStorage.getItem('pokeWarSkin') : null;
+        this.currentSkin = saved || 'default-apple';
         this._apply(SKINS[this.currentSkin] || SKINS['default-apple']);
     }
 
@@ -71,7 +72,7 @@ class SkinManager {
     setSkin(name) {
         if (!SKINS[name]) { console.warn(`[Skin] 未知皮肤: ${name}`); return; }
         this.currentSkin = name;
-        localStorage.setItem('pokeWarSkin', name);
+        if (typeof localStorage !== 'undefined') localStorage.setItem('pokeWarSkin', name);
         this._apply(SKINS[name]);
     }
 
@@ -87,6 +88,7 @@ class SkinManager {
     // ── 内部 ──
 
     _apply(config) {
+        if (typeof document === 'undefined') return; // Node 环境跳过
         const root = document.documentElement;
         for (const [key, value] of Object.entries(config)) {
             root.style.setProperty(`--${key}`, value);
