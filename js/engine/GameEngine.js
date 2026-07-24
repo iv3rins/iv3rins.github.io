@@ -321,6 +321,8 @@ export class GameEngine {
     }
 
     _postPlayCleanup(attacker, target, cardsPlayed) {
+        // ★ 防御：游戏未开始时不执行清理（防止初始化时序污染）
+        if (this.phase === 'SELECTING_STARTER') return;
         attacker.removeCardsFromHand(cardsPlayed);
         this.discardPile.push(...cardsPlayed);
         

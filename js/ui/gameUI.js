@@ -17,8 +17,11 @@ let _prevState = null;  // 用于检测变化以触发 VFX
 
 export function renderState(state) {
     G.currentState = state;
-    const me = state.players[state.myPlayerId];
+    // ★ 防御：myPlayerId 可能是 0 (falsy)，禁止用 !myPlayerId 判定
+    const myId = state.myPlayerId !== undefined ? state.myPlayerId : 0;
+    const me = state.players[myId];
     const isSpectating = me && me.isEliminated;
+    console.log('[renderState] myId:', myId, 'phase:', state.phase, 'handLen:', me?.hand?.length, 'starterSelected:', me?.starterSelected);
 
     // ★ Bug4: 选将阶段
     if (state.phase === 'SELECTING_STARTER') {
