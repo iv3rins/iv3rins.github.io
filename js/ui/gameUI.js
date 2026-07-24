@@ -297,21 +297,28 @@ export function renderHand(cards) {
         div.className = 'poker-card';
         div.dataset.index = i;
 
+        if (G.selectedCardIndices && G.selectedCardIndices.length > 0 && G.selectedCardIndices.includes(i)) div.classList.add('selected');
+
+        // ★ Joker 优先判断（无花色，防止 null-pointer）
+        if (card.isJoker) {
+            div.classList.add('card-joker');
+            div.innerHTML = '<span>🃏</span><span style="font-size:14px">Joker</span>';
+        } else if (card.suit === '♥' || card.suit === '♦') {
+            div.classList.add('suit-red');
+            div.innerHTML = `<span>${card.suit}</span><span>${card.rank}</span>`;
+        } else if (card.suit === '♠' || card.suit === '♣') {
+            div.classList.add('suit-black');
+            div.innerHTML = `<span>${card.suit}</span><span>${card.rank}</span>`;
+        } else {
+            // 兜底：未知花色
+            div.innerHTML = `<span>${card.suit || '?'}</span><span>${card.rank}</span>`;
+        }
+
         // ★ Staggered dealing: 新卡牌从屏幕外飞入，逐张延迟
         const isNewCard = (i >= prevCount - 1 || prevCount === 0);
         if (isNewCard) {
             div.classList.add('deal-stagger');
             div.style.animationDelay = (i * 50) + 'ms';
-        }
-
-        if (G.selectedCardIndices && G.selectedCardIndices.length > 0 && G.selectedCardIndices.includes(i)) div.classList.add('selected');
-        if (card.isJoker) {
-            div.classList.add('card-joker');
-            div.innerHTML = '<span>🃏</span><span style="font-size:14px">Joker</span>';
-        } else {
-            const isRed = card.suit === '♦' || card.suit === '♥';
-            div.classList.add(isRed ? 'suit-red' : 'suit-black');
-            div.innerHTML = `<span>${card.suit}</span><span>${card.rank}</span>`;
         }
         div.addEventListener('click', () => toggleCard(i, div));
         container.appendChild(div);
@@ -607,9 +614,9 @@ export function playCardFlyAnimation(attackerId, targetId, suit, rank) {
     const ey = tRect.top + tRect.height / 2;
 
     const flyCard = document.createElement('div');
-    const isRed = suit === '♦' || suit === '♥';
     flyCard.className = 'flying-card';
-    flyCard.classList.add(isRed ? 'suit-red' : 'suit-black');
+    if (suit === '♥' || suit === '♦') flyCard.classList.add('suit-red');
+    else if (suit === '♠' || suit === '♣') flyCard.classList.add('suit-black');
     flyCard.style.left = (sx - 26) + 'px';
     flyCard.style.top = (sy - 36) + 'px';
     flyCard.textContent = suit + rank;
@@ -718,10 +725,10 @@ function showStarterModal(me) {
     container.innerHTML = '';
 
     me.characters.forEach((c, idx) => {
-        const isRed = c.suit === '♦' || c.suit === '♥';
         const card = document.createElement('div');
         card.className = 'starter-card';
-        card.classList.add(isRed ? 'suit-red' : 'suit-black');
+        if (c.suit === '♥' || c.suit === '♦') card.classList.add('suit-red');
+        else if (c.suit === '♠' || c.suit === '♣') card.classList.add('suit-black');
         card.innerHTML = `
             <div class="starter-suit">${c.suit}</div>
             <div class="starter-rank">${c.rank}</div>
