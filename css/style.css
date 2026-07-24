@@ -27,6 +27,11 @@
     --suit-black: #1e293b;
     --joker: #8e44ad;
     --font: 'Comic Sans MS','Microsoft YaHei',sans-serif;
+
+    /* ★ Apple Bento / Puppertino 变量 */
+    --apple-blur: blur(25px);
+    --bento-bg: rgba(255, 255, 255, 0.15);
+    --bento-border: 1px solid rgba(255, 255, 255, 0.3);
 }
 [data-theme="dark"] {
     --bg-base: #1e1e2e;
