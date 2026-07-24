@@ -908,3 +908,78 @@ function playVisualEffect(targetPlayerId, effectType) {
 }
 // expose globally so renderState can call it
 window.playVisualEffect = playVisualEffect;
+
+// ═══ 登录/注册弹窗 ═══
+
+export function showAuthModal(onSuccess) {
+    // 移除旧弹窗
+    const old = document.getElementById('modal-auth');
+    if (old) old.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'modal-auth';
+    overlay.className = 'modal-overlay show';
+    overlay.innerHTML = `
+        <div class="modal-box" style="max-width:380px;width:92%">
+            <h3 style="color:var(--hp)">🔐 登录 / 注册</h3>
+            <div id="auth-tabs" style="display:flex;gap:0;margin-bottom:15px">
+                <button class="auth-tab active" data-tab="login" style="flex:1;padding:8px;border:none;border-radius:10px 0 0 10px;background:var(--primary);color:#fff;cursor:pointer;font-weight:bold">登录</button>
+                <button class="auth-tab" data-tab="register" style="flex:1;padding:8px;border:none;border-radius:0 10px 10px 0;background:var(--surface-3);color:var(--text-primary);cursor:pointer;font-weight:bold">注册</button>
+            </div>
+            <input id="auth-username" placeholder="用户名" style="width:100%;padding:10px;margin-bottom:10px;border:2px solid var(--border);border-radius:10px;background:var(--surface-2);color:var(--text-primary);font-family:inherit;font-size:15px;outline:none">
+            <input id="auth-password" type="password" placeholder="密码(至少4位)" style="width:100%;padding:10px;margin-bottom:10px;border:2px solid var(--border);border-radius:10px;background:var(--surface-2);color:var(--text-primary);font-family:inherit;font-size:15px;outline:none">
+            <div id="auth-error" style="color:var(--danger);font-size:13px;margin-bottom:8px;display:none"></div>
+            <button id="auth-submit-btn" class="btn" style="width:100%">🔐 登录</button>
+            <button id="auth-close-btn" class="btn btn-ghost" style="width:100%;margin-top:8px">取消</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    let mode = 'login';
+    const apiBase = 'http://64.90.30.38:8080';
+
+    // Tab 切换
+    overlay.querySelectorAll('.auth-tab').forEach(tab => {
+        tab.onclick = () => {
+            mode = tab.dataset.tab;
+            overlay.querySelectorAll('.auth-tab').forEach(t => { t.classList.remove('active'); t.style.background='var(--surface-3)'; t.style.color='var(--text-primary)'; });
+            tab.classList.add('active'); tab.style.background='var(--primary)'; tab.style.color='#fff';
+            document.getElementById('auth-submit-btn').textContent = mode === 'login' ? '🔐 登录' : '✨ 注册';
+        };
+    });
+
+    // 关闭
+    overlay.querySelector('#auth-close-btn').onclick = () => overlay.remove();
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+    // 提交
+    overlay.querySelector('#auth-submit-btn').onclick = async () => {
+        const username = document.getElementById('auth-username').value.trim();
+        const password = document.getElementById('auth-password').value;
+        const errEl = document.getElementById('auth-error');
+        errEl.style.display = 'none';
+
+        if (!username || !password) { errEl.textContent = '请填写用户名和密码'; errEl.style.display = 'block'; return; }
+        if (password.length < 4) { errEl.textContent = '密码至少4位'; errEl.style.display = 'block'; return; }
+
+        try {
+            const res = await fetch(`${apiBase}/api/${mode}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            if (!res.ok) { errEl.textContent = data.error; errEl.style.display = 'block'; return; }
+
+            // 存储 token
+            localStorage.setItem('pokeWarToken', data.token);
+            localStorage.setItem('pokeWarUser', data.username);
+
+            overlay.remove();
+            if (onSuccess) onSuccess(data);
+        } catch (e) {
+            errEl.textContent = '服务器连接失败';
+            errEl.style.display = 'block';
+        }
+    };
+}

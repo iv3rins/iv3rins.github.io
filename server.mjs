@@ -1,19 +1,104 @@
 /**
- * server.mjs — PokeWar 权威服务器 v3.0
- * 架构：OOP 分层（Account → Matchmaker → Room → GameEngine）
- * 特性：快速匹配 + AI 机器人补位 + 预留数据库接入
+ * server.mjs — PokeWar 权威服务器 v3.1
+ * 架构：OOP 分层 + JWT 鉴权 + 匹配队列
+ * 共享端口 8080：HTTP (Express) + WebSocket (ws)
  *
- * 启动: node server.mjs  监听 ws://0.0.0.0:8080
+ * 启动: node server.mjs
  */
+import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
+import express from 'express';
+import jwt from 'jsonwebtoken';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { GameEngine } from './js/engine/GameEngine.js';
 import { Card } from './js/engine/Card.js';
 
 const PORT = process.env.PORT || 8080;
+const JWT_SECRET = process.env.JWT_SECRET || 'pokewar-secret-' + Date.now().toString(36);
 const HEARTBEAT_INTERVAL = 15000;
-const BOT_THINK_MS = 1500;       // AI 思考延迟（模拟真人）
-const MATCHMAKER_TICK_MS = 1000; // 匹配轮询间隔
-const MATCHMAKER_TIMEOUT_MS = 10000; // 超时自动补机器人
+const BOT_THINK_MS = 1500;
+const MATCHMAKER_TICK_MS = 1000;
+const MATCHMAKER_TIMEOUT_MS = 10000;
+
+// ═══════════════════════════════════════════
+// 0. JSON 文件数据库
+// ═══════════════════════════════════════════
+const DB_PATH = './users.json';
+function loadUsers() {
+    if (!existsSync(DB_PATH)) return {};
+    try { return JSON.parse(readFileSync(DB_PATH, 'utf-8')); }
+    catch { return {}; }
+}
+function saveUsers(db) {
+    writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
+}
+const users = loadUsers();
+
+// ═══════════════════════════════════════════
+// 1. Express HTTP 鉴权
+// ═══════════════════════════════════════════
+const app = express();
+app.use(express.json());
+
+// CORS
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') return res.sendStatus(200);
+    next();
+});
+
+// 注册
+app.post('/api/register', (req, res) => {
+    const { username, password } = req.body || {};
+    if (!username || !password) return res.status(400).json({ error: '用户名和密码不能为空' });
+    if (username.length < 2 || password.length < 4) return res.status(400).json({ error: '用户名至少2字，密码至少4位' });
+    if (users[username]) return res.status(409).json({ error: '用户名已存在' });
+
+    users[username] = { password, rating: 1000, wins: 0, createdAt: Date.now() };
+    saveUsers(users);
+
+    const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ token, username, rating: 1000 });
+});
+
+// 登录
+app.post('/api/login', (req, res) => {
+    const { username, password } = req.body || {};
+    if (!username || !password) return res.status(400).json({ error: '用户名和密码不能为空' });
+    const user = users[username];
+    if (!user || user.password !== password) return res.status(401).json({ error: '用户名或密码错误' });
+
+    const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ token, username, rating: user.rating, wins: user.wins });
+});
+
+// Token 验证
+app.get('/api/me', (req, res) => {
+    const auth = req.headers.authorization;
+    if (!auth) return res.status(401).json({ error: '未登录' });
+    try {
+        const payload = jwt.verify(auth.replace('Bearer ', ''), JWT_SECRET);
+        const user = users[payload.username];
+        if (!user) return res.status(404).json({ error: '用户不存在' });
+        res.json({ username: payload.username, rating: user.rating, wins: user.wins });
+    } catch {
+        res.status(401).json({ error: 'Token 无效或已过期' });
+    }
+});
+
+// ═══════════════════════════════════════════
+// 2. 共享 HTTP/WS 服务器
+// ═══════════════════════════════════════════
+const server = createServer(app);
+const wss = new WebSocketServer({ server });
+
+// ── WebSocket 鉴权中间件 ──
+function verifyToken(token) {
+    if (!token) return null;
+    try { return jwt.verify(token, JWT_SECRET); }
+    catch { return null; }
+}
 
 // ═══════════════════════════════════════════
 // 1. 账号服务层（预留 MongoDB/MySQL 接入）
@@ -549,16 +634,20 @@ function generateRoomId() {
 }
 
 // ═══════════════════════════════════════════
-// 6. WebSocket 服务器
+// 5. WebSocket 服务器
 // ═══════════════════════════════════════════
 
-const wss = new WebSocketServer({ port: PORT });
-console.log(`🐾 PokeWar v3.0 已启动 — ws://0.0.0.0:${PORT}`);
+console.log(`🐾 PokeWar v3.1 已启动 — ws://0.0.0.0:${PORT}`);
+console.log(`   HTTP API: http://0.0.0.0:${PORT}/api/{register,login,me}`);
 console.log(`   匹配队列: ${MATCHMAKER_TIMEOUT_MS/1000}s 超时自动补AI`);
 
 wss.on('connection', (ws, req) => {
     const clientIp = req.socket.remoteAddress;
-    console.log(`[WS] 新连接 — ${clientIp}`);
+    const url = new URL(req.url, 'http://localhost');
+    const token = url.searchParams.get('token');
+    const auth = verifyToken(token);
+
+    console.log(`[WS] 新连接 — ${clientIp}${auth ? ' (已登录:' + auth.username + ')' : ''}`);
 
     let heartbeatTimer = null;
     const resetHeartbeat = () => {
@@ -631,11 +720,12 @@ function handleMessage(ws, msg) {
 
         // ── 快速匹配 ──
         case 'QUICK_MATCH': {
-            const name = msg.payload?.playerName || 'Guest';
+            // ★ 优先使用 JWT 鉴权的用户名，否则用 payload
+            const name = auth?.username || msg.payload?.playerName || 'Guest';
             const avatar = msg.payload?.avatar || '🐱';
             const sp = new ServerPlayer('u_' + Date.now().toString(36), name, avatar, false);
             sp.ws = ws;
-            connections.set(ws, { sp, roomId: null });
+            connections.set(ws, { sp, roomId: null, auth });
 
             // 尝试加入匹配队列
             if (!matchmaker.join(sp)) {
@@ -663,7 +753,7 @@ function handleMessage(ws, msg) {
 
             const sp = new ServerPlayer('u_' + Date.now().toString(36), name, avatar, false);
             sp.ws = ws;
-            connections.set(ws, { sp, roomId });
+            connections.set(ws, { sp, roomId, auth });
 
             room.addPlayer(sp);
             sp.send('room_created', { roomCode: roomId, myPlayerId: sp.playerId, isHost: true });
@@ -684,7 +774,7 @@ function handleMessage(ws, msg) {
             const avatar = msg.payload?.avatar || '🐱';
             const sp = new ServerPlayer('u_' + Date.now().toString(36), name, avatar, false);
             sp.ws = ws;
-            connections.set(ws, { sp, roomId });
+            connections.set(ws, { sp, roomId, auth });
 
             room.addPlayer(sp);
             sp.send('room_joined', { roomCode: roomId, myPlayerId: sp.playerId, isHost: false });
@@ -901,13 +991,17 @@ const BOT_NAMES = [
 const BOT_AVATARS = ['🐢', '⚡', '🐱', '🦆', '🐻', '🦊', '🌟', '👾'];
 
 // ═══════════════════════════════════════════
-// 10. 优雅退出
+// 10. 启动
 // ═══════════════════════════════════════════
+
+server.listen(PORT, () => {
+    console.log(`🐾 HTTP + WS 共享端口 ${PORT} 已就绪`);
+});
 
 process.on('SIGINT', () => {
     console.log('\n🐾 服务器关闭中...');
     matchmaker.shutdown();
-    wss.close(() => process.exit(0));
+    wss.close(() => server.close(() => process.exit(0)));
 });
 
 process.on('uncaughtException', (err) => {
