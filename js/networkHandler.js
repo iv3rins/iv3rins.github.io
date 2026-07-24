@@ -299,7 +299,7 @@ export function processPlayCard(attackerIdx, payload) {
         console.log('[processPlayCard] ⚔ 攻击路由 — attacker:', attacker.name, 'target:', engine.players[payload.targetPlayerId]?.name, 'declaredSuit:', declaredSuit, 'aValue:', aValue);
         const target = engine.players[payload.targetPlayerId];
         if (!target) throw new Error('无效的目标');
-        engine.playAttack(attacker, target, cards, declaredSuit, aValue);
+        engine.playAttack(attacker, target, cards, declaredSuit, aValue, hasA);
         broadcastGameChat(attacker.name + ' 攻击了 ' + target.name + '！');
     }
 

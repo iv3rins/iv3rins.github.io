@@ -29,29 +29,26 @@ export class Character {
      * 遵循：剩余伤害 = Math.max(0, damage - 护盾)
      */
     takeDamage(damage, ignoreShield = false) {
-        let actualDamage = 0;
+        if (this.isDead) return { actualDamage: 0, hpDamage: 0 };
+        const raw = Math.max(0, Number(damage) || 0);
+        let hpDamage;
 
         if (ignoreShield) {
-            // 直接扣血，无视护盾
-            const remaining = Math.max(0, damage);
-            actualDamage = remaining;
-            this.hp = Math.max(0, this.hp - remaining);
+            hpDamage = Math.min(this.hp, raw);
+            this.hp = Math.max(0, this.hp - hpDamage);
         } else {
-            // 优先扣护盾，溢出扣血
-            const absorbed = Math.min(this.shield, damage);
-            this.shield -= absorbed;
-            
-            const remaining = Math.max(0, damage - absorbed);
-            actualDamage = remaining;
-            this.hp = Math.max(0, this.hp - remaining);
+            const absorbed = Math.min(this.shield, raw);
+            this.shield = Math.max(0, this.shield - raw);
+            hpDamage = Math.min(this.hp, Math.max(0, raw - absorbed));
+            this.hp = Math.max(0, this.hp - hpDamage);
         }
 
-        // 血量归零，触发濒死
-        if (this.hp === 0 && !this.isDead) {
+        if (this.hp <= 0 && !this.isDead) {
+            this.hp = 0;
             this.isDying = true;
         }
 
-        return actualDamage;
+        return { actualDamage: raw, hpDamage };
     }
 
     /**

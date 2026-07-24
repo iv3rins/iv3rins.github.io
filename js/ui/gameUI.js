@@ -495,9 +495,10 @@ function dispatchPlayAction(selectedCards, chosenSuit, hasJoker, nonJokers, stat
     const payload = {
         targetPlayerId: isShield ? state.myPlayerId : G.selectedTargetId,
         cardIndices: [...G.selectedCardIndices],
-        aSuit: chosenSuit,                    // 兼容旧字段
-        declaredSuit: chosenSuit,             // ★ 新字段：最终浸染花色
-        aValue: hasA ? (G.aValue || 1) : null, // ★ 新字段：A 的自定义点数
+        aSuit: chosenSuit,
+        declaredSuit: chosenSuit,
+        aValue: hasA ? (G.aValue || 1) : null,
+        hasA: hasA,  // ★ 万化特权标志
     };
 
     // 出牌后清空合体状态

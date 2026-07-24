@@ -219,69 +219,67 @@ export class GameEngine {
 
     /**
      * 执行攻击出牌
+     * @param {boolean} hasA — 是否含万化牌A（A特权：无视花色免疫）
      */
-    playAttack(attacker, target, cards, declaredSuit = null, aValue = null) {
+    playAttack(attacker, target, cards, declaredSuit = null, aValue = null, hasA = false) {
         const validation = validatePlay(cards, declaredSuit);
         if (!validation.valid) throw new Error(validation.error);
 
-        let totalDamage = validation.normalCards.reduce((sum, c) => sum + c.value, 0);
-        if (validation.hasA) totalDamage += (aValue || 1);
+        let totalDamage = validation.normalCards.reduce((sum, c) => sum + (Number(c.value)||0), 0);
+        if (validation.hasA) totalDamage += (Number(aValue) || 1);
+        totalDamage = Math.max(0, Math.floor(totalDamage));
 
         const attackSuit = validation.declaredSuit;
         if (!attackSuit) throw new Error('无法确定攻击花色');
 
         const targetChar = target.getActiveCharacter();
         const attackerChar = attacker.getActiveCharacter();
-        const isImmune = (attackSuit === targetChar.suit);
+        const targetImmune = (attackSuit === targetChar.suit);
+        // ★ [Wanhua特权]：hasA 时无视花色免疫
+        const immuneBlocks = targetImmune && !hasA;
+
         let finalDamage = totalDamage;
 
-        // ♠ 黑桃双倍
-        if (attackSuit === '♠' && !isImmune) {
+        // ♠ 黑桃双倍（免疫时无效，除非有A）
+        if (attackSuit === '♠' && !immuneBlocks) {
             finalDamage *= 2;
         }
 
-        // ♣ 免疫穿透护盾
-        const ignoreShield = (attackSuit === '♣' && isImmune);
-        const actualDamageDealt = targetChar.takeDamage(finalDamage, ignoreShield);
+        // ♣ 穿透护盾：攻击者角色是♣ 或 (攻击花色是♣且目标免疫时)
+        const ignoreShield = (attackerChar.suit === '♣') || (attackSuit === '♣' && targetImmune);
+
+        const result = targetChar.takeDamage(finalDamage, ignoreShield);
+        const hpDamage = result.hpDamage;
 
         // 濒死检测
         if (targetChar.isDying) {
             this.phase = 'WAITING_FOR_JOKER';
-            this.dyingInfo = {
-                playerId: target.id,
-                charIndex: target.activeCharIndex,
-                timestamp: Date.now(),
-            };
+            this.dyingInfo = { playerId: target.id, charIndex: target.activeCharIndex, timestamp: Date.now() };
         }
 
-        // ♦ 方块：五谷丰登
-        if (attackSuit === '♦' && !isImmune) {
+        // ♦ 方块：五谷丰登（免疫时无效，除非有A）
+        if (attackSuit === '♦' && !immuneBlocks) {
             let remaining = finalDamage;
             const alivePlayers = this.players.filter(p => !p.isEliminated);
             if (alivePlayers.length > 0) {
                 const startIdx = this.players.indexOf(attacker);
-                let idx = startIdx;
-                let loops = 0;
-                const maxLoops = alivePlayers.length * 3; 
-                while (remaining > 0 && loops < maxLoops) {
+                let idx = startIdx, loops = 0;
+                while (remaining > 0 && loops < alivePlayers.length * 3) {
                     loops++;
                     const p = this.players[idx];
-                    if (!p.isEliminated && p.hand.length < MAX_HAND_SIZE) {
-                        this.drawCards(p, 1);
-                        remaining--;
-                    }
+                    if (!p.isEliminated && p.hand.length < MAX_HAND_SIZE) { this.drawCards(p, 1); remaining--; }
                     if (alivePlayers.every(ap => ap.hand.length >= MAX_HAND_SIZE)) break;
                     idx = (idx + 1) % this.numPlayers;
                 }
             }
         }
-        
-        // ♥ 红桃吸血
-        if (attackSuit === '♥') {
-            attackerChar.hp = Math.min(attackerChar.maxHp, attackerChar.hp + actualDamageDealt);
+
+        // ♥ 红桃吸血：回复实际削血值（免疫时无效，除非有A）
+        if (attackSuit === '♥' && !immuneBlocks) {
+            attackerChar.hp = Math.min(attackerChar.maxHp, attackerChar.hp + hpDamage);
         }
 
-        this.lastAction = { type: 'damage', targetId: target.id, amount: actualDamageDealt, suit: attackSuit };
+        this.lastAction = { type: 'damage', targetId: target.id, amount: finalDamage, suit: attackSuit };
         this._postPlayCleanup(attacker, target, cards);
     }
 
