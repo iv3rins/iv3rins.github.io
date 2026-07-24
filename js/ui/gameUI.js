@@ -317,14 +317,20 @@ export function renderHand(cards) {
             div.innerHTML = `<span>${card.suit || '?'}</span><span>${card.rank}</span>`;
         }
 
-        // ★ Staggered dealing: 新卡牌从屏幕外飞入，逐张延迟
-        const isNewCard = (i >= prevCount - 1 || prevCount === 0);
-        if (isNewCard) {
-            div.classList.add('deal-stagger');
-            div.style.animationDelay = (i * 50) + 'ms';
-        }
         div.addEventListener('click', () => toggleCard(i, div));
         container.appendChild(div);
+
+        // ★ Staggered dealing：必须在 appendChild 后通过 RAF 添加动画类
+        //    否则浏览器可能因元素未入 layout 而跳过 @keyframes
+        const isNewCard = (i >= prevCount - 1 || prevCount === 0);
+        if (isNewCard) {
+            const el = div;
+            const delay = i * 50;
+            requestAnimationFrame(() => {
+                el.classList.add('deal-stagger');
+                el.style.animationDelay = delay + 'ms';
+            });
+        }
     });
     // ★ 渲染后调用推荐提示
     highlightRecommendedCards(cards);
