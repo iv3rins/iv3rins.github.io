@@ -222,6 +222,7 @@ export function serializeState(engine, forEngineId) {
             characters: p.characters.map(c => ({
                 rank: c.rank, suit: c.suit, maxHp: c.maxHp,
                 hp: c.hp, shield: c.shield, isDead: c.isDead, isDying: c.isDying,
+                lives: c.lives, maxLives: c.maxLives,
             })),
             activeCharIndex: p.activeCharIndex,
             starterSelected: p.starterSelected,

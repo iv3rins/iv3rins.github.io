@@ -74,12 +74,21 @@ function createRoom() {
         G.playerToPeer[0] = G.p2p.myId;
         document.getElementById('display-room-code').textContent = roomCode;
         showPage('waiting');
+        document.getElementById('game-mode-selector').style.display = 'block';
         renderWaitingLobby();
         addSystemChat('房间创建成功！快邀请小伙伴加入吧~ 🐾');
         hideLoading();
     };
 
     G.p2p.callbacks.onPlayerJoin = (peerId) => {
+        // ★ 重连检测：如果该 peer 之前存在且游戏已开始，取消断线倒计时
+        if (G.gameStarted && G.gameEngine && G.peerToPlayer[peerId] !== undefined) {
+            const idx = G.peerToPlayer[peerId];
+            G.gameEngine.cancelDisconnectTimer(idx);
+            addGameChat('system', (G.playerNames[idx] || '玩家') + ' 重新连接！🎉');
+            broadcastSyncState();
+            return;
+        }
         if (G.gameStarted) return;
         // ★ 如果 JOIN_REQ 已经提前分配了槽位，跳过
         if (G.peerToPlayer[peerId] !== undefined) return;
@@ -106,18 +115,12 @@ function createRoom() {
         delete G.playerAvatars[idx];
         delete G.playerReady[idx];
         if (G.gameStarted && G.gameEngine) {
-            const p = G.gameEngine.players[idx];
-            if (p && !p.isEliminated) {
-                p.characters.forEach(c => c.execute());
-                p.isEliminated = true;
-                addGameChat('system', name + ' 断线，已被淘汰 😿');
-                if (G.gameEngine.currentPlayerIndex === idx && !G.gameEngine.isGameOver) {
-                    G.gameEngine.nextTurn();
-                }
-                G.gameEngine.checkWinCondition();
-                broadcastSyncState();
-                if (G.gameEngine.isGameOver) broadcastGameOver();
-            }
+            // ★ 使用 30 秒重连倒计时，而非立即淘汰
+            G.gameEngine.startDisconnectTimer(idx);
+            addGameChat('system', name + ' 断线了，30秒内重连可继续游戏 ⏳');
+            G.gameEngine.checkWinCondition();
+            broadcastSyncState();
+            if (G.gameEngine.isGameOver) broadcastGameOver();
         } else {
             addSystemChat(name + ' 离开了房间 😿');
             renderWaitingLobby();
@@ -219,7 +222,11 @@ function startGame() {
     const indices = Object.keys(G.playerNames).map(Number).sort((a, b) => a - b);
     const count = indices.length;
 
-    G.gameEngine = new GameEngine(count);
+    // ★ 读取游戏模式：quick=1命, classic=3命
+    const modeRadio = document.querySelector('input[name="gameMode"]:checked');
+    const maxLives = (modeRadio && modeRadio.value === 'quick') ? 1 : 3;
+
+    G.gameEngine = new GameEngine(count, maxLives);
     G.roundCount = 0;
     G.gameStarted = true;
 

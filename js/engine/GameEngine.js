@@ -13,8 +13,9 @@ const NORMAL_RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10'];
 const MAX_HAND_SIZE = 7;
 
 export class GameEngine {
-    constructor(numPlayers) {
+    constructor(numPlayers, maxLives = 3) {
         this.numPlayers = numPlayers;
+        this.maxLives = maxLives;
         this.players = [];
         this.deck = [];
         this.discardPile = [];
@@ -24,7 +25,42 @@ export class GameEngine {
         // ★ Bug3+4: 阶段状态机
         this.phase = 'SELECTING_STARTER';  // SELECTING_STARTER | PLAYING | WAITING_FOR_JOKER | GAME_OVER
         this.dyingInfo = null;             // { playerId, charIndex, timestamp }
+        this._disconnectTimers = {};       // ★ playerId → setTimeout (30s 断线死亡)
         this._initGame();
+    }
+
+    /** ★ 玩家断线：30 秒内未重连则淘汰 */
+    startDisconnectTimer(playerId) {
+        if (this._disconnectTimers[playerId]) return;
+        const player = this.players[playerId];
+        if (!player || player.isEliminated) return;
+        player._disconnected = true;
+        console.log('[Engine] 玩家断线 — player:', playerId, '30s倒计时');
+        this._disconnectTimers[playerId] = setTimeout(() => {
+            console.log('[Engine] 断线超时，淘汰玩家 — player:', playerId);
+            this.killPlayer(playerId);
+            delete this._disconnectTimers[playerId];
+        }, 30000);
+    }
+
+    /** ★ 玩家重连：清除死亡倒计时 */
+    cancelDisconnectTimer(playerId) {
+        if (this._disconnectTimers[playerId]) {
+            clearTimeout(this._disconnectTimers[playerId]);
+            delete this._disconnectTimers[playerId];
+        }
+        const player = this.players[playerId];
+        if (player) player._disconnected = false;
+        console.log('[Engine] 玩家重连 — player:', playerId);
+    }
+
+    /** ★ 强制淘汰玩家 */
+    killPlayer(playerId) {
+        const player = this.players[playerId];
+        if (!player || player.isEliminated) return;
+        player.characters.forEach(c => { c.hp = 0; c.isDead = true; c.isDying = false; });
+        player.isEliminated = true;
+        this.checkWinCondition();
     }
 
     _initGame() {
@@ -114,7 +150,7 @@ export class GameEngine {
         this.players.forEach(p => {
             charRanks.forEach(rank => {
                 const randomSuit = SUITS[Math.floor(Math.random() * SUITS.length)];
-                p.characters.push(new Character(rank, randomSuit));
+                p.characters.push(new Character(rank, randomSuit, this.maxLives));
             });
             // ★ Bug4: 不设置 activeCharIndex，等玩家选将（Player 构造函数已设为 -1）
         });

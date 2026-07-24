@@ -56,6 +56,14 @@
                     <h2>✨ 等待可爱的玩家加入 ✨</h2>
                     <div class="room-code-display">房间邀请码: <span id="display-room-code">----</span><button class="btn btn-small" id="btn-copy-code">复制</button></div>
                 </div>
+                <!-- 游戏模式选择 (仅房主可见) -->
+                <div id="game-mode-selector" class="host-only-ui" style="display:none;margin-bottom:10px">
+                    <p class="mode-title">✨ 选择游戏模式 ✨</p>
+                    <div class="mode-options">
+                        <label class="mode-card"><input type="radio" name="gameMode" value="quick" checked><div class="mode-content"><span class="mode-icon">⚡</span><span class="mode-name">快速模式</span><span class="mode-desc">1条命，速战速决！</span></div></label>
+                        <label class="mode-card"><input type="radio" name="gameMode" value="classic"><div class="mode-content"><span class="mode-icon">🐾</span><span class="mode-name">常规模式</span><span class="mode-desc">3条命，绝地反击！</span></div></label>
+                    </div>
+                </div>
                 <div class="players-grid" id="players-grid"></div>
                 <div class="action-buttons">
                     <button class="btn" id="btn-start-game">🚀 开始游戏</button>

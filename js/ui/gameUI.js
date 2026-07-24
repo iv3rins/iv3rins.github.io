@@ -186,7 +186,7 @@ export function createPlayerCard(p, idx, isSelf, isTargetable, state) {
         <div style="font-size:10px;color:#636e72">${displayChar.hp}/${displayChar.maxHp}${displayChar.shield > 0 ? ' +' + displayChar.shield + '🛡' : ''}</div>
         <div class="status-bar" data-shield="${displayChar.shield}">
             <div class="status-hp" style="width:${hpPct}%"></div>
-            <div class="status-shield" style="width:${shPct}%"></div>
+            ${displayChar.shield > 0 ? `<div class="status-shield" style="width:${shPct}%"></div>` : ''}
         </div>
         <div style="margin-top:4px">${charDots}</div>
         <div class="hand-count">${p.handCount}</div>

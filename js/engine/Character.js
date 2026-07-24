@@ -3,14 +3,16 @@
  * Bug3: 新增濒死状态 (isDying)，hp=0 时不直接死亡
  */
 export class Character {
-    constructor(rank, suit) {
+    constructor(rank, suit, maxLives = 3) {
         this.rank = rank;
         this.suit = suit;
         this.maxHp = rank === 'J' ? 30 : (rank === 'Q' ? 40 : 50);
         this.hp = this.maxHp;
         this.shield = 0;
         this.isDead = false;
-        this.isDying = false;  // ★ Bug3: 濒死状态
+        this.isDying = false;
+        this.lives = maxLives;     // ★ 游戏模式：剩余命数
+        this.maxLives = maxLives;
     }
 
     takeDamage(amount, ignoreShield = false) {
@@ -35,9 +37,16 @@ export class Character {
         }
         if (this.hp <= 0) {
             this.hp = 0;
-            // ★ Bug3: 进入濒死而非直接死亡
-            this.isDying = true;
             this.shield = 0;
+            if (this.lives > 0) {
+                // ★ 消耗一条命，回满 HP，不进入濒死
+                this.lives--;
+                this.hp = this.maxHp;
+                this.isDying = false;
+            } else {
+                // 命数耗尽 → 濒死
+                this.isDying = true;
+            }
         }
         return actualDamage;
     }
