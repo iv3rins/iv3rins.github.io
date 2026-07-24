@@ -172,18 +172,18 @@ export function createPlayerCard(p, idx, isSelf, isTargetable, state) {
     console.log('[createPlayerCard]', p.name, 'idx:', idx, 'hp:', displayChar.hp, 'shield:', displayChar.shield, 'shPct:', shPct.toFixed(1) + '%', 'activeIdx:', p.activeCharIndex);
 
     const roleHtml = p.isEliminated
-        ? '<span class="role" style="color:#b2bec3">已淘汰</span>'
+        ? '<span class="role eliminated">已淘汰</span>'
         : `<span class="role ${suitClass}">${displayChar.suit}${displayChar.rank}</span>`;
 
     const charDots = p.characters.map(c =>
-        `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 2px;background:${c.isDead ? '#dfe6e9' : c.isDying ? '#ff4757' : '#55efc4'}"></span>`
+        `<span class="char-dot ${c.isDead ? 'dead' : c.isDying ? 'dying' : 'alive'}"></span>`
     ).join('');
 
     div.innerHTML = `
         ${nameHtml}
         <div class="avatar ${avatarCls}">${avatar}</div>
         ${roleHtml}
-        <div style="font-size:10px;color:#636e72">${displayChar.hp}/${displayChar.maxHp}${displayChar.shield > 0 ? ' +' + displayChar.shield + '🛡' : ''}</div>
+        <div class="hp-text">${displayChar.hp}/${displayChar.maxHp}${displayChar.shield > 0 ? ' +' + displayChar.shield + '🛡' : ''}</div>
         ${(() => {
             const lives = displayChar.lives !== undefined ? displayChar.lives : 0;
             const max = displayChar.maxLives || 3;
@@ -486,7 +486,7 @@ export function openWanhuaModal() {
         btn.innerHTML = `
             <span class="suit-icon ${isRed ? 'red' : 'black'}">${suit}</span>
             <span class="suit-text">${SUIT_NAMES[suit]}组合</span>
-            <span style="font-size:11px;color:#999">${SUIT_EFFECTS[suit] || ''}</span>
+            <span class="suit-effect-text">${SUIT_EFFECTS[suit] || ''}</span>
         `;
         btn.onclick = () => {
             container.querySelectorAll('.combo-card-btn').forEach(b => b.classList.remove('active'));
@@ -609,8 +609,7 @@ export function playCardFlyAnimation(attackerId, targetId, suit, rank) {
     const flyCard = document.createElement('div');
     const isRed = suit === '♦' || suit === '♥';
     flyCard.className = 'flying-card';
-    flyCard.style.background = isRed ? '#fff0f0' : '#f0f0ff';
-    flyCard.style.color = isRed ? '#dc2626' : '#1e293b';
+    flyCard.classList.add(isRed ? 'suit-red' : 'suit-black');
     flyCard.style.left = (sx - 26) + 'px';
     flyCard.style.top = (sy - 36) + 'px';
     flyCard.textContent = suit + rank;
@@ -722,7 +721,7 @@ function showStarterModal(me) {
         const isRed = c.suit === '♦' || c.suit === '♥';
         const card = document.createElement('div');
         card.className = 'starter-card';
-        card.style.color = isRed ? '#dc2626' : '#1e293b';
+        card.classList.add(isRed ? 'suit-red' : 'suit-black');
         card.innerHTML = `
             <div class="starter-suit">${c.suit}</div>
             <div class="starter-rank">${c.rank}</div>
