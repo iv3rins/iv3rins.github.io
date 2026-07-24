@@ -322,6 +322,12 @@ function initGamePage() {
     // ★ 新手指引关闭
     const tutOk = document.getElementById('btn-tutorial-ok');
     if (tutOk) tutOk.addEventListener('click', () => { clickSound(); document.getElementById('modal-tutorial').classList.remove('show'); });
+    // ★ 游戏内 [?] 按钮打开玩法说明
+    const gameTutBtn = document.getElementById('btn-game-tutorial');
+    if (gameTutBtn) gameTutBtn.addEventListener('click', () => {
+        clickSound();
+        document.getElementById('modal-tutorial').classList.add('show');
+    });
 }
 
 // ═══ 启动 (module脚本是defer的，DOMContentLoaded可能已触发) ═══

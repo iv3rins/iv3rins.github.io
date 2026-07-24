@@ -139,7 +139,8 @@ export function handleClientMessage(data, senderId) {
         }
         case 'SYNC_STATE': {
             G.currentState = data.payload;
-            renderState(data.payload);
+            // ★ 与房主保持一致：setTimeout(50ms) 确保 DOM 布局稳定
+            setTimeout(() => renderState(data.payload), 50);
             break;
         }
         case 'CHAT': {
@@ -289,18 +290,27 @@ export function processPlayCard(attackerIdx, payload) {
     if (cards.some(c => c.isJoker)) {
         const target = engine.players[payload.targetPlayerId];
         if (!target) throw new Error('Joker 需要指定目标');
+        const jokerCard = cards[0];
         engine.playJoker(attacker, target, target.activeCharIndex, cards);
         broadcastGameChat(attacker.name + ' 使用了 Joker！');
+        // ★ 全屏播报
+        import('./ui/gameUI.js').then(m => m.playActionBroadcast(attacker.name, target.name, jokerCard.suit || '🃏', jokerCard.rank || '', 'joker'));
     } else if (isClub) {
         console.log('[processPlayCard] ♣ 护盾路由 — attacker:', attacker.name, 'declaredSuit:', declaredSuit, 'aValue:', aValue, 'cards:', cards.map(c=>c.suit+c.rank));
+        const mainCard = nonJokers[0];
         engine.playShield(attacker, cards, declaredSuit, aValue);
         broadcastGameChat(attacker.name + ' 获得了护盾！🛡️');
+        // ★ 全屏播报
+        import('./ui/gameUI.js').then(m => m.playActionBroadcast(attacker.name, attacker.name, mainCard.suit, mainCard.rank, 'shield'));
     } else {
         console.log('[processPlayCard] ⚔ 攻击路由 — attacker:', attacker.name, 'target:', engine.players[payload.targetPlayerId]?.name, 'declaredSuit:', declaredSuit, 'aValue:', aValue);
         const target = engine.players[payload.targetPlayerId];
         if (!target) throw new Error('无效的目标');
+        const mainCard = nonJokers[0];
         engine.playAttack(attacker, target, cards, declaredSuit, aValue, hasA);
         broadcastGameChat(attacker.name + ' 攻击了 ' + target.name + '！');
+        // ★ 全屏播报
+        import('./ui/gameUI.js').then(m => m.playActionBroadcast(attacker.name, target.name, mainCard.suit, mainCard.rank, 'attack'));
     }
 
     G.roundCount++;

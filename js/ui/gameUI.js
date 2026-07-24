@@ -292,8 +292,10 @@ let _prevHandCount = 0;
 
 export function renderHand(cards) {
     const container = document.getElementById('hand-container');
+    if (!container) { console.warn('[renderHand] hand-container not found'); return; }
     const prevCount = container.children.length;
     container.innerHTML = '';
+    container.offsetHeight; // ★ 强制重排：确保浏览器完成 DOM 清除的布局计算
     
     cards.forEach((card, i) => {
         const div = document.createElement('div');
@@ -319,22 +321,42 @@ export function renderHand(cards) {
 
         div.addEventListener('click', () => toggleCard(i, div));
         container.appendChild(div);
-
-        // ★ Staggered dealing：必须在 appendChild 后通过 setTimeout 添加动画类
-        //    嵌套 RAF 会在同一帧触发 → 浏览器跳过 @keyframes（幽灵DOM根因）
-        const isNewCard = (i >= prevCount - 1 || prevCount === 0);
-        if (isNewCard) {
-            const el = div;
-            const delay = 60 + i * 50; // 基础延迟60ms确保布局完成
-            setTimeout(() => {
-                el.classList.add('deal-stagger');
-                el.style.animationDelay = (i * 50) + 'ms';
-            }, delay);
-        }
     });
-    // ★ 渲染后调用推荐提示 + 强制重排
-    container.offsetHeight; // 读取布局属性，强制浏览器完成 reflow
+
+    // ★ 强制重排：在设置动画类之前确保所有 DOM 节点都已布局
+    container.offsetHeight;
+
+    // ★ Staggered dealing：必须先设置 animationDelay，再添加 deal-stagger 类
+    //    因为 CSS animation 简写会重置 delay 为 0s，inline style 必须先生效
+    cards.forEach((card, i) => {
+        const isNewCard = (i >= prevCount - 1 || prevCount === 0);
+        if (!isNewCard) return;
+        const el = container.children[i];
+        if (!el) return;
+        const delay = 60 + i * 50;
+        setTimeout(() => {
+            // ★ 关键：先设置 animationDelay，再添加动画类（避免 CSS 简写覆盖）
+            el.style.animationDelay = (i * 50) + 'ms';
+            el.classList.add('deal-stagger');
+        }, delay);
+    });
+
+    // ★ 渲染后调用推荐提示 + 最终强制重排
+    container.offsetHeight;
     highlightRecommendedCards(cards);
+
+    // ★ 兜底：500ms 后强制移除残留的 opacity:0（防止动画永不触发导致卡牌永久不可见）
+    setTimeout(() => {
+        const allCards = container.querySelectorAll('.poker-card.deal-stagger');
+        allCards.forEach(el => {
+            const cs = getComputedStyle(el);
+            if (cs.opacity === '0') {
+                console.warn('[renderHand] 幽灵卡牌检测 — 强制刷新 card', el.dataset.index);
+                el.style.opacity = '1';
+                el.style.animation = 'none';
+            }
+        });
+    }, 550);
 }
 
 // ═══ 全屏中央出牌播报 ═══
