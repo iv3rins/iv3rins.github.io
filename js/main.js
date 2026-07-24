@@ -249,6 +249,20 @@ function initGamePage() {
         clickSound();
         import('./ui/gameUI.js').then(m => m.openWanhuaModal());
     });
+    // ★ 三国杀式浮动面板：确定出牌 + 取消
+    const floatConfirm = document.getElementById('float-confirm-btn');
+    if (floatConfirm) floatConfirm.addEventListener('click', () => { clickSound(); executeAttack(); });
+    const floatCancel = document.getElementById('float-cancel-btn');
+    if (floatCancel) floatCancel.addEventListener('click', () => {
+        clickSound();
+        // 清除所有选中状态
+        document.querySelectorAll('#hand-container .poker-card.selected').forEach(el => el.classList.remove('selected'));
+        G.selectedCardIndices = [];
+        G.selectedTargetId = -1;
+        G.declaredSuit = null;
+        const panel = document.getElementById('float-action-panel');
+        if (panel) panel.style.display = 'none';
+    });
     document.getElementById('btn-game-chat-send').addEventListener('click', () => { clickSound(); sendGameChat(); });
     document.getElementById('game-chat-input').addEventListener('keydown', e => {
         if (e.key === 'Enter') sendGameChat();

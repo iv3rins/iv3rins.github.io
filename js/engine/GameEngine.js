@@ -344,11 +344,11 @@ export class GameEngine {
         target.checkElimination();
         this.checkWinCondition();
 
-        // ★ 空城补给已禁用 — 摸牌仅通过 ♦ 方块和卡牌效果触发
-        // const normals = attacker.hand.filter(c => !c.isJoker);
-        // if (attacker.hand.length === 0 || normals.length === 0) {
-        //     this.drawCards(attacker, 3);
-        // }
+        // ★ 法则二：空手牌/全Joker → 补3张
+        const hasOnlyJokers = attacker.hand.every(c => c.isJoker);
+        if (attacker.hand.length === 0 || (attacker.hand.length > 0 && hasOnlyJokers)) {
+            this.drawCards(attacker, 3);
+        }
         // ★ 统一渲染出口
         if (this.onStateChange) this.onStateChange(this);
     }

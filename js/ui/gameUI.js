@@ -396,7 +396,11 @@ export function toggleCard(index, el) {
         el.classList.add('selected');
         audioManager.play('select');
     }
-    updateActionButtonUI();
+    // ★ 三国杀式：选中任意卡牌 → 显示浮动操作面板
+    const panel = document.getElementById('float-action-panel');
+    if (panel) {
+        panel.style.display = G.selectedCardIndices.length > 0 ? 'flex' : 'none';
+    }
 }
 
 // ═══ 回合 UI ═══
