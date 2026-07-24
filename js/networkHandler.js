@@ -196,10 +196,11 @@ export function broadcastSyncState() {
             G.p2p.sendTo(peerId, { type: 'SYNC_STATE', payload: G.gameEngine.getMaskedState(parseInt(engineIdx)) });
         }
     });
-    // 2. 房主本地状态：用未经脱敏的完整状态渲染自己
+    // 2. 房主本地状态：用 requestAnimationFrame 确保 DOM 已就绪
     G.currentState = G.gameEngine.getMaskedState(0);
-    console.log('[broadcastSyncState] phase:', G.currentState.phase, 'hand:', G.currentState.players[0]?.hand?.length, 'starterSelected:', G.currentState.players[0]?.starterSelected);
-    renderState(G.currentState);
+    console.log('[broadcastSyncState] phase:', G.currentState.phase, 'hand:', G.currentState.players[0]?.hand?.length);
+    // ★ 强制在下一帧渲染，避免浏览器批量合并 DOM 操作导致 "幽灵手牌"
+    requestAnimationFrame(() => renderState(G.currentState));
 }
 
 export function broadcastGameOver() {
