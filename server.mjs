@@ -140,9 +140,12 @@ class Room {
     // ── 游戏流程 ──
 
     canStart() {
+        // ★ 房主不需要准备，只检查其他人
+        const others = [...this.players.values()].filter(p => p.uid !== this.hostUid);
         return this.playerCount >= 2
             && this.state === 'WAITING'
-            && [...this.players.values()].every(p => p.ready);
+            && others.length > 0
+            && others.every(p => p.ready);
     }
 
     startGame(maxLives = 3) {

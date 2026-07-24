@@ -54,17 +54,19 @@ export function renderWaitingLobby() {
         grid.appendChild(slot);
     }
 
-    // ★ 修复按钮文字：防御性计算，确保不会出现 (0/-1)
+    // ★ 修复按钮文字：房主不需要准备，只检查客人的就绪状态
     const btn = document.getElementById('btn-start-game');
     if (!btn) return;
 
     if (G.isHost) {
-        const nonHostReady = indices.filter(i => i !== 0 && playerReady[i]).length;
-        const nonHostTotal = Math.max(0, totalPlayers - 1); // ★ 防御：确保不为负
-        const canStart = totalPlayers >= 2 && [...indices].every(i => !!playerReady[i]);
+        // ★ 房主自身不算在"需要准备"的人里
+        const guestIndices = indices.filter(i => i !== 0);
+        const guestReady = guestIndices.filter(i => playerReady[i]).length;
+        const guestTotal = guestIndices.length;
+        const canStart = totalPlayers >= 2 && guestTotal > 0 && guestIndices.every(i => !!playerReady[i]);
         btn.textContent = canStart
             ? `🚀 开始游戏 (${totalPlayers}人)`
-            : `⏳ 等待准备 (${nonHostReady}/${nonHostTotal})`;
+            : `⏳ 等待准备 (${guestReady}/${guestTotal})`;
         btn.disabled = !canStart;
     } else {
         // 非房主
