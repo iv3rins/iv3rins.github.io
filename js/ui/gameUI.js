@@ -3,7 +3,6 @@
  * 对手卡牌、自己状态、手牌、回合 UI、A 牌面板、目标选择、出牌执行
  */
 import { G } from '../state.js';
-import { findPlayableCombinations } from '../engine/GameValidator.js';
 import { Toast } from './toast.js';
 import { audioManager } from '../audioManager.js';
 // ★ 选将后广播状态（由 networkHandler.js 延迟注入以避免循环依赖）
@@ -60,9 +59,6 @@ export function renderState(state) {
 
     if (!isSpectating && me && me.hand) {
         renderHand(me.hand);
-        if (state.currentPlayerIndex === state.myPlayerId) {
-            markSuggestedCards(me.hand);
-        }
     }
     else document.getElementById('hand-container').innerHTML = '';
 
@@ -341,7 +337,6 @@ export function renderHand(cards) {
 
     // ★ 渲染后调用推荐提示 + 最终强制重排
     container.offsetHeight;
-    highlightRecommendedCards(cards);
 
     // ★ 兜底：500ms 后强制移除残留的 opacity:0（防止动画永不触发导致卡牌永久不可见）
     setTimeout(() => {
@@ -387,29 +382,8 @@ export function playActionBroadcast(attackerName, targetName, suit, rank, action
 }
 
 /**
- * ★ 系统推荐出牌：自动找出同花色或万化A，加上 gold 发光边框
+ * ★ 系统推荐出牌：已废弃 — 玩家自主选择，不做任何自动推荐
  */
-export function highlightRecommendedCards(cards) {
-    if (!G.currentState) return;
-    const me = G.currentState.players[G.myPlayerId];
-    if (!me || G.currentState.currentPlayerIndex !== G.myPlayerId) return;
-
-    const nonJokers = cards.filter(c => !c.isJoker);
-    const suitCounts = {};
-    nonJokers.forEach(c => { if (c.suit) suitCounts[c.suit] = (suitCounts[c.suit]||0)+1; });
-    const primarySuit = Object.entries(suitCounts).sort((a,b)=>b[1]-a[1])[0]?.[0];
-
-    const handEls = document.querySelectorAll('#hand-container .poker-card');
-    handEls.forEach(el => el.classList.remove('recommended'));
-
-    nonJokers.forEach((card, i) => {
-        const el = handEls[i];
-        if (!el) return;
-        if (card.rank === 'A' || card.suit === primarySuit) {
-            el.classList.add('recommended');
-        }
-    });
-}
 
 export function toggleCard(index, el) {
     const pos = G.selectedCardIndices.indexOf(index);
@@ -751,19 +725,7 @@ export function markNewCardsAsDealt(prevHandLength, currentCards) {
     if (currentCards.length > prevHandLength) audioManager.play('draw');
 }
 
-/** 斗地主式智能提示：高亮可参与合法组合的卡牌 */
-export function markSuggestedCards(handCards) {
-    const playable = findPlayableCombinations(handCards);
-    const container = document.getElementById('hand-container');
-    if (!container) return;
-    container.querySelectorAll('.poker-card').forEach((el, idx) => {
-        if (playable.has(idx)) {
-            el.classList.add('suggested');
-        } else {
-            el.classList.remove('suggested');
-        }
-    });
-}
+/** 斗地主式智能提示：已废弃 — 玩家自主选择 */
 
 // ═══ Bug4: 首发选将弹窗 ═══
 
