@@ -122,11 +122,11 @@ export class GameEngine {
         
         targetChar.rescue(Math.floor(targetChar.maxHp / 2));
 
-        // ★ 空城补给：Joker 救援后检查救援者是否空手
-        const normals = rescuer.hand.filter(c => !c.isJoker);
-        if (rescuer.hand.length === 0 || normals.length === 0) {
-            this.drawCards(rescuer, 3);
-        }
+        // ★ 空城补给已禁用（见 _postPlayCleanup）
+        // const normals = rescuer.hand.filter(c => !c.isJoker);
+        // if (rescuer.hand.length === 0 || normals.length === 0) {
+        //     this.drawCards(rescuer, 3);
+        // }
 
         this.phase = 'PLAYING';
         const rescuedName = target.name || '玩家' + target.id;
@@ -344,11 +344,11 @@ export class GameEngine {
         target.checkElimination();
         this.checkWinCondition();
 
-        // ★ 规则2 — 空城补给：手里没牌 或 只剩Joker → 摸3张
-        const normals = attacker.hand.filter(c => !c.isJoker);
-        if (attacker.hand.length === 0 || normals.length === 0) {
-            this.drawCards(attacker, 3);
-        }
+        // ★ 空城补给已禁用 — 摸牌仅通过 ♦ 方块和卡牌效果触发
+        // const normals = attacker.hand.filter(c => !c.isJoker);
+        // if (attacker.hand.length === 0 || normals.length === 0) {
+        //     this.drawCards(attacker, 3);
+        // }
         // ★ 统一渲染出口
         if (this.onStateChange) this.onStateChange(this);
     }
