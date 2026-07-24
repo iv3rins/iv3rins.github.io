@@ -243,25 +243,24 @@ function hideLoading() {
 
 function initGamePage() {
     const clickSound = () => audioManager.play('click');
-    document.getElementById('attack-btn').addEventListener('click', () => { clickSound(); executeAttack(); });
+    // ★ 万化按钮
     const wanhuaBtn = document.getElementById('wanhua-btn');
     if (wanhuaBtn) wanhuaBtn.addEventListener('click', () => {
         clickSound();
         import('./ui/gameUI.js').then(m => m.openWanhuaModal());
     });
     // ★ 三国杀式浮动面板：确定出牌 + 取消
-    const floatConfirm = document.getElementById('float-confirm-btn');
-    if (floatConfirm) floatConfirm.addEventListener('click', () => { clickSound(); executeAttack(); });
-    const floatCancel = document.getElementById('float-cancel-btn');
-    if (floatCancel) floatCancel.addEventListener('click', () => {
+    const btnConfirm = document.getElementById('btn-confirm');
+    if (btnConfirm) btnConfirm.addEventListener('click', () => { clickSound(); executeAttack(); });
+    const btnCancel = document.getElementById('btn-cancel');
+    if (btnCancel) btnCancel.addEventListener('click', () => {
         clickSound();
-        // 清除所有选中状态
-        document.querySelectorAll('#hand-container .poker-card.selected').forEach(el => el.classList.remove('selected'));
+        document.querySelectorAll('#my-hand-cards .poker-card.selected').forEach(el => el.classList.remove('selected'));
         G.selectedCardIndices = [];
         G.selectedTargetId = -1;
         G.declaredSuit = null;
-        const panel = document.getElementById('float-action-panel');
-        if (panel) panel.style.display = 'none';
+        const panel = document.getElementById('action-panel');
+        if (panel) panel.classList.add('hidden');
     });
     document.getElementById('btn-game-chat-send').addEventListener('click', () => { clickSound(); sendGameChat(); });
     document.getElementById('game-chat-input').addEventListener('keydown', e => {

@@ -60,7 +60,7 @@ export function renderState(state) {
     if (!isSpectating && me && me.hand) {
         renderHand(me.hand);
     }
-    else document.getElementById('hand-container').innerHTML = '';
+    else document.getElementById('my-hand-cards').innerHTML = '';
 
     // ★ VFX/音效必须在 renderOpponents/renderSelf 之后执行（否则 DOM 被 innerHTML='' 清掉）
     if (state.lastAction) {
@@ -135,7 +135,7 @@ export function renderOpponents(state) {
 }
 
 export function renderSelf(state) {
-    const container = document.getElementById('self-container');
+    const container = document.getElementById('my-avatar-area');
     container.innerHTML = '';
     const me = state.players[state.myPlayerId];
     if (!me) return;
@@ -216,7 +216,7 @@ export function selectTarget(playerId, el) {
 // ═══ 动态按钮文字（Task 2） ═══
 
 export function updateActionButtonUI() {
-    const btn = document.getElementById('attack-btn');
+    const btn = document.getElementById('btn-confirm');
     const wanhuaBtn = document.getElementById('wanhua-btn');
     if (!btn) return;
 
@@ -285,8 +285,8 @@ function calcComboValue(cards) {
 let _prevHandCount = 0;
 
 export function renderHand(cards) {
-    const container = document.getElementById('hand-container');
-    if (!container) { console.warn('[renderHand] hand-container not found'); return; }
+    const container = document.getElementById('my-hand-cards');
+    if (!container) { console.warn('[renderHand] my-hand-cards not found'); return; }
     const prevCount = container.children.length;
     container.innerHTML = '';
     container.offsetHeight; // ★ 强制重排：确保浏览器完成 DOM 清除的布局计算
@@ -397,9 +397,10 @@ export function toggleCard(index, el) {
         audioManager.play('select');
     }
     // ★ 三国杀式：选中任意卡牌 → 显示浮动操作面板
-    const panel = document.getElementById('float-action-panel');
+    const panel = document.getElementById('action-panel');
     if (panel) {
-        panel.style.display = G.selectedCardIndices.length > 0 ? 'flex' : 'none';
+        if (G.selectedCardIndices.length > 0) panel.classList.remove('hidden');
+        else panel.classList.add('hidden');
     }
 }
 
@@ -409,33 +410,14 @@ export function updateTurnUI(state) {
     const isMyTurn = state.currentPlayerIndex === state.myPlayerId;
     const me = state.players[state.myPlayerId];
     const isSpectating = me && me.isEliminated;
-    const actionArea = document.getElementById('action-area');
-    const btn = document.getElementById('attack-btn');
 
     if (isSpectating) {
-        actionArea.style.visibility = 'hidden';
         clearTimer();
     } else if (isMyTurn) {
-        actionArea.style.visibility = 'visible';
         updateActionButtonUI();
         startTimer();
     } else {
-        // 非自己回合：检测是否只选了 Joker 可插队
-        actionArea.style.visibility = 'visible';
         clearTimer();
-        // 检测是否选中了纯 Joker
-        const myHand = state.players[state.myPlayerId]?.hand;
-        const selectedCards = myHand && G.selectedCardIndices.length > 0
-            ? G.selectedCardIndices.map(i => myHand[i]).filter(Boolean) : [];
-        const onlyJoker = selectedCards.length > 0 && selectedCards.every(c => c.isJoker);
-        if (onlyJoker && G.selectedTargetId >= 0) {
-            btn.textContent = '🃏 使用 Joker (插队)';
-            btn.disabled = false;
-        } else {
-            const cur = state.players[state.currentPlayerIndex];
-            btn.textContent = `⏳ 等待 ${cur?.name || '...'} 出牌...`;
-            btn.disabled = true;
-        }
     }
 }
 
@@ -614,15 +596,11 @@ export function injectWSClient(ws) { _wsClient = ws; }
 
 export function startTimer() {
     clearTimer();
-    const tb = document.querySelector('.timer-bar-bg');
-    if (tb) { tb.classList.remove('timer-active'); void tb.offsetWidth; tb.classList.add('timer-active'); }
     G.timerTimeout = setTimeout(() => forceRandomPlay(), 30000);
 }
 
 export function clearTimer() {
     if (G.timerTimeout) { clearTimeout(G.timerTimeout); G.timerTimeout = null; }
-    const tb = document.querySelector('.timer-bar-bg');
-    if (tb) tb.classList.remove('timer-active');
 }
 
 function forceRandomPlay() {

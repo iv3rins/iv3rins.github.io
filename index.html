@@ -85,28 +85,23 @@
 
     <!-- 游戏对局 -->
     <div class="page-view" id="page-game">
-        <div class="game-main">
-            <div class="opponents-area" id="opponents-container"></div>
-            <div class="board-center">
-                <div class="deck-info" id="deck-info">🎴 牌堆: -- | 回合: --</div>
-                <div class="action-area" id="action-area">
-                    <div class="action-btns">
-                        <button class="btn btn-ghost" id="wanhua-btn" style="display:none">✨ 万化选项</button>
-                        <button class="btn" id="attack-btn">⚔️ 选择一个玩家，攻击</button>
-                    </div>
-                    <div class="timer-bar-bg"><div class="timer-bar-fill" id="turn-timer"></div></div>
-                </div>
-            </div>
-            <div class="game-bottom">
-                <div class="self-area" id="self-container"></div>
-                <div class="hand-area" id="hand-container"></div>
-            </div>
-            <!-- ★ 三国杀式浮动操作面板：手牌正上方 -->
-            <div class="float-action-panel" id="float-action-panel" style="display:none">
-                <button class="float-btn float-btn-confirm" id="float-confirm-btn">⚔️ 确定出牌</button>
-                <button class="float-btn float-btn-cancel" id="float-cancel-btn">✖ 取消</button>
+        <!-- ★ 顶层：对手头像与出牌展示区 -->
+        <div id="battlefield">
+            <div id="opponents-container"></div>
+            <div id="deck-info">🎴 牌堆: -- | 回合: --</div>
+            <button class="btn btn-ghost" id="wanhua-btn" style="display:none">✨ 万化</button>
+        </div>
+
+        <!-- ★ 底层：玩家专属操作台 -->
+        <div id="my-dashboard">
+            <div id="my-avatar-area"></div>
+            <div id="my-hand-cards"></div>
+            <div id="action-panel" class="hidden">
+                <button id="btn-confirm">确定</button>
+                <button id="btn-cancel">取消</button>
             </div>
         </div>
+
         <div class="chat-box">
             <div class="chat-header">💬 战斗聊天室</div>
             <div class="chat-messages" id="game-chat-messages"></div>
