@@ -346,3 +346,67 @@ body {
 }
 @media screen and (max-width:900px) { .chat-box{position:fixed;top:0;right:-320px;width:300px;height:100vh;z-index:1000;transition:right .3s cubic-bezier(.4,0,.2,1);box-shadow:-5px 0 15px rgba(0,0,0,.1)} .chat-sidebar{position:fixed;top:0;right:-320px;width:300px;height:100vh;z-index:1000;transition:right .3s cubic-bezier(.4,0,.2,1);box-shadow:-5px 0 15px rgba(0,0,0,.1)} .chat-sidebar.show-mobile-chat{right:0!important} .game-main{width:100%} #mobile-chat-toggle{display:flex} }
 @media (hover:none) and (pointer:coarse) { .poker-card:hover{transform:none;margin:0} .poker-card.selected{transform:translateY(-25px) scale(1.08);margin:0 18px;z-index:100;border-color:var(--primary);box-shadow:0 0 20px rgba(255,182,193,.6),0 12px 30px rgba(0,0,0,.2)} .poker-card{margin-left:-20px} }
+/* ═══ 📱 移动端全响应式布局 ═══ */
+@media screen and (max-width: 768px) {
+    body { overflow: hidden; }
+    .game-main { width: 100vw !important; }
+    .game-bottom { padding: 4px 4px 6px; gap: 4px; }
+    
+    /* 卡牌流式缩放 */
+    .poker-card { width: clamp(42px, 14vw, 78px); height: clamp(58px, 20vw, 112px); font-size: clamp(12px, 4vw, 24px); margin-left: clamp(-14px, -4vw, -25px); }
+    .poker-card:hover { margin: 0 clamp(2px, 1vw, 6px); }
+    .poker-card.selected { transform: translateY(-14px) scale(1.04); margin: 0 clamp(4px, 2vw, 10px); }
+    
+    /* 玩家卡片缩小 */
+    .player-card { width: clamp(65px, 16vw, 115px); padding: 4px; border-radius: 10px; border-width: 2px; }
+    .player-card .avatar { font-size: 18px; }
+    .player-card .name { font-size: 9px; }
+    .player-card .role { font-size: 12px; margin: 1px 0; }
+    .status-bar { height: 4px; margin-top: 2px; }
+    .hand-count { width: 16px; height: 16px; line-height: 16px; font-size: 8px; bottom: -5px; right: -5px; }
+    .current-turn-indicator { width: 18px; height: 18px; line-height: 18px; font-size: 10px; top: -7px; left: -7px; }
+    .self-area .player-card { width: clamp(75px, 18vw, 135px); padding: 5px; border-width: 3px; }
+    
+    /* 对手区压缩 */
+    .opponents-area { max-height: 32vh; gap: 4px; padding: 4px 6px; }
+    
+    /* 中央控制区 */
+    .board-center { gap: 4px; }
+    .deck-info { font-size: 10px; padding: 2px 8px; }
+    .timer-bar-bg { width: clamp(120px, 40vw, 280px); height: 5px; }
+    .btn { padding: 5px 12px; font-size: 12px; border-radius: 16px; }
+    .action-area { gap: 6px; }
+    .action-btns { gap: 6px; }
+    
+    /* ★ 聊天室抽屉化 (Drawer) */
+    .chat-box { position: fixed; top: 0; right: -100%; width: min(300px, 85vw); height: 100vh; z-index: 1000; transition: right .3s cubic-bezier(.4,0,.2,1); box-shadow: -5px 0 15px rgba(0,0,0,.1); }
+    .chat-box.show-mobile-chat { right: 0 !important; }
+    .chat-sidebar { position: fixed; top: 0; right: -100%; width: min(300px, 85vw); height: 100vh; z-index: 1000; transition: right .3s; box-shadow: -5px 0 15px rgba(0,0,0,.1); }
+    .chat-sidebar.show-mobile-chat { right: 0 !important; }
+    #mobile-chat-toggle { display: flex; }
+    
+    /* 手牌区 */
+    .hand-area { padding: 8px 12px 0; }
+    
+    /* 弹窗适配 */
+    .modal-box { max-width: 92vw; padding: 20px 24px; }
+    .wanhua-modal-content { max-width: 95vw; }
+    .combo-card-btn { padding: 8px 10px; min-width: 70px; }
+    .combo-card-btn .suit-icon { font-size: 22px; }
+    
+    /* 选将弹窗 */
+    .starter-card { width: clamp(60px, 20vw, 100px); height: clamp(80px, 28vw, 140px); }
+    
+    /* 大厅 */
+    .waiting-container { padding: 10px 12px; gap: 10px; }
+    .main-area { padding: 12px; border-radius: 15px; }
+    .players-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
+    .player-slot { height: 110px; border-radius: 12px; }
+    .player-slot .avatar { font-size: 28px; }
+    .room-header h2 { font-size: 18px; }
+    .room-code-display { font-size: 14px; padding: 5px 12px; }
+    
+    /* 飘字缩小 */
+    .vfx-popup { font-size: 18px; }
+    .damage-float { font-size: 16px; }
+}

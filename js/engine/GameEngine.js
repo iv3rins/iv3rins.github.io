@@ -20,6 +20,7 @@ export class GameEngine {
         this.deck = [];
         this.discardPile = [];
         this.currentPlayerIndex = 0;
+        this.turnCount = 1;  // ★ 回合计数
         this.isGameOver = false;
         this.winner = null;
         
@@ -340,10 +341,12 @@ export class GameEngine {
 
     nextTurn() {
         if (this.isGameOver || this.phase !== 'PLAYING') return;
+        const prevIdx = this.currentPlayerIndex;
         do {
             this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.numPlayers;
         } while (this.players[this.currentPlayerIndex].isEliminated);
-        // ★ 不在此摸牌 — 卡牌补给仅通过 ♦攻击 / 空城补给 / 角色阵亡奖励触发
+        // ★ 回到首位玩家时增加回合计数
+        if (this.currentPlayerIndex <= prevIdx) this.turnCount++;
     }
 
     checkWinCondition() {
@@ -370,12 +373,13 @@ export class GameEngine {
                 starterSelected: p.starterSelected,
                 handCount: p.hand.length,
                 isEliminated: p.isEliminated,
-                // ★ 仅目标玩家能看到自己的真实手牌
-                hand: (i === forPlayerId) ? p.hand.map(c => ({
+                // ★ 类型安全：确保 i 和 forPlayerId 都是 Number
+                hand: (Number(i) === Number(forPlayerId)) ? p.hand.map(c => ({
                     suit: c.suit, rank: c.rank, isJoker: c.isJoker, value: c.value,
                 })) : Array(p.hand.length).fill({ isHidden: true }),
             })),
             currentPlayerIndex: this.currentPlayerIndex,
+            turnCount: this.turnCount,
             deckCount: this.deck.length,
             isGameOver: this.isGameOver,
             winner: this.winner ? { id: this.winner.id, name: this.winner.name } : null,

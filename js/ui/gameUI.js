@@ -54,7 +54,7 @@ export function renderState(state) {
     const deckInfo = document.getElementById('deck-info');
     if (deckInfo) {
         const cur = state.players[state.currentPlayerIndex];
-        deckInfo.textContent = `🎴 牌堆: ${state.deckCount} | 回合 ${state.roundCount} | 当前: ${cur ? cur.name : '--'}`;
+        deckInfo.textContent = `🎴 牌堆: ${state.deckCount} | 回合 ${state.turnCount || state.roundCount || 1} | 当前: ${cur ? cur.name : '--'}`;
     }
 
     renderOpponents(state);
