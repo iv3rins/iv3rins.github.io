@@ -28,7 +28,7 @@
    🏠 大厅主页 — V8
    ═══════════════════════════════════════════ -->
 <div class="page-view active" id="page-home">
-  <div class="lobby-layout">
+  <main id="main-lobby-view" class="lobby-layout">
 
     <!-- TopNav -->
     <nav class="lobby-topnav">
@@ -89,25 +89,40 @@
       </div>
     </section>
 
-    <!-- V9 Waiting Room Overlay (默认隐藏) -->
-    <div id="waiting-room" style="display:none;max-width:680px;margin:0 auto 20px;padding:0 20px">
-      <div class="bento-card" style="padding:24px">
-        <h3 style="font-family:var(--font-heading)">⏳ 准备室</h3>
-        <p style="margin:8px 0">房间码: <b class="neo-number" id="wr-room-code">----</b></p>
-        <div id="wr-players" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0"></div>
-        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-          <button class="btn btn-primary" id="btn-wr-start" style="display:none">🚀 开始游戏</button>
-          <button class="btn btn-secondary" id="btn-wr-ready" style="display:none">✅ 准备</button>
-          <button class="btn btn-danger" id="btn-wr-leave">🚪 离开房间</button>
-        </div>
-      </div>
-    </div>
     <footer class="lobby-footer">
       <button class="btn-footer btn-footer-green" id="btn-my-stats"><i data-lucide="user" style="width:16px;height:16px"></i> 个人战绩</button>
       <button class="btn-footer btn-footer-gold" id="btn-rules"><i data-lucide="book-open" style="width:16px;height:16px"></i> 游戏规则</button>
       <button class="btn-footer btn-footer-blue" id="btn-updates"><i data-lucide="megaphone" style="width:16px;height:16px"></i> 更新公告</button>
     </footer>
-  </div>
+  </main>
+
+  <!-- V11: 全屏准备室视图 -->
+  <main id="waiting-room-view" style="display:none" class="lobby-layout">
+    <nav class="lobby-topnav">
+      <div class="nav-left"><span class="nav-logo">PokeWar</span></div>
+      <div class="nav-right"><button class="btn btn-danger btn-small" id="btn-wr-leave">🚪 离开</button></div>
+    </nav>
+    <div style="display:flex;gap:16px;flex:1;padding:16px;max-width:960px;margin:0 auto;width:100%;min-height:0">
+      <!-- 左侧: 玩家列表 60% -->
+      <div class="bento-card" style="flex:6;display:flex;flex-direction:column;padding:20px">
+        <h3 style="font-family:var(--font-heading);margin-bottom:8px">⏳ 准备室 · <b class="neo-number" id="wr-room-code">----</b></h3>
+        <div id="wr-players" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;flex:1"></div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+          <button class="btn btn-primary" id="btn-wr-start" style="display:none">🚀 开始游戏</button>
+          <button class="btn btn-secondary" id="btn-wr-ready" style="display:none">✅ 准备</button>
+        </div>
+      </div>
+      <!-- 右侧: 聊天 40% -->
+      <div class="bento-card" style="flex:4;display:flex;flex-direction:column;padding:16px">
+        <h4 style="font-family:var(--font-heading);margin-bottom:8px">💬 房间聊天</h4>
+        <div id="wr-chat-messages" style="flex:1;overflow-y:auto;background:#FFF;border:2px solid #000;border-radius:8px;padding:8px;margin-bottom:8px;font-size:13px;min-height:0"></div>
+        <div style="display:flex;gap:6px">
+          <input type="text" class="input-glass" id="wr-chat-input" placeholder="输入消息..." style="flex:1">
+          <button class="btn btn-small" id="btn-wr-chat-send">发送</button>
+        </div>
+      </div>
+    </div>
+  </main>
 </div>
 
 <!-- ═══════════════════════════════════════════

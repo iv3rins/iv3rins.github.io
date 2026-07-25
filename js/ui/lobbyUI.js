@@ -240,7 +240,7 @@ export function initLobby() {
       document.getElementById('btn-create-room').textContent = '⏳ 创建中...';
       const data = await app.createVirtualRoom();
       app.roomCode = data.roomCode;
-      showWaitingRoom(data.roomCode);
+      switchToWaitingRoom(data.roomCode);
       startRoomPolling();
       Toast.show('房间创建成功! 邀请码: ' + data.roomCode, 'success');
     } catch (e) {
@@ -258,7 +258,7 @@ export function initLobby() {
     try {
       const data = await app.joinVirtualRoom(code);
       app.roomCode = data.roomCode;
-      showWaitingRoom(data.roomCode);
+      switchToWaitingRoom(data.roomCode);
       startRoomPolling();
       Toast.show('加入成功!', 'success');
     } catch (e) {
@@ -321,7 +321,7 @@ export function initLobby() {
       if (data.user) {
         content.innerHTML = `
           <div class="bento-card" style="text-align:center;margin-bottom:12px">
-            <span style="font-size:36px">${data.user.avatar}</span>
+            <img src="${data.user.avatar}" alt="" style="width:64px;height:64px;border-radius:12px;border:2px solid #000">
             <h3>${esc(data.user.name)}</h3>
             <div style="display:flex;gap:20px;justify-content:center;margin-top:8px">
               <span>🏆 ${data.user.wins}胜</span>
@@ -411,7 +411,7 @@ function renderLeaderboard(rows) {
     else if (i === 2) { rankClass = 'bronze'; rankIcon = '🥉'; }
     return `<div class="leaderboard-row">
       <span class="leaderboard-rank ${rankClass}">${rankIcon}</span>
-      <span>${r.avatar || '🐱'}</span>
+      <img src="${r.avatar}" alt="" style="width:28px;height:28px;border-radius:6px;border:2px solid #000">
       <span class="leaderboard-name">${esc(r.name)}</span>
       <span class="leaderboard-rating">⭐ ${r.rating}</span>
     </div>`;
@@ -419,18 +419,18 @@ function renderLeaderboard(rows) {
 }
 
 // ═══════════════════════════════════════
-// V9: Waiting Room
+// V11: Waiting Room (SPA view switching)
 // ═══════════════════════════════════════
 
 let _roomPollTimer = null;
 
-function showWaitingRoom(code) {
-  const wr = document.getElementById('waiting-room');
+function switchToWaitingRoom(code) {
+  document.getElementById('main-lobby-view').style.display = 'none';
+  const wr = document.getElementById('waiting-room-view');
+  if (wr) wr.style.display = 'flex';
   const codeEl = document.getElementById('wr-room-code');
-  if (wr) wr.style.display = 'block';
   if (codeEl) codeEl.textContent = code;
 
-  // 按钮显示
   document.getElementById('btn-wr-start').style.display = app.isHost ? 'inline-block' : 'none';
   document.getElementById('btn-wr-ready').style.display = app.isHost ? 'none' : 'inline-block';
 
@@ -438,40 +438,63 @@ function showWaitingRoom(code) {
   document.getElementById('btn-wr-start').onclick = async () => {
     try {
       const data = await app.startRoom();
-      if (_roomPollTimer) clearInterval(_roomPollTimer);
-      document.getElementById('waiting-room').style.display = 'none';
+      stopRoomPolling();
+      document.getElementById('waiting-room-view').style.display = 'none';
+      document.getElementById('main-lobby-view').style.display = 'none';
       app.matchID = data.matchID;
       app.connectGame();
+      showPage('game');
       Toast.show('游戏开始!', 'success');
     } catch (e) { Toast.show(e.message, 'error'); }
   };
 
-  // 准备按钮
-  document.getElementById('btn-wr-ready').onclick = () => {
-    Toast.show('已准备! (等待房主开始)', 'success');
-  };
+  document.getElementById('btn-wr-ready').onclick = () => Toast.show('已准备!', 'success');
 
-  // 离开
   document.getElementById('btn-wr-leave').onclick = () => {
-    if (_roomPollTimer) clearInterval(_roomPollTimer);
-    document.getElementById('waiting-room').style.display = 'none';
+    stopRoomPolling();
+    document.getElementById('waiting-room-view').style.display = 'none';
+    document.getElementById('main-lobby-view').style.display = 'flex';
     app.roomCode = null;
     Toast.show('已离开房间');
   };
+
+  // 聊天发送
+  document.getElementById('btn-wr-chat-send').onclick = sendRoomChat;
+  document.getElementById('wr-chat-input').onkeydown = (e) => { if (e.key === 'Enter') sendRoomChat(); };
+}
+
+async function sendRoomChat() {
+  const input = document.getElementById('wr-chat-input');
+  const text = input?.value?.trim();
+  if (!text || !app.roomCode) return;
+  input.value = '';
+  try {
+    await fetch(`${app.getServerOrigin()}/api/room/chat`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roomCode: app.roomCode, playerId: app.playerId, playerName: app.playerName, text }),
+    });
+  } catch {}
+}
+
+function stopRoomPolling() {
+  if (_roomPollTimer) { clearInterval(_roomPollTimer); _roomPollTimer = null; }
 }
 
 function startRoomPolling() {
-  if (_roomPollTimer) clearInterval(_roomPollTimer);
+  stopRoomPolling();
   _roomPollTimer = setInterval(async () => {
     try {
       const data = await app.getRoomStatus();
+      if (!data) return;
       renderWRPlayers(data.players, data.host);
+      if (data.messages) renderWRChat(data.messages);
     } catch {
-      if (_roomPollTimer) clearInterval(_roomPollTimer);
-      document.getElementById('waiting-room').style.display = 'none';
+      stopRoomPolling();
+      document.getElementById('waiting-room-view').style.display = 'none';
+      document.getElementById('main-lobby-view').style.display = 'flex';
       Toast.show('房间已解散', 'error');
     }
-  }, 2000);
+  }, 1000);
 }
 
 function renderWRPlayers(players, host) {
@@ -482,19 +505,34 @@ function renderWRPlayers(players, host) {
     const p = players[i];
     if (p) {
       html += `<div class="wr-player-slot filled">
-        <img src="${p.avatar}" alt="" style="width:40px;height:40px;border-radius:8px;border:2px solid #000">
-        <span style="font-size:12px;font-weight:800">${esc(p.name)}</span>
+        <img src="${esc(p.avatar)}" alt="" style="width:44px;height:44px;border-radius:10px;border:2px solid #000">
+        <span style="font-size:13px;font-weight:800">${esc(p.name)}</span>
         ${p.id === host ? '<span style="font-size:10px;color:var(--accent-green)">👑房主</span>' : ''}
-        <span style="font-size:10px">${p.ready ? '✅' : '⏳'}</span>
+        <span style="font-size:11px">${p.ready ? '✅ 已准备' : '⏳ 等待'}</span>
       </div>`;
     } else {
       html += `<div class="wr-player-slot empty">
-        <span style="font-size:24px;color:var(--text-muted)">?</span>
-        <span style="font-size:11px;color:var(--text-muted)">等待加入</span>
+        <span style="font-size:28px;color:var(--text-muted)">?</span>
+        <span style="font-size:12px;color:var(--text-muted)">等待加入</span>
       </div>`;
     }
   }
   container.innerHTML = html;
+}
+
+let _lastChatCount = 0;
+function renderWRChat(messages) {
+  const container = document.getElementById('wr-chat-messages');
+  if (!container) return;
+  for (let i = _lastChatCount; i < messages.length; i++) {
+    const m = messages[i];
+    const div = document.createElement('div');
+    div.style.cssText = 'margin-bottom:4px;padding:4px 6px;border-radius:6px;background:#F5F5F5;font-size:12px';
+    div.innerHTML = `<b style="color:var(--accent-blue)">${esc(m.name)}:</b> ${esc(m.text)}`;
+    container.appendChild(div);
+  }
+  _lastChatCount = messages.length;
+  container.scrollTop = container.scrollHeight;
 }
 
 function esc(s) { return (s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }

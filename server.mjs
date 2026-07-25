@@ -307,7 +307,21 @@ server.app.use(async (ctx, next) => {
   if (!m || ctx.method !== 'GET') return next();
   const room = rooms.get(m[1].toUpperCase());
   if (!room) { ctx.status = 404; ctx.body = { error: '房间不存在' }; return; }
-  ctx.body = { roomCode: m[1].toUpperCase(), players: room.players, host: room.host };
+  ctx.body = { roomCode: m[1].toUpperCase(), players: room.players, host: room.host, messages: room.messages || [] };
+});
+
+/** POST /api/room/chat — 发送聊天 */
+server.app.use(async (ctx, next) => {
+  if (ctx.path !== '/api/room/chat' || ctx.method !== 'POST') return next();
+  try {
+    const { roomCode, playerId, playerName, text } = ctx.request.body || {};
+    const room = rooms.get((roomCode || '').toUpperCase());
+    if (!room) { ctx.status = 404; ctx.body = { error: '房间不存在' }; return; }
+    if (!room.messages) room.messages = [];
+    room.messages.push({ id: playerId, name: playerName || 'Unknown', text: (text || '').substring(0, 200), time: Date.now() });
+    if (room.messages.length > 100) room.messages = room.messages.slice(-100);
+    ctx.body = { success: true };
+  } catch (e) { ctx.status = 500; ctx.body = { error: e.message }; }
 });
 
 server.app.use(async (ctx, next) => {
