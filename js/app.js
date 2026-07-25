@@ -13,10 +13,12 @@ import { PokeWar } from '../game.js';
 
 const { Client, LobbyClient, SocketIO } = window.BoardgameIO || {};
 
-// ── 默认配置 ──
-// ★ 修复: lobby API 与 game server 共享端口，不再使用 8081
-const DEFAULT_SERVER = `${location.hostname}:${location.port || 8080}`;
-const LobbyAPI = `${location.protocol}//${location.hostname}:${location.port || 8080}`;
+// ══════════════════════════════════════════════════
+// ★ 统一服务器 Origin 地址
+//   动态获取当前域名/协议，端口降级到 8080
+//   DEFAULT_SERVER 旧值缺少 http:// 导致 Socket.IO 解析崩溃
+// ══════════════════════════════════════════════════
+const SERVER_ORIGIN = `${location.protocol}//${location.hostname}:${location.port || '8080'}`;
 
 // ═══════════════════════════════════════════
 // AppController — 单例
@@ -96,7 +98,7 @@ class AppController {
   // ═══ 初始化 Lobby ═══
 
   initLobby(serverAddr) {
-    const host = serverAddr || LobbyAPI;
+    const host = serverAddr || SERVER_ORIGIN;
     this.lobby = new LobbyClient({ server: host });
     console.log('[App] LobbyClient 初始化:', host);
   }
@@ -172,7 +174,7 @@ class AppController {
       return;
     }
 
-    const host = serverAddr || DEFAULT_SERVER;
+    const host = serverAddr || SERVER_ORIGIN;
     console.log('[App] 连接游戏服务器:', host, 'match:', this.matchID);
 
     this.client = Client({

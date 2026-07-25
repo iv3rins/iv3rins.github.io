@@ -74,7 +74,8 @@
    ├─ ❌ 文字对比度: text-muted 太暗 (#606070 → #8e8e9a)
    └─ ❌ 阴影丢失: 暗模式下 box-shadow 需加环境光 (无方向扩散)
    ════════════════════════════════════════════════════ */
-[data-theme="dark"] {
+[data-theme="dark"],
+.theme-dark {
   /* ── 基础背景 ── */
   --bg-base: #0f0f1a;
   --bg-gradient: linear-gradient(135deg, #0a0a14 0%, #0f0f1a 40%, #0d0d18 100%);
