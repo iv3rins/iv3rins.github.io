@@ -58,27 +58,63 @@
   --transition-spring: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* ── 暗黑模式 ── */
+/* ════════════════════════════════════════════════════
+   ★ 修复 3: 暗黑模式 (Dark Mode) — 完整变量覆盖
+
+   常见翻车点及修复:
+   ├─ ❌ 缺失变量: 原 dark 块只定义了部分变量，导致大量回退到
+   │   light 值，按钮 hover、万化色等完全丢失
+   ├─ ❌ 毛玻璃失效: panel-bg 必须带透明度 (rgba)，否则
+   │   backdrop-filter: blur() 完全无效
+   ├─ ❌ ♣♠ 不可读: suit-black 直接用 #eaeaea 违反用户规范
+   │   → 改用 slate-400 (#94a3b8): 冷调深灰，暗底清晰可读
+   ├─ ❌ 文字对比度: text-muted 太暗 (#606070 → #8e8e9a)
+   └─ ❌ 阴影丢失: 暗模式下 box-shadow 需加环境光 (无方向扩散)
+   ════════════════════════════════════════════════════ */
 [data-theme="dark"] {
-  --bg-base: #1a1a2e;
-  --bg-gradient: linear-gradient(135deg, #12121f 0%, #1a1a2e 50%, #15152a 100%);
-  --glass-bg: rgba(30, 30, 50, 0.65);
-  --glass-border: 1px solid rgba(255, 255, 255, 0.08);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
-  --text-primary: #eaeaea;
-  --text-secondary: #a0a0b0;
-  --text-muted: #606070;
-  --color-primary: #0a84ff;
-  --color-confirm: #30d158;
-  --color-cancel: #ff453a;
+  /* ── 基础背景 ── */
+  --bg-base: #0f0f1a;
+  --bg-gradient: linear-gradient(135deg, #0a0a14 0%, #0f0f1a 40%, #0d0d18 100%);
+
+  /* ── 毛玻璃面板 ★ 关键: 必须是带透明度的暗色，否则 blur 失效 ── */
+  --glass-bg: rgba(22, 22, 38, 0.65);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.06);
+  /* ★ 暗模式下阴影用极低透明度纯黑 + 环境弥散光 */
+  --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.5),
+                  0 0 0 0.5px rgba(255, 255, 255, 0.05),
+                  0 0 40px rgba(100, 100, 255, 0.04);
+  --glass-blur: blur(28px) saturate(140%);  /* 暗模式降低饱和避免溢出 */
+
+  /* ── 文字 — 提升对比度 ── */
+  --text-primary: #e8e8ed;      /* 主文字: 接近纯白但柔和 */
+  --text-secondary: #a8a8b8;    /* 次要: 不用 #a0a0b0 (偏灰偏暗) */
+  --text-muted: #7a7a8c;        /* ★ 修复: #606070 → #7a7a8c (增亮 25%，暗底可读) */
+
+  /* ── 主题色 — iOS Dark 调色板 ── */
+  --color-primary: #0a84ff;       /* iOS 暗模式蓝 */
+  --color-primary-hover: #409cff; /* ★ 修复: 新增 hover 态 */
+  --color-confirm: #30d158;       /* iOS 暗模式绿 */
+  --color-cancel: #ff453a;        /* iOS 暗模式红 */
   --color-danger: #ff453a;
   --color-hp: #ff453a;
   --color-shield: #0a84ff;
-  --suit-red: #ff6b6b;
-  --suit-black: #eaeaea;
-  --card-bg: rgba(40, 40, 60, 0.85);
+  --color-wanhua: #bf5af2;        /* ★ 修复: 新增万化色 (iOS 暗模式紫) */
+
+  /* ── 花色 — ★ 用户规范: ♦♥=red ♣♠=black ── */
+  --suit-red: #ff6b6b;            /* 暗模式红: 需要比 #dc2626 亮 */
+  /* ★ 修复: ♣♠ 在暗底上必须可见，使用 slate-400 (#94a3b8)
+           冷调深灰，视觉上保持"黑桃/梅花"的暗色调，
+           不会与红桃/方块的红色混淆 */
+  --suit-black: #94a3b8;          /* slate-400: 冷深灰，暗底清晰可读 */
+
+  /* ── 卡牌 — 半透明暗色底 + 暗模式投影 ── */
+  --card-bg: rgba(32, 32, 50, 0.88);
   --card-border: 1px solid rgba(255, 255, 255, 0.06);
-  --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  /* ★ 暗模式卡牌阴影: 加环境光弥散，不用大面积浅灰 */
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.5),
+                 0 0 0 0.5px rgba(255, 255, 255, 0.04);
+  --card-selected-glow: 0 0 0 3px rgba(255, 215, 0, 0.45),
+                        0 0 28px rgba(255, 215, 0, 0.18);
 }
 
 /* ═══════════════════════════════════════

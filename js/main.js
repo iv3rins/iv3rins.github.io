@@ -20,16 +20,23 @@ function boot() {
   console.log('🐾 扑克战争 (PokeWar) v3.0 — boardgame.io 架构');
   console.log('[Main] 初始化 UI...');
 
-  // 初次用户交互解锁音频
-  const unlockAudio = () => {
-    const s = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
-    s.volume = 0;
-    s.play().then(() => s.remove()).catch(() => {});
-    document.removeEventListener('click', unlockAudio);
-    document.removeEventListener('keydown', unlockAudio);
+  // ═══════════════════════════════════════════
+  // ★ 修复 2: 音频自动播放策略解锁
+  //
+  //   浏览器要求: 任何 Audio.play() 必须在"用户手势"中或之后执行。
+  //   解决方案:
+  //     1. 监听首次 click / touchstart / keydown
+  //     2. 调用 audioManager.unlock() 解锁 HTMLAudioElement + AudioContext
+  //     3. 解锁前的声音自动排队，解锁后一次性放出
+  //     4. 使用 { once: true } 确保事件监听器只触发一次 → 自动销毁
+  // ═══════════════════════════════════════════
+  const unlockOnInteraction = () => {
+    audioManager.unlock();
   };
-  document.addEventListener('click', unlockAudio, { once: true });
-  document.addEventListener('keydown', unlockAudio, { once: true });
+  // ★ 使用 { once: true } 替代手动 removeEventListener，更干净
+  document.addEventListener('click',      unlockOnInteraction, { once: true });
+  document.addEventListener('touchstart', unlockOnInteraction, { once: true });
+  document.addEventListener('keydown',    unlockOnInteraction, { once: true });
 
   // 初始化 UI
   try {

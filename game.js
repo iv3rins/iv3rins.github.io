@@ -450,6 +450,14 @@ function handleCharacterDeath(G, deadPlayerId, killerId) {
   const deadP = G.players[deadPlayerId];
   if (!deadP || deadP.eliminated) return;
 
+  // ★ 标记当前活跃角色为死亡
+  const dyingChar = deadP.characters[deadP.activeCharIdx];
+  if (dyingChar) {
+    dyingChar.isDead = true;
+    dyingChar.isDying = false;
+    dyingChar.hp = 0;
+  }
+
   deadP.aliveChars = Math.max(0, (deadP.aliveChars || 0) - 1);
 
   // 清空死者所有手牌
@@ -473,8 +481,8 @@ function handleCharacterDeath(G, deadPlayerId, killerId) {
       newCharIdx: nextIdx,
     };
   } else {
-    // 无存活角色 → 濒死
-    const dyingChar = deadP.characters[deadP.activeCharIdx];
+    // 无存活角色 → 濒死（注意：当前角色已在上面标记死亡）
+    // 需要找到刚死亡的那个角色来设置 isDying
     if (dyingChar) {
       dyingChar.isDying = true;
     }

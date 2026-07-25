@@ -6,7 +6,7 @@
   "main": "server.mjs",
   "scripts": {
     "start": "node server.mjs",
-    "test": "node --input-type=module -e \"import {GameEngine} from './js/engine/GameEngine.js'; const e = new GameEngine(2,3); console.log(e.players.length === 2 ? 'PASS: engine init' : 'FAIL'); process.exit(0)\""
+    "test": "node _verify.mjs"
   },
   "repository": {
     "type": "git",
