@@ -14,24 +14,16 @@ const require = createRequire(import.meta.url);
 const { Server, Origins } = require('boardgame.io/dist/cjs/server.js');
 
 const PORT = process.env.PORT || 8080;
-const API_PORT = process.env.API_PORT || 8081;
 const DEV_MODE = process.env.NODE_ENV !== 'production';
 
 // ══════════════════════════════════════════════════
-// ★ 修复 1: 显式配置 CORS origins 数组
-//   前端部署在 http://game.n1komajor.top → 必须加入白名单
-//   本地调试也需要 localhost
-//   注意: Origins 常量仅包含 LOCALHOST / LOCALHOST_IN_DEVELOPMENT，
-//   生产域名需以字符串形式直接传入。
+// CORS origins 白名单
 // ══════════════════════════════════════════════════
 const ALLOWED_ORIGINS = [
-  // ── 生产环境 ──
   'http://game.n1komajor.top',
   'https://game.n1komajor.top',
-  // ── 开发环境 ──
   'http://localhost:8080',
   'http://localhost:3000',
-  'http://localhost:9876',
   'http://127.0.0.1:8080',
   Origins.LOCALHOST_IN_DEVELOPMENT,
 ];
@@ -40,26 +32,52 @@ const ALLOWED_ORIGINS = [
 const server = Server({
   games: [PokeWar],
 
-  // ★ 修复: origins 显式列出所有前端源地址
   origins: ALLOWED_ORIGINS,
-
-  // ★ 修复: apiOrigins 也需要独立配置，否则 Lobby API 的 CORS 也会拦截
   apiOrigins: ALLOWED_ORIGINS,
 
-  // 开启 Lobby REST API
-  // 客户端可通过 POST /games/poke-war/create 创建房间
-  // POST /games/poke-war/join 加入房间
-  // GET /games/poke-war 列出房间
+  // ★ 修复: 不指定 apiPort → lobby API 与 game server 共享端口
+  //   避免跨端口 CORS preflight 问题
   lobbyConfig: {
-    apiPort: API_PORT,
+    // apiPort 不设置 = 自动挂载到 PORT
     apiCallback: () => {
-      console.log(`[Lobby API] 运行在端口 ${API_PORT}`);
+      console.log(`[Lobby API] 运行在端口 ${PORT} (共享)`);
     },
   },
 });
 
-// ── 静态文件服务（挂载在 Koa app 上） ──
-// boardgame.io 内部使用 Koa，添加静态文件中间件
+// ══════════════════════════════════════════════════
+// ★ 修复: 显式 CORS + OPTIONS preflight 中间件
+//   boardgame.io 内置 @koa/cors 但对 lobby API 端口
+//   的 preflight 处理不完全。在最外层手动拦截 OPTIONS。
+// ══════════════════════════════════════════════════
+server.app.use(async (ctx, next) => {
+  const origin = ctx.get('Origin') || '';
+  const allowed = ALLOWED_ORIGINS.some(o => {
+    if (typeof o === 'string') return origin === o;
+    if (o instanceof RegExp) return o.test(origin);
+    return !!o; // Origins.LOCALHOST_IN_DEVELOPMENT = allow all
+  });
+
+  if (allowed) {
+    ctx.set('Access-Control-Allow-Origin', origin);
+    ctx.set('Access-Control-Allow-Credentials', 'true');
+    ctx.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+    ctx.set('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With');
+    ctx.set('Access-Control-Max-Age', '86400');
+  }
+
+  // ★ 拦截 OPTIONS preflight: 直接返回 204，不进入后续路由
+  if (ctx.method === 'OPTIONS') {
+    ctx.status = 204;
+    return;
+  }
+
+  await next();
+});
+
+// ══════════════════════════════════════════════════
+// 静态文件服务（挂载在 Koa app 上）
+// ══════════════════════════════════════════════════
 import { readFileSync, existsSync } from 'fs';
 import { extname } from 'path';
 
@@ -112,12 +130,12 @@ server.run({
     console.log('╔══════════════════════════════════════════╗');
     console.log('║   🃏 扑克战争 (PokeWar) v3.0           ║');
     console.log('║   boardgame.io 权威服务器              ║');
-    console.log(`║   Game Port: ${PORT}                        ║`);
-    console.log(`║   API Port:  ${API_PORT}                       ║`);
+    console.log(`║   Port: ${PORT}                              ║`);
+    console.log(`║   Lobby API: /games/poke-war (共享端口)    ║`);
     console.log(`║   Mode: ${DEV_MODE ? 'DEVELOPMENT' : 'PRODUCTION'}                    ║`);
     console.log('╚══════════════════════════════════════════╝');
     console.log(`[Server] 服务器就绪 → http://localhost:${PORT}`);
-    console.log(`[Lobby] 创建房间 → POST http://localhost:${API_PORT}/games/poke-war/create`);
+    console.log(`[Lobby] 创建房间 → POST http://localhost:${PORT}/games/poke-war/create`);
     console.log('[CORS]  允许的来源:');
     ALLOWED_ORIGINS.forEach(o => {
       if (typeof o === 'string') console.log(`        ✓ ${o}`);

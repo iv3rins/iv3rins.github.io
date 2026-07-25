@@ -14,8 +14,9 @@ import { PokeWar } from '../game.js';
 const { Client, LobbyClient, SocketIO } = window.BoardgameIO || {};
 
 // ── 默认配置 ──
+// ★ 修复: lobby API 与 game server 共享端口，不再使用 8081
 const DEFAULT_SERVER = `${location.hostname}:${location.port || 8080}`;
-const LobbyAPI = `${location.protocol}//${location.hostname}:8081`;
+const LobbyAPI = `${location.protocol}//${location.hostname}:${location.port || 8080}`;
 
 // ═══════════════════════════════════════════
 // AppController — 单例

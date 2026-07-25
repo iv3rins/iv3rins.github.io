@@ -184,36 +184,36 @@ export const PokeWar = {
       allowedMoves: ['selectStarter'],
       onBegin: (G) => { G.phase = 'SELECTING_STARTER'; },
       endIf: (G) => {
+        if (!G || !G.players) return;
         const allReady = Object.values(G.players).every(p => p.starterSelected || p.eliminated);
         if (allReady) return { next: 'PLAYING' };
       },
     },
     PLAYING: {
       allowedMoves: ['playCards', 'rescueWithJoker'],
-      onBegin: (G) => { G.phase = 'PLAYING'; G.dyingInfo = null; },
+      onBegin: (G) => { if (G) { G.phase = 'PLAYING'; G.dyingInfo = null; } },
       endIf: (G) => {
-        // 有濒死 → 切换到等待救援阶段
+        if (!G) return;
         if (G.dyingInfo) return { next: 'WAITING_FOR_JOKER' };
       },
     },
     WAITING_FOR_JOKER: {
       allowedMoves: ['rescueWithJoker'],
       onBegin: (G) => {
+        if (!G) return;
         G.phase = 'WAITING_FOR_JOKER';
         if (!G.dyingInfo) G.dyingInfo = { startedAt: Date.now() };
         else G.dyingInfo.startedAt = Date.now();
       },
       endIf: (G) => {
-        // 救援成功 → 回到 PLAYING
+        if (!G) return;
         if (!G.dyingInfo) return { next: 'PLAYING' };
-        // 超时死亡
         if (Date.now() - G.dyingInfo.startedAt > DYING_TIMEOUT_SEC * 1000) {
-          return { next: 'PLAYING' }; // handleDyingTimeout 在 onEnd 处理
+          return { next: 'PLAYING' };
         }
       },
       onEnd: (G) => {
-        // 如果濒死信息还在 = 超时未救
-        if (G.dyingInfo) {
+        if (G && G.dyingInfo) {
           handleDyingTimeout(G);
         }
       },
@@ -224,14 +224,13 @@ export const PokeWar = {
   turn: {
     order: {
       first: () => 0,
-      next: (G, ctx) => (ctx.currentPlayer + 1) % ctx.numPlayers,
+      next: (G, ctx) => (ctx?.currentPlayer ?? 0 + 1) % (ctx?.numPlayers || 2),
     },
     onBegin: (G, ctx) => {
+      if (!G || !ctx) return;
       G.currentPlayer = String(ctx.currentPlayer);
       G.turn++;
-      // ★ 绝不自动摸牌！
     },
-    // onEnd: 不做任何事 — 不自动摸牌
   },
 
   /* ── Moves ── */
@@ -434,6 +433,8 @@ export const PokeWar = {
 
   /* ── 游戏结束条件 ── */
   endIf: (G) => {
+    // ★ 防御: setup 未完成时 players 可能为 undefined
+    if (!G || !G.players) return;
     const alive = Object.entries(G.players).filter(([, p]) => !p.eliminated);
     if (alive.length <= 1) {
       return { winner: alive[0]?.[0] || 'draw' };
