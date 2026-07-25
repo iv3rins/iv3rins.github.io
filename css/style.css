@@ -12,21 +12,19 @@ body.dark-mode {
   /* ★ 不再使用全局 invert */
 }
 
-/* ── CSS 变量: Neo-Brutalism Light ── */
+/* ── CSS 变量: Neo-Brutalism Acid Green (Spotify Wrapped Style) ── */
 :root {
-  /* 基础 */
+  /* 核心色彩 */
   --bg-color: #F4F4F0;
-  --bg-pattern: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='28'/%3E%3Ccircle cx='30' cy='30' r='18'/%3E%3Ccircle cx='30' cy='30' r='8'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   --text-main: #000000;
   --text-muted: #555555;
+  --primary-acid: #CCFF00;
+  --accent-blue: #0057FF;
+  --danger-red: #FF3B30;
+
+  /* 字体 */
   --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
   --font-heading: 'Impact', 'Arial Black', 'Helvetica Neue', sans-serif;
-
-  /* 荧光跳色 */
-  --accent-green: #CCFF00;
-  --accent-blue: #0057FF;
-  --accent-pink: #FF00E6;
-  --accent-yellow: #FFD600;
 
   /* 粗黑描边 + 硬阴影 */
   --border-thick: 3px solid #000000;
@@ -35,35 +33,10 @@ body.dark-mode {
   --shadow-hard-sm: 4px 4px 0px #000000;
   --radius: 12px;
 
-  /* 主题语义色 */
-  --color-primary: #0057FF;
-  --color-primary-hover: #003FCC;
-  --color-confirm: #00C853;
-  --color-cancel: #FF1744;
-  --color-danger: #FF1744;
-  --color-hp: #FF1744;
-  --color-shield: #0057FF;
-  --color-wanhua: #FF00E6;
-  --color-gold: #FFD600;
-
-  /* 花色 */
-  --suit-red: #dc2626;
-  --suit-black: #000000;
-
-  /* 旧别名兼容 */
-  --bg-base: var(--bg-color);
-  --bg-gradient: var(--bg-color);
-  --text-primary: var(--text-main);
-  --text-secondary: #333333;
-  --text-color-primary: var(--text-main);
-  --text-color-secondary: #333333;
+  /* 组件背景 */
   --glass-bg: #FFFFFF;
-  --glass-border: var(--border-thick);
-  --glass-shadow: var(--shadow-hard);
-  --glass-blur: none;
-  --glass-radius: var(--radius);
   --panel-bg: #FFFFFF;
-  --panel-border: #000000;
+  --card-bg: #FFFFFF;
 
   /* 按钮 */
   --btn-radius: 8px;
@@ -74,45 +47,89 @@ body.dark-mode {
   --card-width: 90px;
   --card-height: 126px;
   --card-radius: 10px;
-  --card-bg: #FFFFFF;
-  --card-border: var(--border-thin);
-  --card-shadow: var(--shadow-hard-sm);
   --card-hover-lift: -8px;
   --card-selected-lift: -28px;
-  --card-selected-glow: 0 0 0 4px var(--accent-green), 4px 4px 0px #000;
+
+  /* 花色 */
+  --suit-red: #dc2626;
+  --suit-black: #000000;
 
   /* 动画 */
   --transition-fast: 0.15s ease;
   --transition-normal: 0.2s ease;
   --transition-spring: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* 旧别名兼容 */
+  --bg-base: var(--bg-color);
+  --bg-gradient: var(--bg-color);
+  --bg-pattern: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='28'/%3E%3Ccircle cx='30' cy='30' r='18'/%3E%3Ccircle cx='30' cy='30' r='8'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --text-primary: var(--text-main);
+  --text-secondary: #333333;
+  --text-color-primary: var(--text-main);
+  --text-color-secondary: #333333;
+  --glass-border: var(--border-thick);
+  --glass-shadow: var(--shadow-hard);
+  --glass-blur: none;
+  --glass-radius: var(--radius);
+  --panel-border: #000000;
+  --card-border: var(--border-thin);
+  --card-shadow: var(--shadow-hard-sm);
+  --card-selected-glow: 0 0 0 4px var(--primary-acid), 4px 4px 0px #000;
+  --color-primary: var(--accent-blue);
+  --color-primary-hover: #003FCC;
+  --color-confirm: #00C853;
+  --color-cancel: #FF1744;
+  --color-danger: var(--danger-red);
+  --color-hp: #FF1744;
+  --color-shield: var(--accent-blue);
+  --color-wanhua: #FF00E6;
+  --color-gold: #FFD600;
+  --accent-green: var(--primary-acid);
+  --accent-pink: #FF00E6;
+  --accent-yellow: #FFD600;
 }
 
-/* ── Neo-Brutalism Dark ── */
-[data-theme="dark"],
-.theme-dark {
-  --bg-color: #1A1A1A;
-  --bg-pattern: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FFFFFF' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='28'/%3E%3Ccircle cx='30' cy='30' r='18'/%3E%3Ccircle cx='30' cy='30' r='8'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+/* ── 黑夜模式: 纯变量驱动 (零 invert 作弊) ── */
+html.dark-theme {
+  --bg-color: #111111;
   --text-main: #FFFFFF;
-  --text-muted: #999999;
+  --text-muted: #AAAAAA;
+  --glass-bg: #1A1A1A;
+  --panel-bg: #1A1A1A;
+  --card-bg: #222222;
   --border-thick: 3px solid #FFFFFF;
   --border-thin: 2px solid #FFFFFF;
   --shadow-hard: 6px 6px 0px #FFFFFF;
   --shadow-hard-sm: 4px 4px 0px #FFFFFF;
-  --glass-bg: #222222;
-  --panel-bg: #222222;
-  --card-bg: #2A2A2A;
-  --card-border: var(--border-thin);
-  --card-shadow: var(--shadow-hard-sm);
-  --text-primary: var(--text-main);
   --text-secondary: #BBBBBB;
-  --text-color-primary: var(--text-main);
   --text-color-secondary: #BBBBBB;
+  --suit-red: #ff6b6b;
+  --suit-black: #FFFFFF;
+  --card-selected-glow: 0 0 0 4px var(--primary-acid), 4px 4px 0px #FFF;
   --color-primary: #448AFF;
   --color-primary-hover: #6699FF;
   --color-confirm: #69F0AE;
+}
+/* 向后兼容 [data-theme=\"dark\"] */
+[data-theme="dark"], .theme-dark {
+  --bg-color: #111111;
+  --text-main: #FFFFFF;
+  --text-muted: #AAAAAA;
+  --glass-bg: #1A1A1A;
+  --panel-bg: #1A1A1A;
+  --card-bg: #222222;
+  --border-thick: 3px solid #FFFFFF;
+  --border-thin: 2px solid #FFFFFF;
+  --shadow-hard: 6px 6px 0px #FFFFFF;
+  --shadow-hard-sm: 4px 4px 0px #FFFFFF;
+  --text-secondary: #BBBBBB;
+  --text-color-secondary: #BBBBBB;
   --suit-red: #ff6b6b;
   --suit-black: #FFFFFF;
-  --card-selected-glow: 0 0 0 4px var(--accent-green), 4px 4px 0px #FFF;
+  --card-selected-glow: 0 0 0 4px var(--primary-acid), 4px 4px 0px #FFF;
+  --color-primary: #448AFF;
+  --color-primary-hover: #6699FF;
+  --color-confirm: #69F0AE;
 }
 
 /* ═══════════════════════════════════════

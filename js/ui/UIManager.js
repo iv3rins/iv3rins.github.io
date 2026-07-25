@@ -184,10 +184,10 @@ function renderWaitingLobby() {
   const grid = document.getElementById('players-grid');
   if (!grid) return;
   grid.innerHTML = `<div class="player-card">
-    <span class="player-avatar">${app.avatar}</span>
+    <img src="${app.avatar}" alt="avatar" class="player-avatar" style="width:64px;height:64px;border-radius:14px;border:3px solid #000;object-fit:cover">
     <div>
       <div class="player-name">${app.playerName} (你)</div>
-      <div class="player-status ready">✅ 已准备</div>
+      <div class="player-status ready">${ICON.check} 已准备</div>
     </div>
   </div>`;
 }
