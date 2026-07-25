@@ -1,0 +1,401 @@
+﻿<!doctype html>
+<html lang="zh-CN" data-theme="light" data-lang="zh">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="PokeWar 扑克战争 - 多人对战卡牌游戏"/>
+  <title>PokeWar</title>
+</head>
+<body>
+<a class="skip-link" href="#scene-layer">跳到主内容</a>
+
+<header class="topbar">
+  <div class="topbar-left">
+    <strong class="brand" data-action="go-home" role="button" tabindex="0">POKEWAR</strong>
+    <span id="connection-status" class="status-pill">离线</span>
+  </div>
+  <div class="topbar-right">
+    <button class="neo-btn compact lang-toggle" type="button" data-action="toggle-lang" aria-label="切换语言">ZH</button>
+    <button class="neo-btn compact theme-toggle" type="button" data-action="toggle-theme" aria-label="切换主题">浅色</button>
+    <div id="topbar-auth"></div>
+  </div>
+</header>
+
+<div id="reconnect-banner" class="reconnect-banner" hidden>
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <polyline points="1,4 1,10 7,10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M3.51 15a9 9 0 1 0 .49-3.51" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <span>连接断开，正在重连…</span>
+</div>
+
+<main id="scene-layer" tabindex="-1">
+
+  <!-- ── 首页 ──────────────────────────────────────────────────────────── -->
+  <section id="page-home" class="page-view active" aria-labelledby="home-title">
+    <div class="bento-card hero no-hover">
+      <div class="hero-inner">
+        <div>
+          <p class="eyebrow">2 ~ 12 PLAYER CARD BATTLE</p>
+          <h1 id="home-title" class="hero-title">POKEWAR</h1>
+          <p class="neo-body">服务器权威结算 · 创建房间 · 邀请好友 · 选将开战</p>
+        </div>
+        <svg viewBox="0 0 220 180" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="8" y="20" width="80" height="110" rx="10" fill="#fff" stroke="#000" stroke-width="3"/>
+          <text x="48" y="86" text-anchor="middle" font-size="52" fill="#000">♠</text>
+          <text x="16" y="42" font-size="18" font-weight="bold" fill="#000">K</text>
+          <rect x="132" y="20" width="80" height="110" rx="10" fill="#fff" stroke="#c00" stroke-width="3"/>
+          <text x="172" y="86" text-anchor="middle" font-size="52" fill="#c00">♥</text>
+          <text x="140" y="42" font-size="18" font-weight="bold" fill="#c00">Q</text>
+          <path d="M113 38 L102 82 L112 82 L99 138 L124 75 L112 75 L125 38Z" fill="#ccff00" stroke="#000" stroke-width="2"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 主菜单四格 -->
+    <div class="mode-grid">
+      <div class="bento-card mode-card no-hover" data-action="toggle-multiplayer" role="button" tabindex="0" aria-expanded="false">
+        <svg viewBox="0 0 140 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="50" cy="38" r="20" fill="var(--color-secondary)" stroke="var(--color-text)" stroke-width="2"/>
+          <text x="50" y="45" text-anchor="middle" font-size="16" fill="#fff">P1</text>
+          <circle cx="90" cy="38" r="20" fill="var(--color-danger)" stroke="var(--color-text)" stroke-width="2"/>
+          <text x="90" y="45" text-anchor="middle" font-size="16" fill="#fff">P2</text>
+          <path d="M30 80 Q50 65 70 72 Q90 65 110 80 L110 110 L30 110Z" fill="var(--color-surface2)" stroke="var(--color-text)" stroke-width="2"/>
+          <text x="70" y="100" text-anchor="middle" font-size="12" font-weight="bold" fill="var(--color-text)">多人对战</text>
+        </svg>
+        <h3>多人对战</h3>
+        <p>创建或加入房间，与好友激战</p>
+      </div>
+      <div class="bento-card mode-card no-hover" data-action="go-bot-lobby" role="button" tabindex="0">
+        <svg viewBox="0 0 140 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="30" y="20" width="80" height="60" rx="12" fill="var(--color-surface2)" stroke="var(--color-text)" stroke-width="2"/>
+          <circle cx="54" cy="46" r="8" fill="var(--color-secondary)"/>
+          <circle cx="86" cy="46" r="8" fill="var(--color-secondary)"/>
+          <rect x="50" y="62" width="40" height="6" rx="3" fill="var(--color-muted)"/>
+          <rect x="58" y="8" width="4" height="14" rx="2" fill="var(--color-text)"/>
+          <circle cx="60" cy="6" r="4" fill="var(--color-primary)" stroke="var(--color-text)" stroke-width="2"/>
+          <path d="M10 86 L30 80 L110 80 L130 86 L130 110 L10 110Z" fill="var(--color-primary)" stroke="var(--color-text)" stroke-width="2"/>
+          <text x="70" y="100" text-anchor="middle" font-size="12" font-weight="bold" fill="#000">人机对战</text>
+        </svg>
+        <h3>人机对战</h3>
+        <p>挑战 AI Bot，熟悉规则</p>
+      </div>
+      <div class="bento-card mode-card no-hover" data-action="go-leaderboard" role="button" tabindex="0">
+        <svg viewBox="0 0 140 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="20" y="70" width="30" height="40" rx="4" fill="var(--color-secondary)" stroke="var(--color-text)" stroke-width="2"/>
+          <rect x="55" y="45" width="30" height="65" rx="4" fill="var(--color-gold)" stroke="var(--color-text)" stroke-width="2"/>
+          <rect x="90" y="58" width="30" height="52" rx="4" fill="var(--color-muted)" stroke="var(--color-text)" stroke-width="2"/>
+          <path d="M55 10 L70 24 L85 10 L79 28 L93 28 L81 38 L85 52 L70 43 L55 52 L59 38 L47 28 L61 28Z" fill="var(--color-gold)" stroke="var(--color-text)" stroke-width="1.5"/>
+        </svg>
+        <h3>天梯排行</h3>
+        <p>天梯积分榜，一较高下</p>
+      </div>
+      <div class="bento-card mode-card no-hover" data-action="go-profile" role="button" tabindex="0">
+        <svg viewBox="0 0 140 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="70" cy="38" r="26" fill="var(--color-primary)" stroke="var(--color-text)" stroke-width="2"/>
+          <text x="70" y="48" text-anchor="middle" font-size="28" font-weight="bold" fill="var(--color-text)">★</text>
+          <rect x="18" y="75" width="24" height="30" rx="4" fill="var(--color-secondary)" stroke="var(--color-text)" stroke-width="2"/>
+          <rect x="48" y="62" width="24" height="43" rx="4" fill="var(--color-danger)" stroke="var(--color-text)" stroke-width="2"/>
+          <rect x="78" y="68" width="24" height="37" rx="4" fill="var(--color-primary)" stroke="var(--color-text)" stroke-width="2"/>
+          <rect x="108" y="80" width="14" height="25" rx="4" fill="var(--color-muted)" stroke="var(--color-text)" stroke-width="1.5"/>
+        </svg>
+        <h3>我的档案</h3>
+        <p>战绩统计与个人信息</p>
+      </div>
+    </div>
+
+    <!-- 多人对战展开面板 -->
+    <div id="multiplayer-panel" hidden>
+      <div class="home-grid" style="margin-top:20px">
+        <form id="create-form" class="bento-card" novalidate>
+          <h2 class="neo-heading">创建房间</h2>
+          <div class="form-actions">
+            <button class="neo-btn primary" type="submit">立即创建</button>
+            <button class="neo-btn" type="button" data-action="quick-match">快速匹配</button>
+          </div>
+        </form>
+        <form id="join-form" class="bento-card" novalidate>
+          <h2 class="neo-heading">加入房间</h2>
+          <label class="field-label" for="join-code">六位房间码</label>
+          <input id="join-code" class="neo-input uppercase" maxlength="6" required/>
+          <button class="neo-btn secondary" type="submit" style="margin-top:12px">加入战局</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 人机大厅 ─────────────────────────────────────────────────────── -->
+  <section id="page-bot-lobby" class="page-view" aria-labelledby="bot-title">
+    <button class="neo-btn compact" type="button" data-action="go-home" style="margin-bottom:12px">← 返回</button>
+    <div class="bot-lobby-grid">
+      <div>
+        <h1 id="bot-title" class="neo-heading" style="font-size:2rem">人机对战</h1>
+        <p class="neo-body">1 人 + 3 AI Bot，4 人对局，熟悉基础操作与花色战略，不消耗天梯分。</p>
+        <label class="field-label" for="bot-max-lives">命数</label>
+        <select id="bot-max-lives" class="neo-input compact-input">
+          <option value="1">1 条命（体验局）</option>
+          <option value="2">2 条命</option>
+          <option value="3" selected>3 条命（标准）</option>
+        </select>
+        <div class="form-actions" style="margin-top:16px">
+          <button class="neo-btn primary" type="button" data-action="start-bot-game">开始对战</button>
+        </div>
+      </div>
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect x="55" y="50" width="90" height="80" rx="16" fill="var(--color-surface2)" stroke="var(--color-text)" stroke-width="3"/>
+        <circle cx="85" cy="86" r="12" fill="var(--color-secondary)"/>
+        <circle cx="115" cy="86" r="12" fill="var(--color-secondary)"/>
+        <circle cx="88" cy="88" r="5" fill="#fff"/>
+        <circle cx="118" cy="88" r="5" fill="#fff"/>
+        <rect x="80" y="106" width="40" height="8" rx="4" fill="var(--color-primary)" stroke="var(--color-text)" stroke-width="1.5"/>
+        <rect x="96" y="32" width="8" height="20" rx="4" fill="var(--color-text)"/>
+        <circle cx="100" cy="28" r="6" fill="var(--color-primary)" stroke="var(--color-text)" stroke-width="2"/>
+        <rect x="145" y="70" width="18" height="40" rx="8" fill="var(--color-surface2)" stroke="var(--color-text)" stroke-width="2"/>
+        <rect x="37" y="70" width="18" height="40" rx="8" fill="var(--color-surface2)" stroke="var(--color-text)" stroke-width="2"/>
+        <rect x="20" y="130" width="38" height="52" rx="6" fill="#fff" stroke="#000" stroke-width="2" transform="rotate(-12 39 156)"/>
+        <text x="39" y="162" text-anchor="middle" font-size="20" fill="#c00" transform="rotate(-12 39 156)">♥</text>
+        <rect x="142" y="130" width="38" height="52" rx="6" fill="#fff" stroke="#000" stroke-width="2" transform="rotate(12 161 156)"/>
+        <text x="161" y="162" text-anchor="middle" font-size="20" fill="#000" transform="rotate(12 161 156)">♠</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ── 等待室 ─────────────────────────────────────────────────────────── -->
+  <section id="page-waiting" class="page-view" aria-labelledby="waiting-title">
+    <div class="bento-card room-header no-hover">
+      <div>
+        <p class="eyebrow">ROOM CODE</p>
+        <h1 id="waiting-title" class="room-code">------</h1>
+      </div>
+      <div class="room-actions">
+        <button class="neo-btn secondary" type="button" data-action="toggle-ready">准备 / 取消</button>
+        <label class="inline-field">命数
+          <select id="max-lives" class="neo-input compact-input">
+            <option value="1">1</option><option value="2">2</option>
+            <option value="3" selected>3</option><option value="4">4</option><option value="5">5</option>
+          </select>
+        </label>
+        <button id="start-game" class="neo-btn primary" type="button" data-action="start-game">开始游戏</button>
+        <button class="neo-btn compact" type="button" data-action="go-home">← 离开</button>
+      </div>
+    </div>
+    <div id="room-players" class="player-grid" aria-live="polite"></div>
+  </section>
+
+  <!-- ── 游戏 ──────────────────────────────────────────────────────────── -->
+  <section id="page-game" class="page-view" aria-label="游戏对局">
+    <div class="game-layout">
+      <!-- 对手行 -->
+      <div class="game-opponents bento-card no-hover" style="position:relative">
+        <div id="opponents-list" class="opponents-list" aria-live="polite"></div>
+        <!-- 可视牌堆：发牌动画起点 -->
+        <div id="deck-stack" class="deck-stack" aria-hidden="true">
+          <div class="deck-card"></div>
+          <div class="deck-card"></div>
+          <div class="deck-card"></div>
+        </div>
+      </div>
+      <!-- 自身面板 (左列) -->
+      <div class="game-self-col bento-card no-hover">
+        <aside id="self-panel" class="game-self-info"></aside>
+      </div>
+      <!-- 战斗区域 (中) -->
+      <section class="game-arena bento-card no-hover">
+        <div class="phase-row">
+          <span id="phase-pill" class="status-pill">PHASE</span>
+          <span id="turn-label" class="turn-label"></span>
+          <span id="turn-timer" class="turn-timer" data-urgent="false" aria-live="polite"></span>
+        </div>
+        <div id="joker-actions" class="joker-actions" aria-live="polite"></div>
+        <!-- 战报场景 (高解耦，动画插槽独立) -->
+        <div id="broadcast-display" class="broadcast-display" aria-live="polite" aria-label="出牌播报">
+          <span class="bc-idle-hint">等待出牌…</span>
+        </div>
+
+      </section>
+      <!-- 聊天 (右) -->
+      <div class="game-chat bento-card no-hover">
+        <p class="game-chat-label">💬 聊天</p>
+        <div id="in-game-chat-list" class="chat-list" aria-live="polite"></div>
+        <form id="in-game-chat-form" class="chat-form" novalidate>
+          <label class="sr-only" for="in-game-chat-input">聊天内容</label>
+          <input id="in-game-chat-input" class="neo-input" maxlength="200" placeholder="说点什么…"/>
+          <button class="neo-btn compact" type="submit">发</button>
+        </form>
+      </div>
+      <!-- 手牌底栏 (跨全列) -->
+      <!-- 回合进度条：替代圆圈倒计时，显示在手牌区上方 -->
+      <div id="turn-progress-bar" class="turn-progress-bar" aria-hidden="true">
+        <div id="turn-progress-fill" class="turn-progress-fill"></div>
+      </div>
+      <div id="game-hand-bar" class="game-hand-bar bento-card no-hover">
+        <!-- 万化合体栏：动态插入，固定在手牌区左侧，宽度不受 hand-action-center 限制 -->
+        <div id="wanhua-bar" class="wanhua-bar" style="display:none" aria-live="polite"></div>
+        <div id="hand" class="hand-area" aria-label="手牌" aria-live="polite"></div>
+        <!-- 出牌中心 + 计时圆环 -->
+        <div class="hand-action-center" id="hand-action-center">
+          <div class="hand-play-btn-wrap">
+            <!-- declared-suit 隐藏保留，花色由 A 牌自身派生，不允许玩家手动选择 -->
+            <select id="declared-suit" class="neo-input hand-suit-select" style="display:none" aria-hidden="true" tabindex="-1">
+              <option value=""></option>
+              <option value="S">S</option><option value="H">H</option>
+              <option value="D">D</option><option value="C">C</option>
+            </select>
+            <button id="play-selected" class="neo-btn primary" type="button" data-action="play-selected">出牌</button>
+          </div>
+        </div>
+        <label class="sr-only" for="target-player">目标玩家</label>
+        <select id="target-player" style="display:none" aria-hidden="true"></select>
+      </div>
+    </div>
+  </section>
+  <!-- ── 结算 ──────────────────────────────────────────────────────────── -->
+  <section id="page-result" class="page-view" aria-labelledby="result-title">
+    <div class="bento-card result-card no-hover">
+      <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="result-trophy">
+        <path d="M70 10 L100 30 L130 10 L120 50 L140 50 L115 70 L125 100 L100 82 L75 100 L85 70 L60 50 L80 50Z" fill="var(--color-gold)" stroke="var(--color-text)" stroke-width="2"/>
+        <rect x="88" y="100" width="24" height="10" rx="3" fill="var(--color-muted)" stroke="var(--color-text)" stroke-width="1.5"/>
+        <rect x="76" y="108" width="48" height="6" rx="3" fill="var(--color-secondary)" stroke="var(--color-text)" stroke-width="1.5"/>
+      </svg>
+      <h1 id="result-title" class="neo-heading" style="font-size:2rem">对局结束</h1>
+      <p id="result-text" class="neo-body" style="font-size:1.2rem"></p>
+      <div class="form-actions" style="margin-top:20px;justify-content:center">
+        <button class="neo-btn primary" type="button" data-action="start-bot-game">再来一局</button>
+        <button class="neo-btn" type="button" data-action="go-home">返回主页</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 天梯榜 ─────────────────────────────────────────────────────────── -->
+  <section id="page-leaderboard" class="page-view" aria-labelledby="lb-title">
+    <button class="neo-btn compact" type="button" data-action="go-home" style="margin-bottom:12px">← 返回</button>
+    <div class="bento-card no-hover">
+      <div class="lb-header">
+        <h1 id="lb-title" class="neo-heading" style="font-size:1.6rem">天梯排行</h1>
+      </div>
+      <div id="leaderboard-list" class="leaderboard-list" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- ── 个人档案 ───────────────────────────────────────────────────────── -->
+  <section id="page-profile" class="page-view" aria-labelledby="profile-title">
+    <button class="neo-btn compact" type="button" data-action="go-home" style="margin-bottom:12px">← 返回</button>
+    <div class="profile-layout">
+      <div class="bento-card profile-hero no-hover">
+        <div id="profile-avatar-frame"></div>
+        <h1 id="profile-username" class="neo-heading" style="font-size:1.4rem"></h1>
+        <p id="profile-elo" class="elo-badge"></p>
+      </div>
+      <div class="bento-card no-hover">
+        <svg viewBox="0 0 400 100" class="profile-chart" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <polyline points="20,90 60,70 100,75 140,55 180,60 220,40 260,50 300,35 340,45 380,30" fill="none" stroke="var(--color-secondary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="20,90 60,70 100,75 140,55 180,60 220,40 260,50 300,35 340,45 380,30" fill="url(#grad)" stroke="none" opacity=".18"/>
+          <defs><linearGradient id="grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--color-secondary)"/><stop offset="100%" stop-color="transparent"/></linearGradient></defs>
+          <line x1="20" y1="95" x2="380" y2="95" stroke="var(--color-muted)" stroke-width="1"/>
+        </svg>
+        <div id="profile-stats" class="stats-grid"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ── 等待室聊天 (浮动面板) ──────────────────────────────────────────────── -->
+<aside id="chat-system" class="chat-system" aria-label="房间聊天">
+  <div id="chat-list" class="chat-list" aria-live="polite"></div>
+  <form id="chat-form" class="chat-form">
+    <label class="sr-only" for="chat-input">聊天内容</label>
+    <input id="chat-input" class="neo-input" maxlength="200" placeholder="说点什么…"/>
+    <button class="neo-btn compact" type="submit">发送</button>
+  </form>
+</aside>
+
+<!-- ── 万化合体 Modal ───────────────────────────────────────────────────────── -->
+<div id="wanhua-modal" class="modal bento-card no-hover" role="dialog" aria-modal="true" aria-labelledby="wanhua-modal-title">
+  <div class="modal-header">
+    <h2 id="wanhua-modal-title">⚡ 万化合体</h2>
+    <button class="modal-close" type="button" data-action="cancel-wanhua" aria-label="取消">✕</button>
+  </div>
+  <p class="neo-body wanhua-modal-hint">两张牌将合成一张新牌，选择目标花色：</p>
+  <div id="wanhua-source-cards" class="wanhua-source-cards" aria-label="原始牌预览"></div>
+  <div id="wanhua-suit-options" class="wanhua-suit-options" role="group" aria-label="选择花色"></div>
+  <p class="wanhua-modal-note muted">合成牌点数 = 搭配牌点数 + 1，出牌无视花色免疫</p>
+</div>
+
+<!-- ── Starter Selection Modal ─────────────────────────────────────────────── -->
+<div id="starter-modal" class="modal bento-card no-hover" role="dialog" aria-modal="true" aria-labelledby="starter-modal-title" style="display:none">
+  <div class="modal-header">
+    <h2 id="starter-modal-title">⚔️ 选择首发角色</h2>
+  </div>
+  <p class="starter-modal-hint">花色决定你的攻击特效，慎重选择！</p>
+  <div id="starter-modal-cards" class="starter-modal-cards"></div>
+  <div class="starter-suit-legend">
+    <span class="legend-item">♠ 黑桃 = 双倍伤害</span>
+    <span class="legend-item suit-red">♥ 红桃 = 吸血回复</span>
+    <span class="legend-item suit-red">♦ 方块 = 五谷丰登</span>
+    <span class="legend-item">♣ 梅花 = 护盾/穿透</span>
+  </div>
+</div>
+<!-- ── Auth Modal ─────────────────────────────────────────────────────────── -->
+<div id="auth-modal" class="modal bento-card no-hover" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+  <div class="modal-header">
+    <h2 id="auth-modal-title">账号登录</h2>
+    <button class="modal-close" type="button" data-action="close-modal" aria-label="关闭">✕</button>
+  </div>
+  <div class="auth-tabs">
+    <button class="auth-tab-btn active" type="button" data-action="auth-tab" data-value="login">登录</button>
+    <button class="auth-tab-btn" type="button" data-action="auth-tab" data-value="register">注册</button>
+  </div>
+  <!-- 用固定高度容器消除切换跳动 -->
+  <div class="auth-pane-host">
+    <div id="auth-login-pane" class="auth-pane active">
+      <form id="auth-login-form" novalidate>
+        <label class="field-label" for="auth-username">用户名</label>
+        <input id="auth-username" class="neo-input" autocomplete="username" maxlength="24" required/>
+        <label class="field-label" for="auth-password">密码</label>
+        <input id="auth-password" class="neo-input" type="password" autocomplete="current-password" required/>
+        <div class="form-actions" style="margin-top:16px">
+          <button class="neo-btn primary" type="submit">登录</button>
+          <button class="neo-btn" type="button" data-action="close-modal">以访客继续</button>
+        </div>
+      </form>
+    </div>
+    <div id="auth-register-pane" class="auth-pane">
+      <form id="auth-register-form" novalidate>
+        <label class="field-label" for="reg-username">用户名</label>
+        <input id="reg-username" class="neo-input" autocomplete="username" maxlength="24" required/>
+        <label class="field-label" for="reg-password">密码（4位以上）</label>
+        <input id="reg-password" class="neo-input" type="password" autocomplete="new-password" required/>
+        <div class="form-actions" style="margin-top:16px">
+          <button class="neo-btn primary" type="submit">注册并登录</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ── Cosmetics Modal ───────────────────────────────────────────────────── -->
+<div id="cosmetics-modal" class="modal bento-card no-hover" role="dialog" aria-modal="true" aria-labelledby="cosmetics-modal-title">
+  <div class="modal-header">
+    <h2 id="cosmetics-modal-title">个人装扮</h2>
+    <button class="modal-close" type="button" data-action="close-modal" aria-label="关闭">✕</button>
+  </div>
+  <div class="cosmetics-section">
+    <h3>头像框</h3>
+    <div id="cosmetics-frames" class="frames-grid"></div>
+  </div>
+  <div class="cosmetics-section">
+    <h3>称号</h3>
+    <div id="cosmetics-titles" class="titles-row"></div>
+  </div>
+</div>
+
+<!-- ── Overlay / Toast ───────────────────────────────────────────────────── -->
+<div id="overlay-layer" data-action="close-modal"></div>
+<div id="toast-container" class="toast-container" aria-live="assertive"></div>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
+
+

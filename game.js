@@ -8,8 +8,12 @@
  *   1. UI 层绝不允许直接修改状态 — 必须通过 client.moves.xxx() 派发动作
  *   2. 所有状态变更仅发生在 moves 函数内部
  *   3. 空值保护 (Null Check) 覆盖所有状态读取路径
- *   4. 花色特效：♠双倍 ♥吸血 ♦摸牌 ♣护盾/穿透 — A 万化无视免疫
- *
+ *   4. 战斗结算委托给 js/engine/combatUtils.js（纯函数，可测试，可复用）
+ */
+
+import { resolveAttack } from './js/engine/combatUtils.js';
+
+/**
  * 三大摸牌法则：
  *   法则一 (♦方块)：打出方块时全场轮序摸牌（A 万化无视免疫）
  *   法则二 (空城补给)：出牌后手牌为空或仅剩 Joker → 补 3 张
@@ -482,64 +486,56 @@ export const PokeWar = {
       const ac = getActiveChar(attacker);
       if (!tc || !ac) return;
 
-      // 计算伤害
+      // ★ 计算总点数
       const hasA = v.hasA;
-      let totalDamage = nonJokers.reduce((s, c) => s + (Number(c.value) || 0), 0);
+      const totalValue = nonJokers.reduce((s, c) => s + (Number(c.value) || 0), 0);
 
-      // 免疫判定：目标花色 = 攻击花色 且 无A浸染 → 免疫
-      const isImmune = (suit === tc.suit) && !hasA;
+      // ★ 调用 combatUtils 模块化结算
+      const combatResult = resolveAttack({
+        declaredSuit: suit,
+        totalValue,
+        hasA,
+        targetChar: tc,
+        attackerChar: ac,
+      });
 
-      // ♠ 黑桃双倍：A 万化必翻倍（无视免疫），非A时免疫则跳过
-      if (suit === '♠') {
-        if (hasA || !isImmune) {
-          totalDamage *= 2;
-        }
+      // ★ 应用伤害
+      if (combatResult.finalDamage > 0 && !combatResult.isImmune) {
+        tc.hp = Math.max(0, (Number(tc.hp) || 0) - combatResult.finalDamage);
       }
 
-      // 护盾结算：♣ 角色穿透 或 免疫时不扣护盾
-      const ignoreShield = (ac.suit === '♣');
-      let actualDmg = totalDamage;
-      const currentShield = Number(tc.shield) || 0;
-      if (!ignoreShield && !isImmune && currentShield > 0) {
-        const blocked = Math.min(currentShield, totalDamage);
-        tc.shield = currentShield - blocked;
-        actualDmg = totalDamage - blocked;
+      // ★ 更新护盾（护盾已在 combatUtils 中计算扣除量）
+      if (combatResult.shieldBlocked > 0) {
+        tc.shield = Math.max(0, (Number(tc.shield) || 0) - combatResult.shieldBlocked);
       }
 
-      // 扣血
-      if (actualDmg > 0 && !isImmune) {
-        tc.hp = Math.max(0, (Number(tc.hp) || 0) - actualDmg);
-      }
-
-      // ★ ♥ 红桃吸血：无条件！（skill §9b）
-      //   回复值为 actualDmg（实际削血量，不含护盾吸收部分）
-      if (suit === '♥') {
-        const healAmount = isImmune ? 0 : actualDmg; // 免疫时无实际伤害，吸血为0
-        if (healAmount > 0) {
-          ac.hp = Math.min(ac.maxHp, (Number(ac.hp) || 0) + healAmount);
-        }
+      // ★ ♥ 红桃吸血
+      if (combatResult.lifesteal > 0) {
+        ac.hp = Math.min(ac.maxHp, (Number(ac.hp) || 0) + combatResult.lifesteal);
       }
 
       G.lastAction = {
         type: 'attack',
         playerId: pid,
         targetId: String(targetPlayerId),
-        amount: totalDamage,
-        actualDmg: isImmune ? 0 : actualDmg,
+        amount: combatResult.isDouble ? totalValue * 2 : totalValue,
+        actualDmg: combatResult.finalDamage,
         suit,
-        immune: isImmune,
+        immune: combatResult.isImmune,
       };
 
-      // ★ ♦ 方块摸牌：A 万化无视免疫
-      if (suit === '♦' && (hasA || !isImmune)) {
-        triggerDiamondDraw(G, pid, totalDamage);
+      // ★ ♦ 方块五谷丰登
+      if (combatResult.triggerHarvest) {
+        triggerDiamondDraw(G, pid, totalValue);
       }
 
       // 战斗日志
-      const immuneText = isImmune ? ' [免疫!]' : '';
+      const immuneText = combatResult.isImmune ? ' [免疫特效]' : '';
+      const doubleText = combatResult.isDouble ? ' [双倍!]' : '';
+      const shieldText = combatResult.shieldBlocked > 0 ? ` (护盾吸收${combatResult.shieldBlocked})` : '';
       addBattleLog(G, {
         type: 'attack',
-        message: `⚔️ ${attacker.name} → ${target.name} ${suit} ${totalDamage}点 (实伤${isImmune ? 0 : actualDmg})${immuneText}`,
+        message: `⚔️ ${attacker.name} → ${target.name} ${suit} ${totalValue}点${doubleText}${shieldText} 实伤${combatResult.finalDamage}${immuneText}`,
         timestamp: Date.now(),
       });
 

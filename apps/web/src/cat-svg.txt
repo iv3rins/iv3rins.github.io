@@ -1,0 +1,19 @@
+﻿<svg class="cat-widget" width="72" height="62" viewBox="0 0 72 62" xmlns="http://www.w3.org/2000/svg" aria-label="扑克猫" role="img">
+  <ellipse cx="36" cy="47" rx="22" ry="14" fill="#ffd700" stroke="#333" stroke-width="1.5"/>
+  <ellipse cx="36" cy="25" rx="16" ry="14" fill="#ffd700" stroke="#333" stroke-width="1.5"/>
+  <polygon points="22,15 17,4 28,11" fill="#ffd700" stroke="#333" stroke-width="1.5"/>
+  <polygon points="50,15 55,4 44,11" fill="#ffd700" stroke="#333" stroke-width="1.5"/>
+  <polygon points="23,14 18,6 27,11" fill="#ffb3c6"/>
+  <polygon points="49,14 54,6 45,11" fill="#ffb3c6"/>
+  <g class="cat-eye"><ellipse cx="29" cy="24" rx="3.5" ry="4" fill="#222"/><circle cx="28" cy="23" r="1" fill="#fff"/></g>
+  <g class="cat-eye cat-eye-r"><ellipse cx="43" cy="24" rx="3.5" ry="4" fill="#222"/><circle cx="42" cy="23" r="1" fill="#fff"/></g>
+  <polygon points="36,29 34,31 38,31" fill="#ff85a2"/>
+  <path d="M32,32 Q36,35 40,32" fill="none" stroke="#333" stroke-width="1.2"/>
+  <line x1="10" y1="28" x2="27" y2="29" stroke="#999" stroke-width="0.8"/>
+  <line x1="12" y1="31" x2="27" y2="32" stroke="#999" stroke-width="0.8"/>
+  <line x1="45" y1="29" x2="62" y2="28" stroke="#999" stroke-width="0.8"/>
+  <line x1="45" y1="32" x2="62" y2="31" stroke="#999" stroke-width="0.8"/>
+  <path class="cat-tail" d="M58,52 Q70,38 62,24" fill="none" stroke="#ffd700" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="22" cy="58" rx="7" ry="4" fill="#ffd700" stroke="#333" stroke-width="1"/>
+  <ellipse cx="50" cy="58" rx="7" ry="4" fill="#ffd700" stroke="#333" stroke-width="1"/>
+</svg>
