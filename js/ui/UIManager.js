@@ -12,7 +12,6 @@ import { app } from '../app.js';
 import { renderGameState } from './gameUI.js';
 import { Toast } from './toast.js';
 import { audioManager } from '../audioManager.js';
-import { skinManager } from './SkinManager.js';
 import { ICON } from './lobbyUI.js';
 
 // ═══════════════════════════════════════
