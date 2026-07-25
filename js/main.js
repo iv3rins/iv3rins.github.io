@@ -8,7 +8,7 @@ import { audioManager } from './audioManager.js';
 import { initTheme } from './state.js';
 
 function boot() {
-  console.log('🐾 PokeWar V4 — Bento Grid + SQLite');
+  console.log('🐾 PokeWar V5 — scene-layer + chat-layer isolation');
 
   // 音频解锁
   const unlock = () => { audioManager.unlock(); };
@@ -21,10 +21,50 @@ function boot() {
   // 初始化游戏 UI
   try { initUI(); } catch (e) { console.error('[Main] Game UI init:', e); }
 
-  // 恢复主题 — 统一通过 initTheme()
+  // 恢复主题
   initTheme();
 
-  console.log('[Main] V4 启动完成 ✓');
+  // ★ 单机练习按钮
+  initBotPractice();
+
+  console.log('[Main] V5 启动完成 ✓');
+}
+
+/** 🤖 单机练习: 本地实例化 boardgame.io client + 3 Bot */
+function initBotPractice() {
+  const btn = document.getElementById('btn-bot-practice');
+  if (!btn) {
+    // 动态注入按钮到 lobby-grid
+    const grid = document.querySelector('.lobby-grid');
+    if (grid) {
+      const card = document.createElement('div');
+      card.className = 'bento-card';
+      card.id = 'card-bot-practice';
+      card.innerHTML = `
+        <i data-lucide=\"bot\" class=\"bento-icon-lg\"></i>
+        <h3>🤖 单机练习</h3>
+        <p>本地 1v3 Bot 对战</p>
+        <button class=\"btn btn-primary\" id=\"btn-bot-practice\">开始练习</button>
+      `;
+      grid.appendChild(card);
+      lucide.createIcons();
+    }
+  }
+  // 延迟绑定事件
+  setTimeout(() => {
+    document.getElementById('btn-bot-practice')?.addEventListener('click', async () => {
+      audioManager.play('click');
+      try {
+        await app.createRoom(4); // 4 players: 1 human + 3 bots
+        app.connectGame();
+        const { showPage } = await import('./ui/UIManager.js');
+        showPage('game');
+        import('./ui/toast.js').then(m => m.Toast.show('🤖 单机练习模式 (1v3 Bot)', 'success'));
+      } catch (e) {
+        import('./ui/toast.js').then(m => m.Toast.show('练习模式启动失败: ' + e.message, 'error'));
+      }
+    });
+  }, 500);
 }
 
 if (document.readyState === 'loading') {

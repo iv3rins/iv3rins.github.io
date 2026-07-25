@@ -39,8 +39,8 @@
   </div>
 </div>
 
-<!-- ═══ 主视图容器 (页面切换作用域) ═══ -->
-<div id="app-view">
+<!-- ═══ 主场景层 (页面切换作用域, 可 innerHTML) ═══ -->
+<div id="scene-layer">
 
 <!-- ═══════════════════════════════════════════
    🏠 大厅主页
@@ -175,20 +175,16 @@
 </div>
 
 <!-- ═══════════════════════════════════════════
-   🎮 游戏对局 — 三国杀主视角战斗板
+   🎮 游戏对局 — 12人环绕战斗板
+   Grid: opponents(150px) / left(250px)+arena(1fr) / bottom(200px)+arena
    ═══════════════════════════════════════════ -->
 <div class="page-view" id="page-game">
   <div class="battle-shell">
 
-    <!-- 顶部: 阶段 + 计时器 -->
-    <header class="battle-topbar">
-      <div class="phase-pill">
-        <span class="phase-label" id="phase-label">准备阶段</span>
-        <span class="phase-timer" id="phase-timer">--</span>
-      </div>
-    </header>
+    <!-- ★ 顶部: 对手环绕区 (最高12人, flex wrap 横向平铺) -->
+    <section class="battle-opponents" id="opponents-area"></section>
 
-    <!-- 左侧: 自己角色状态 Bento -->
+    <!-- 左侧: 自己角色状态 Bento (左下角, align-self:end) -->
     <aside class="battle-left">
       <div class="character-bento neo-bento" id="self-char">
         <div class="char-avatar-wrap">
@@ -196,64 +192,35 @@
         </div>
         <div class="character-meta">
           <div class="identity-sticker" id="identity-sticker">角色</div>
-          <div class="hp-line">
-            <span class="hp-icon">❤️</span>
-            <span class="hp-value" id="self-hp-val">10/10</span>
-          </div>
-          <div class="shield-line">
-            <span class="shield-icon">🛡️</span>
-            <span class="shield-value" id="self-shield-val">0</span>
-          </div>
+          <div class="hp-line"><span class="hp-icon">❤️</span><span class="hp-value" id="self-hp-val">10/10</span></div>
+          <div class="shield-line"><span class="shield-icon">🛡️</span><span class="shield-value" id="self-shield-val">0</span></div>
           <div class="hp-bar"><div class="hp-fill" id="self-hp-fill"></div></div>
           <div class="shield-bar"><div class="shield-fill" id="self-shield-fill"></div></div>
         </div>
       </div>
     </aside>
 
-    <!-- 中央: 战场 -->
-    <main class="battle-center">
-      <!-- 对手区: 半圆形环绕 -->
-      <div class="surrounding-players" id="opponents-area"></div>
-
-      <!-- 牌堆 + 弃牌堆 + 出牌区 -->
+    <!-- ★ 中央: 对战竞技场 (占据剩余空间) -->
+    <main class="battle-arena">
+      <div class="phase-pill" style="margin-bottom:8px">
+        <span class="phase-label" id="phase-label">准备阶段</span>
+        <span class="phase-timer" id="phase-timer">--</span>
+      </div>
       <div class="play-zone neo-bento" id="battlefield">
         <div class="pile-row">
-          <div class="draw-pile">
-            <svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="3" width="6" height="18" rx="1"/><rect x="16" y="3" width="6" height="18" rx="1"/></svg>
-            <span>牌堆 <b id="deck-count">--</b></span>
-          </div>
-          <div class="drop-target">
-            <span>⚔️ 对战区域</span>
-            <span style="font-size:11px">回合 <b id="turn-display">--</b></span>
-          </div>
-          <div class="discard-pile">
-            <svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-            <span>弃牌</span>
-          </div>
+          <div class="draw-pile"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="3" width="6" height="18" rx="1"/><rect x="16" y="3" width="6" height="18" rx="1"/></svg><span>牌堆 <b id="deck-count">--</b></span></div>
+          <div class="drop-target"><span>⚔️ 对战区域</span><span style="font-size:11px">回合 <b id="turn-display">--</b></span></div>
+          <div class="discard-pile"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg><span>弃牌</span></div>
         </div>
         <div class="battle-action-msg" id="battle-action-msg"></div>
       </div>
     </main>
 
-    <!-- 右侧: 信息/聊天面板 (贯穿全高) -->
-    <aside class="battle-right">
-      <div class="info-log-panel neo-bento" id="game-chat-panel">
-        <div class="panel-head">
-          <h3>对战日志</h3>
-        </div>
-        <div class="log-list" id="game-chat-messages"></div>
-        <div class="chat-input-row">
-          <input type="text" class="chat-input input-glass" id="game-chat-input" placeholder="输入消息...">
-          <button class="btn btn-small chat-send-btn" id="btn-game-chat-send">发送</button>
-        </div>
-      </div>
-    </aside>
-
-    <!-- 底部: 手牌 + 操作按钮 (固定 200px) -->
+    <!-- ★ 底部: 手牌操作台 (固定200px, 永不塌陷) -->
     <footer class="battle-bottom">
       <div class="hand-bento neo-bento" id="player-dashboard">
         <div class="floating-actions">
-          <button class="btn-action btn-wanhua" id="btn-wanhua" style="display:none"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> 万化</button>
+          <button class="btn-action btn-wanhua" id="btn-wanhua" style="display:none"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> 万化</button>
           <button class="btn-action btn-confirm hidden" id="btn-confirm">出牌</button>
           <button class="btn-action btn-cancel hidden" id="btn-cancel">取消</button>
         </div>
@@ -449,7 +416,7 @@
   </div>
 </div>
 </div>
-<!-- ═══ #app-view 结束 ═══ -->
+<!-- ═══ #scene-layer 结束 ═══ -->
 
 <!-- ═══ 入口 ═══ -->
 <script type="module" src="./js/main.js"></script>
