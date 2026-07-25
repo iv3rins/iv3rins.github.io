@@ -1,6 +1,21 @@
 /**
  * 全局状态管理 — 单例 G 对象 (WS 权威服务器架构)
  */
+
+/** 统一主题入口 — 所有模块必须通过此函数切换主题 */
+export function setTheme(isDark) {
+  document.documentElement.classList.toggle('dark-theme', isDark);
+  if (isDark) document.body.classList.add('dark-mode');
+  else document.body.classList.remove('dark-mode');
+  localStorage.setItem('pokeWarDarkMode', isDark ? '1' : '0');
+}
+
+/** 初始化主题：从 localStorage 恢复 */
+export function initTheme() {
+  const isDark = localStorage.getItem('pokeWarDarkMode') === '1';
+  setTheme(isDark);
+}
+
 export const G = {
     ws: null,                  // ★ WSClient 实例 (替代 p2p)
     isHost: false,

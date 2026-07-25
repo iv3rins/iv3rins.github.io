@@ -11,16 +11,29 @@ import { audioManager } from '../audioManager.js';
 import { Toast } from './toast.js';
 
 // ═══════════════════════════════════════
+// 渲染版本号保护 (防止旧异步回调污染 DOM)
+// ═══════════════════════════════════════
+
+let _renderSeq = 0;
+
+/** 获取当前渲染序号，每次渲染前递增 */
+export function nextRenderSeq() { return ++_renderSeq; }
+
+/** 检查序号是否仍然有效 */
+function isCurrentRender(seq) { return seq === _renderSeq; }
+
+// ═══════════════════════════════════════
 // 主渲染入口
 // ═══════════════════════════════════════
 
 export function renderGameState(state) {
   if (!state || !state.G) return;
 
+  const seq = nextRenderSeq();
   const G = state.G;
   const ctx = state.ctx;
 
-  console.log('[gameUI] renderState — phase:', G.phase, 'turn:', G.turn, 'player:', ctx.currentPlayer);
+  console.log('[gameUI] renderState #' + seq + ' — phase:', G.phase, 'turn:', G.turn, 'player:', ctx.currentPlayer);
 
   // 更新战场信息
   updateBattlefield(G, ctx);
@@ -29,7 +42,7 @@ export function renderGameState(state) {
   updateOpponents(G, ctx);
 
   // 更新自己的角色信息
-  updateSelfChar(G, ctx);
+  updateSelfChar(G);
 
   // 更新手牌
   if (G.phase !== 'SELECTING_STARTER') {
@@ -37,7 +50,7 @@ export function renderGameState(state) {
   }
 
   // 检查特殊阶段
-  checkPhaseModals(G, ctx);
+  checkPhaseModals(G, ctx, seq);
 
   // 显示上次动作
   if (G.lastAction) {
@@ -252,26 +265,28 @@ function showActionBroadcast(action, G) {
 // 阶段弹窗检查
 // ═══════════════════════════════════════
 
-function checkPhaseModals(G, ctx) {
+function checkPhaseModals(G, ctx, renderSeq) {
   // 选将阶段
   if (G.phase === 'SELECTING_STARTER' && !app.getMyPlayer()?.starterSelected) {
-    showStarterModal(G);
+    showStarterModal(G, renderSeq);
   }
 
   // 濒死救援阶段
   if (G.phase === 'WAITING_FOR_JOKER' && G.dyingInfo) {
-    showDyingModal(G);
+    showDyingModal(G, renderSeq);
   } else {
     hideModal('modal-dying');
   }
 }
 
-function showStarterModal(G) {
+function showStarterModal(G, renderSeq) {
   const p = app.getMyPlayer();
   if (!p) return;
 
   const container = document.getElementById('starter-options');
   if (!container) return;
+
+  if (!isCurrentRender(renderSeq)) return;
 
   container.innerHTML = '';
   p.characters?.forEach((c, i) => {
@@ -294,11 +309,13 @@ function showStarterModal(G) {
   showModal('modal-starter');
 }
 
-function showDyingModal(G) {
+function showDyingModal(G, renderSeq) {
   if (!G.dyingInfo) return;
 
   const target = G.players?.[G.dyingInfo.playerId];
   if (!target) return;
+
+  if (!isCurrentRender(renderSeq)) return;
 
   const desc = document.getElementById('dying-desc');
   if (desc) desc.textContent = `${target.name} 的最后一个角色濒死！持有 Joker 的玩家可救援，${10}秒后死亡。`;

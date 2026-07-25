@@ -174,6 +174,7 @@ function generateMatchID() {
 // 1b. 虚拟准备大厅 (Virtual Waiting Room) — data only
 // ═══════════════════════════════════════
 
+const MAX_PLAYERS = 12;
 const rooms = new Map();
 function genRoomCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -281,7 +282,7 @@ server.app.use(async (ctx, next) => {
     const { playerId, playerName, avatar } = ctx.request.body || {};
     if (!playerId || !playerName) { ctx.status = 400; ctx.body = { error: '缺少玩家信息' }; return; }
     const code = genRoomCode();
-    rooms.set(code, { host: playerId, players: [{ id: playerId, name: playerName, avatar: avatar || '🐱', ready: true }], maxPlayers: 4, createdAt: Date.now() });
+    rooms.set(code, { host: playerId, players: [{ id: playerId, name: playerName, avatar: avatar || '🐱', ready: true }], maxPlayers: MAX_PLAYERS, createdAt: Date.now() });
     console.log(`[Room] 创建: ${code} by ${playerName}`);
     ctx.body = { roomCode: code };
   } catch (e) { ctx.status = 500; ctx.body = { error: e.message }; }

@@ -13,6 +13,7 @@ import { renderGameState } from './gameUI.js';
 import { Toast } from './toast.js';
 import { audioManager } from '../audioManager.js';
 import { skinManager } from './SkinManager.js';
+import { setTheme } from '../state.js';
 
 // ═══════════════════════════════════════
 // 页面切换
@@ -75,10 +76,7 @@ export function initUI() {
     }
   });
 
-  // ── 恢复主题 ──
-  const savedTheme = localStorage.getItem('pokeWarTheme');
-  if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
-
+  // ── 恢复主题 — 统一由 main.js initTheme() 处理 ──
   console.log('[UI] 初始化完成 ✓');
 }
 
@@ -470,10 +468,8 @@ function initFullscreenBtn() {
 function initThemeToggle() {
   const btn = document.getElementById('btn-toggle-theme');
   btn?.addEventListener('click', () => {
-    const cur = document.documentElement.getAttribute('data-theme');
-    const next = cur === 'dark' ? '' : 'dark';
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('pokeWarTheme', next);
+    const isDark = !document.documentElement.classList.contains('dark-theme');
+    setTheme(isDark);
     audioManager.play('click');
   });
 }

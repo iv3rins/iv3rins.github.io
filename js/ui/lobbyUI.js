@@ -31,6 +31,21 @@ const ICON = {
   bronze: '<svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
 };
 
+/** 统一主题入口 — 所有模块必须通过此函数切换主题 */
+export function setTheme(isDark) {
+  document.documentElement.classList.toggle('dark-theme', isDark);
+  // 向后兼容 body.dark-mode (CSS 变量回退)
+  if (isDark) document.body.classList.add('dark-mode');
+  else document.body.classList.remove('dark-mode');
+  localStorage.setItem('pokeWarDarkMode', isDark ? '1' : '0');
+}
+
+/** 初始化主题：从 localStorage 恢复 */
+export function initTheme() {
+  const isDark = localStorage.getItem('pokeWarDarkMode') === '1';
+  setTheme(isDark);
+}
+
 // ═══════════════════════════════════════
 // 页面切换
 // ═══════════════════════════════════════
@@ -60,20 +75,12 @@ export function initLobby() {
   // ── TopNav ──
   document.getElementById('btn-toggle-theme')?.addEventListener('click', () => {
     cs();
-    const html = document.documentElement;
-    html.classList.toggle('dark-theme');
-    const isDark = html.classList.contains('dark-theme');
-    // 向后兼容: 同步 body.dark-mode
-    if (isDark) document.body.classList.add('dark-mode');
-    else document.body.classList.remove('dark-mode');
-    localStorage.setItem('pokeWarDarkMode', isDark ? '1' : '0');
+    const isDark = !document.documentElement.classList.contains('dark-theme');
+    setTheme(isDark);
   });
 
   // 恢复黑夜模式
-  if (localStorage.getItem('pokeWarDarkMode') === '1') {
-    document.documentElement.classList.add('dark-theme');
-    document.body.classList.add('dark-mode');
-  }
+  initTheme();
 
   document.getElementById('btn-edit-profile')?.addEventListener('click', () => {
     cs();
@@ -446,9 +453,7 @@ export function initLobby() {
   loadOnlineCount();
   setInterval(loadOnlineCount, 30000);
 
-  // 恢复主题
-  const saved = localStorage.getItem('pokeWarTheme');
-  if (saved) document.documentElement.setAttribute('data-theme', saved);
+  // 恢复主题 — 统一通过 initTheme() (已在 initLobby 顶部调用, 此处不再重复)
 
   // 恢复昵称
   updateNavPlayerId();

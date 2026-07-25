@@ -4,6 +4,8 @@
  * 预留未来扩展：cyberpunk, anime, sakura 等皮肤。
  */
 
+import { setTheme } from '../state.js';
+
 const SKINS = {
     'default-apple': {
         'bg-main': '#f4f5f7',
@@ -93,8 +95,8 @@ class SkinManager {
         for (const [key, value] of Object.entries(config)) {
             root.style.setProperty(`--${key}`, value);
         }
-        // data-theme 用于 CSS 选择器回退
-        root.setAttribute('data-theme', this.currentSkin === 'dark' ? 'dark' : '');
+        // ★ 统一通过 setTheme() 切换，不再直接写 data-theme
+        setTheme(this.currentSkin === 'dark');
         console.log(`[Skin] 已应用: ${this.currentSkin}`);
     }
 }

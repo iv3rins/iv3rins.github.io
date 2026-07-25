@@ -5,6 +5,7 @@ import { app } from './app.js';
 import { initLobby } from './ui/lobbyUI.js';
 import { initUI } from './ui/UIManager.js';
 import { audioManager } from './audioManager.js';
+import { initTheme } from './state.js';
 
 function boot() {
   console.log('🐾 PokeWar V4 — Bento Grid + SQLite');
@@ -20,9 +21,8 @@ function boot() {
   // 初始化游戏 UI
   try { initUI(); } catch (e) { console.error('[Main] Game UI init:', e); }
 
-  // 恢复主题
-  const saved = localStorage.getItem('pokeWarTheme');
-  if (saved) document.documentElement.setAttribute('data-theme', saved);
+  // 恢复主题 — 统一通过 initTheme()
+  initTheme();
 
   console.log('[Main] V4 启动完成 ✓');
 }
