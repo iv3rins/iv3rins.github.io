@@ -3,23 +3,27 @@
    三国杀主视角布局 · 毛玻璃材质 · CSS 变量驱动
    ════════════════════════════════════════════════════ */
 
-/* ── CSS 变量: Apple Light (默认) ── */
+/* ── CSS 变量: Apple HIG Light Mode ── */
 :root {
   /* 背景 */
   --bg-base: #f2f2f7;
   --bg-gradient: linear-gradient(135deg, #e8e8f0 0%, #f2f2f7 50%, #e0e0ec 100%);
 
-  /* 毛玻璃面板 */
-  --glass-bg: rgba(255, 255, 255, 0.55);
-  --glass-border: 1px solid rgba(255, 255, 255, 0.7);
+  /* 毛玻璃面板 — Apple HIG Bento Panel */
+  --panel-bg: rgba(255, 255, 255, 0.75);
+  --panel-border: rgba(0, 0, 0, 0.1);
+  --glass-bg: var(--panel-bg);           /* 别名: 兼容旧引用 */
+  --glass-border: 1px solid var(--panel-border);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.07), 0 2px 8px rgba(0, 0, 0, 0.04);
   --glass-blur: blur(25px) saturate(180%);
   --glass-radius: 24px;
 
-  /* 文字 */
-  --text-primary: #1d1d1f;
-  --text-secondary: #555555;   /* ★ 修复: #6e6e73 在毛玻璃面板上太淡 */
-  --text-muted: #888888;       /* ★ 修复: #aeaeb2 在浅底上几乎不可见 */
+  /* 文字 — Apple HIG Typography */
+  --text-color-primary: #1C1C1E;
+  --text-color-secondary: rgba(60, 60, 67, 0.6);
+  --text-primary: var(--text-color-primary);      /* 别名 */
+  --text-secondary: var(--text-color-secondary);  /* 别名 */
+  --text-muted: rgba(60, 60, 67, 0.4);
   --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Microsoft YaHei', sans-serif;
 
   /* 主题色 */
@@ -62,17 +66,7 @@
 }
 
 /* ════════════════════════════════════════════════════
-   ★ 修复 3: 暗黑模式 (Dark Mode) — 完整变量覆盖
-
-   常见翻车点及修复:
-   ├─ ❌ 缺失变量: 原 dark 块只定义了部分变量，导致大量回退到
-   │   light 值，按钮 hover、万化色等完全丢失
-   ├─ ❌ 毛玻璃失效: panel-bg 必须带透明度 (rgba)，否则
-   │   backdrop-filter: blur() 完全无效
-   ├─ ❌ ♣♠ 不可读: suit-black 直接用 #eaeaea 违反用户规范
-   │   → 改用 slate-400 (#94a3b8): 冷调深灰，暗底清晰可读
-   ├─ ❌ 文字对比度: text-muted 太暗 (#606070 → #8e8e9a)
-   └─ ❌ 阴影丢失: 暗模式下 box-shadow 需加环境光 (无方向扩散)
+   Apple HIG Dark Mode
    ════════════════════════════════════════════════════ */
 [data-theme="dark"],
 .theme-dark {
@@ -80,19 +74,22 @@
   --bg-base: #0f0f1a;
   --bg-gradient: linear-gradient(135deg, #0a0a14 0%, #0f0f1a 40%, #0d0d18 100%);
 
-  /* ── 毛玻璃面板 ★ 关键: 必须是带透明度的暗色，否则 blur 失效 ── */
-  --glass-bg: rgba(22, 22, 38, 0.65);
-  --glass-border: 1px solid rgba(255, 255, 255, 0.06);
-  /* ★ 暗模式下阴影用极低透明度纯黑 + 环境弥散光 */
+  /* ── 毛玻璃面板 — Apple HIG Dark Bento Panel ── */
+  --panel-bg: rgba(28, 28, 30, 0.75);
+  --panel-border: rgba(255, 255, 255, 0.15);
+  --glass-bg: var(--panel-bg);
+  --glass-border: 1px solid var(--panel-border);
   --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.5),
                   0 0 0 0.5px rgba(255, 255, 255, 0.05),
                   0 0 40px rgba(100, 100, 255, 0.04);
-  --glass-blur: blur(28px) saturate(140%);  /* 暗模式降低饱和避免溢出 */
+  --glass-blur: blur(28px) saturate(140%);
 
-  /* ── 文字 — 提升对比度 ── */
-  --text-primary: #e8e8ed;             /* 主文字: 接近纯白但柔和 */
-  --text-secondary: rgba(255,255,255,0.72); /* ★ 修复: rgba 半透明，在毛玻璃面板上自然 */
-  --text-muted: rgba(255,255,255,0.48);     /* ★ 修复: 可见但低调 */
+  /* ── 文字 — Apple HIG Dark Typography ── */
+  --text-color-primary: #F2F2F7;
+  --text-color-secondary: rgba(235, 235, 245, 0.6);
+  --text-primary: var(--text-color-primary);
+  --text-secondary: var(--text-color-secondary);
+  --text-muted: rgba(235, 235, 245, 0.36);
 
   /* ── 主题色 — iOS Dark 调色板 ── */
   --color-primary: #0a84ff;       /* iOS 暗模式蓝 */

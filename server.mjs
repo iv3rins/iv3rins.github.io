@@ -17,14 +17,11 @@ const PORT = process.env.PORT || 8080;
 const DEV_MODE = process.env.NODE_ENV !== 'production';
 
 // ══════════════════════════════════════════════════
-// CORS origins 白名单
+// CORS origins — 精准放行前端域名
 // ══════════════════════════════════════════════════
 const ALLOWED_ORIGINS = [
   'http://game.n1komajor.top',
   'https://game.n1komajor.top',
-  'http://localhost:8080',
-  'http://localhost:3000',
-  'http://127.0.0.1:8080',
   Origins.LOCALHOST_IN_DEVELOPMENT,
 ];
 
@@ -35,10 +32,8 @@ const server = Server({
   origins: ALLOWED_ORIGINS,
   apiOrigins: ALLOWED_ORIGINS,
 
-  // ★ 修复: 不指定 apiPort → lobby API 与 game server 共享端口
-  //   避免跨端口 CORS preflight 问题
+  // Lobby API 与 game server 共享端口
   lobbyConfig: {
-    // apiPort 不设置 = 自动挂载到 PORT
     apiCallback: () => {
       console.log(`[Lobby API] 运行在端口 ${PORT} (共享)`);
     },
@@ -46,32 +41,18 @@ const server = Server({
 });
 
 // ══════════════════════════════════════════════════
-// ★ 修复: 显式 CORS + OPTIONS preflight 中间件
-//   boardgame.io 内置 @koa/cors 但对 lobby API 端口
-//   的 preflight 处理不完全。在最外层手动拦截 OPTIONS。
+// ★ 兜底方案: 无条件放行 CORS 响应头
+//   在 Koa 最外层确保所有响应都带 Access-Control-*
+//   解决 boardgame.io 内置 @koa/cors 偶发遗漏问题
 // ══════════════════════════════════════════════════
 server.app.use(async (ctx, next) => {
-  const origin = ctx.get('Origin') || '';
-  const allowed = ALLOWED_ORIGINS.some(o => {
-    if (typeof o === 'string') return origin === o;
-    if (o instanceof RegExp) return o.test(origin);
-    return !!o; // Origins.LOCALHOST_IN_DEVELOPMENT = allow all
-  });
-
-  if (allowed) {
-    ctx.set('Access-Control-Allow-Origin', origin);
-    ctx.set('Access-Control-Allow-Credentials', 'true');
-    ctx.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-    ctx.set('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With');
-    ctx.set('Access-Control-Max-Age', '86400');
-  }
-
-  // ★ 拦截 OPTIONS preflight: 直接返回 204，不进入后续路由
+  ctx.set('Access-Control-Allow-Origin', '*');
+  ctx.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  ctx.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (ctx.method === 'OPTIONS') {
     ctx.status = 204;
     return;
   }
-
   await next();
 });
 
