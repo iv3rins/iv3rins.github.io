@@ -130,12 +130,12 @@
         </div>
       </div>
       <!-- 右侧: 聊天 40% -->
-      <div id="room-chat-container" class="bento-card-panel" style="flex:4;display:flex;flex-direction:column;padding:16px">
-        <h4 style="font-family:var(--font-heading);margin-bottom:8px"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 房间聊天</h4>
-        <div id="wr-chat-messages" style="flex:1;overflow-y:auto;background:#FFF;border:2px solid #000;border-radius:8px;padding:8px;margin-bottom:8px;font-size:13px;min-height:300px"></div>
-        <div class="chat-input-area" style="display:flex;align-items:center;gap:8px;box-sizing:border-box">
-          <input type="text" class="input-glass" id="wr-chat-input" placeholder="输入消息..." style="flex:1;height:48px;box-sizing:border-box">
-          <button class="btn btn-small" id="btn-wr-chat-send" style="height:48px;box-sizing:border-box;white-space:nowrap">发送</button>
+      <div id="room-chat-container" class="bento-card-panel" style="flex:4;display:flex;flex-direction:column;padding:16px;min-height:0">
+        <h4 style="font-family:var(--font-heading);margin-bottom:8px;flex-shrink:0"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 房间聊天</h4>
+        <div id="wr-chat-messages"></div>
+        <div class="chat-input-row">
+          <input type="text" class="input-glass" id="wr-chat-input" placeholder="输入消息...">
+          <button class="btn btn-small" id="btn-wr-chat-send">发送</button>
         </div>
       </div>
     </div>
@@ -293,15 +293,15 @@
   <div class="modal-box bento-glass"><h3><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> 濒死救援</h3><p id="dying-desc"></p><div id="dying-countdown">10</div><div id="dying-actions"></div></div>
 </div>
 <div class="modal-overlay" id="modal-tutorial">
-  <div class="modal-box bento-glass" style="max-width:620px;padding:24px">
+  <div class="modal-box bento-glass" style="max-width:640px;padding:24px;overflow-y:auto;max-height:90vh">
     <button class="close-modal-btn" onclick="document.getElementById('modal-tutorial').classList.remove('show')">✕</button>
     <!-- Header -->
-    <div style="margin-bottom:16px">
+    <div style="margin-bottom:20px">
       <h3 style="font-family:var(--font-heading);font-size:22px;margin:0"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="3" width="6" height="18" rx="1"/><rect x="16" y="3" width="6" height="18" rx="1"/></svg> 游戏规则</h3>
     </div>
 
-    <!-- Bento Grid: 2x2 sub-cards -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <!-- Stacked rule sections — no overlapping grid -->
+    <div style="display:flex;flex-direction:column;gap:14px">
       <!-- 基础设定 -->
       <div class="rule-subcard">
         <h4>📋 基础设定</h4>
@@ -316,7 +316,7 @@
         <p>③ 阵亡 → 换将摸 5 + 击杀摸 3</p>
       </div>
       <!-- 花色特效 -->
-      <div class="rule-subcard" style="grid-column:1/-1">
+      <div class="rule-subcard">
         <h4>⚔️ 花色特效</h4>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px">
           <div class="suit-block suit-spade"><span>♠</span> 黑桃<br><small>双倍伤害</small></div>
@@ -326,9 +326,9 @@
         </div>
       </div>
       <!-- 特殊牌型 -->
-      <div class="rule-subcard" style="grid-column:1/-1">
+      <div class="rule-subcard">
         <h4>✨ 特殊牌型</h4>
-        <div class="rules-section-special" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;line-height:1.8;margin-top:6px">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;line-height:1.8;margin-top:6px">
           <span class="tag tag-ace">A 万化</span> <span>点数 +1，强行浸染花色，<b>无视免疫</b>！</span>
           <span class="tag tag-joker">Joker</span> <span><b>单张复活</b>阵亡角色 · <b>双张秒杀</b>存活角色！</span>
         </div>

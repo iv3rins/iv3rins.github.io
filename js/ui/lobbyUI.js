@@ -9,6 +9,7 @@
 import { app } from '../app.js';
 import { Toast } from './toast.js';
 import { audioManager } from '../audioManager.js';
+import { setTheme, initTheme } from '../state.js';
 
 // ═══════════════════════════════════════
 // Neo-Brutalism SVG 图标集
@@ -32,21 +33,6 @@ const ICON = {
 };
 
 export { ICON };
-
-/** 统一主题入口 — 所有模块必须通过此函数切换主题 */
-export function setTheme(isDark) {
-  document.documentElement.classList.toggle('dark-theme', isDark);
-  // 向后兼容 body.dark-mode (CSS 变量回退)
-  if (isDark) document.body.classList.add('dark-mode');
-  else document.body.classList.remove('dark-mode');
-  localStorage.setItem('pokeWarDarkMode', isDark ? '1' : '0');
-}
-
-/** 初始化主题：从 localStorage 恢复 */
-export function initTheme() {
-  const isDark = localStorage.getItem('pokeWarDarkMode') === '1';
-  setTheme(isDark);
-}
 
 // ═══════════════════════════════════════
 // 页面切换

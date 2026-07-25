@@ -318,10 +318,11 @@ html, body {
   font-weight: 900;
   letter-spacing: -2px;
   line-height: 1;
-  color: var(--accent-green);
-  /* ★ 中文标题禁止描边 — 仅保留纯色 */
-  -webkit-text-stroke: 0;
-  text-stroke: 0;
+  color: var(--text-main);
+  /* ★ 酸性绿仅用于底部强调线 */
+  border-bottom: 5px solid var(--primary-acid);
+  display: inline-block;
+  padding-bottom: 4px;
 }
 .hero-sub {
   font-size: 1.2rem; font-weight: 800; color: var(--text-main);
@@ -387,6 +388,16 @@ html, body {
 }
 .avatar-option:hover { transform: translate(-1px, -1px); box-shadow: var(--shadow-hard-sm); }
 .avatar-option.selected { border-color: var(--accent-green); box-shadow: 0 0 0 3px var(--accent-green); }
+
+/* ★ 通用 avatar 类: 禁止暗色模式反色 */
+.avatar, img[src*="dicebear"], img[src*="avatar"] {
+  /* 暗色模式下不反转 */
+}
+html.dark-theme .avatar,
+html.dark-theme img[src*="dicebear"],
+html.dark-theme .avatar-option {
+  filter: none;
+}
 
 /* ── Rule Sub-cards (Bento Grid Rules) ── */
 .rule-subcard {
@@ -553,6 +564,42 @@ html, body {
   outline: none;
 }
 
+/* ── 房间聊天 (Flexbox 稳定布局) ── */
+#room-chat-container {
+  min-width: 260px;
+  max-width: 400px;
+  overflow: hidden;
+}
+#wr-chat-messages {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 200px;
+  background: #FFF;
+  border: 2px solid #000;
+  border-radius: 8px;
+  padding: 8px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  word-break: break-word;
+}
+.chat-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.chat-input-row input {
+  flex: 1;
+  height: 48px;
+  box-sizing: border-box;
+}
+.chat-input-row button {
+  height: 48px;
+  box-sizing: border-box;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 /* ── Invite Code Display — 高优先级视觉强化 ── */
 .room-code-display {
   font-size: 22px; font-weight: 900;
@@ -613,12 +660,13 @@ html, body {
   width: 100%; height: 100%;
   display: grid;
   grid-template-rows: auto 1fr auto;
-  grid-template-columns: 220px 1fr 260px;
+  grid-template-columns: 200px 1fr 260px;
   grid-template-areas:
     "opponents opponents opponents"
-    "selfchar battlefield chat"
-    "dashboard dashboard dashboard";
-  gap: 0;
+    "selfchar  battlefield chat"
+    "selfchar  dashboard  chat";
+  gap: 6px;
+  padding: 8px;
   position: relative;
 }
 
@@ -630,14 +678,14 @@ html, body {
   min-height: 80px;
 }
 
-/* 中央战场 */
+/* 中央战场 — 核心对战区域 */
 .battlefield {
   grid-area: battlefield;
-  margin: 8px;
-  padding: 16px 20px;
+  margin: 0;
+  padding: 20px 24px;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 8px;
-  min-height: 100px;
+  gap: 12px;
+  min-height: 140px;
 }
 .battle-info {
   display: flex; gap: 20px; font-size: 14px; color: var(--text-secondary);
@@ -649,12 +697,13 @@ html, body {
   animation: fadeIn 0.3s ease;
 }
 
-/* 自己角色卡片 — 左下角 */
+/* 自己角色卡片 — 左下角，跨两行 */
 .self-char {
   grid-area: selfchar;
-  margin: 8px;
-  padding: 16px;
-  display: flex; align-items: center; gap: 14px;
+  margin: 0;
+  padding: 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  overflow-y: auto;
 }
 .char-avatar-large {
   width: 56px; height: 56px;
@@ -711,14 +760,14 @@ html, body {
 .opponent-mini .mini-hp-bar { height: 4px; border-radius: 2px; background: var(--color-hp); margin-top: 2px; }
 
 /* ═══════════════════════════════════════
-   底部操作台 — 手牌沉底
+   底部操作台 — 手牌沉底 (三国杀风格)
    ═══════════════════════════════════════ */
 .player-dashboard {
   grid-area: dashboard;
   position: relative;
-  height: 170px;
   display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-  padding-bottom: 8px;
+  padding-bottom: 4px;
+  min-height: 160px;
 }
 
 /* 浮动操作按钮 */
@@ -1001,7 +1050,7 @@ html, body {
 @media (max-width: 768px) {
   .game-layout {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto 1fr auto;
+    grid-template-rows: auto auto auto auto;
     grid-template-areas:
       "opponents"
       "battlefield"
@@ -1021,8 +1070,8 @@ html, body {
   .waiting-container { flex-direction: column; }
   .chat-sidebar { width: 100%; height: 200px; }
 
-  .self-char { flex-direction: row; padding: 10px; }
-  .player-dashboard { height: 150px; }
+  .self-char { flex-direction: column; padding: 10px; }
+  .player-dashboard { min-height: 140px; }
   .poker-card {
     --card-width: 70px; --card-height: 98px;
     margin-left: -22px;
