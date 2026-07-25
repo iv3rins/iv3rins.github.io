@@ -1,7 +1,20 @@
 /* ════════════════════════════════════════════════════
-   PokeWar V5 — Neo-Brutalism 新粗野主义
+   PokeWar V14 — Neo-Brutalism 新粗野主义
    粗黑描边 · 硬核阴影 · 荧光跳色 · 重型排版
    ════════════════════════════════════════════════════ */
+
+/* ── V14: 黑夜模式 (反转色) ── */
+body.dark-mode {
+  filter: invert(1) hue-rotate(180deg);
+  background-color: #111;
+}
+body.dark-mode img,
+body.dark-mode .avatar,
+body.dark-mode .emoji-icon,
+body.dark-mode .avatar-option,
+body.dark-mode [data-lucide] {
+  filter: invert(1) hue-rotate(180deg);
+}
 
 /* ── CSS 变量: Neo-Brutalism Light ── */
 :root {
@@ -812,6 +825,20 @@ html, body {
 .modal-overlay.show .modal-box {
   transform: scale(1) translateY(0);
 }
+
+/* ── V14: 统一红叉关闭按钮 ── */
+.close-modal-btn {
+  background: #FF3B30; color: #FFF;
+  border: 2px solid #000; box-shadow: 2px 2px 0px #000;
+  border-radius: 50%; width: 32px; height: 32px;
+  font-weight: 900; font-size: 16px; line-height: 1;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  position: absolute; top: -10px; right: -10px;
+  transition: transform 0.1s;
+}
+.close-modal-btn:hover { transform: scale(1.1); }
+.close-modal-btn:active { transform: scale(0.95); box-shadow: none; }
+.modal-box { position: relative; } /* 确保 close-btn 的 absolute 相对于 modal-box */
 
 /* 万化弹窗 */
 .wanhua-modal-content { max-width: 400px; }

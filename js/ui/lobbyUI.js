@@ -39,10 +39,15 @@ export function initLobby() {
   // ── TopNav ──
   document.getElementById('btn-toggle-theme')?.addEventListener('click', () => {
     cs();
-    const cur = document.documentElement.getAttribute('data-theme');
-    document.documentElement.setAttribute('data-theme', cur === 'dark' ? '' : 'dark');
-    localStorage.setItem('pokeWarTheme', cur === 'dark' ? '' : 'dark');
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('pokeWarDarkMode', isDark ? '1' : '0');
   });
+
+  // 恢复黑夜模式
+  if (localStorage.getItem('pokeWarDarkMode') === '1') {
+    document.body.classList.add('dark-mode');
+  }
 
   document.getElementById('btn-edit-profile')?.addEventListener('click', () => {
     cs();
@@ -349,7 +354,8 @@ export function initLobby() {
   // ── 更新公告 ──
   document.getElementById('btn-updates')?.addEventListener('click', () => {
     cs();
-    Toast.show('V12: SPA Rooms · Real-time Chat · JWT Auth · SQLite', 'success');
+    closeAllModals();
+    showModal('modal-updates');
   });
 
   // ── 加载在线人数 ──
@@ -470,13 +476,21 @@ function switchToWaitingRoom(code) {
   if (btnChat) btnChat.onclick = sendRoomChat;
   if (chatInput) chatInput.onkeydown = (e) => { if (e.key === 'Enter') sendRoomChat(); };
 
-  // V12: 复制邀请码
+  // V12: 复制邀请码 (含降级兼容)
   const btnCopy = document.getElementById('btn-copy-room-code');
   if (btnCopy) btnCopy.onclick = () => {
     const codeEl = document.getElementById('wr-room-code');
     const code = codeEl?.textContent?.trim();
-    if (code && code !== '----') {
-      navigator.clipboard?.writeText(code).then(() => Toast.show('✅ 邀请码已复制!', 'success')).catch(() => {});
+    if (!code || code === '----') return;
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(code).then(() => Toast.show('✅ 邀请码已复制!', 'success')).catch(() => {});
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = code; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); Toast.show('✅ 邀请码已复制!', 'success'); }
+      catch { Toast.show('❌ 复制失败', 'error'); }
+      ta.remove();
     }
   };
 }

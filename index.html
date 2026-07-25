@@ -25,7 +25,7 @@
 </div>
 
 <!-- ═══════════════════════════════════════════
-   🏠 大厅主页 — V8
+   🏠 大厅主页
    ═══════════════════════════════════════════ -->
 <div class="page-view active" id="page-home">
   <main id="main-lobby-view" class="lobby-layout">
@@ -105,7 +105,9 @@
     <div style="display:flex;gap:16px;flex:1;padding:16px;max-width:960px;margin:0 auto;width:100%;min-height:0">
       <!-- 左侧: 玩家列表 60% -->
       <div class="bento-card" style="flex:6;display:flex;flex-direction:column;padding:20px">
-        <h3 style="font-family:var(--font-heading);margin-bottom:8px">⏳ 准备室 · <b class="neo-number" id="wr-room-code">----</b> <button class="btn btn-small" id="btn-copy-room-code" style="font-size:11px;padding:4px 8px">📋 复制</button></h3>
+        <h3 style="font-family:var(--font-heading);margin-bottom:8px">⏳ 准备室 · <b class="neo-number" id="wr-room-code">----</b>
+          <button class="btn btn-small neo-button" id="btn-copy-room-code" style="font-size:11px;padding:4px 8px;cursor:pointer">📋 复制邀请码</button>
+        </h3>
         <div id="wr-players" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;flex:1"></div>
         <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
           <button class="btn btn-primary" id="btn-wr-start" style="display:none">🚀 开始游戏</button>
@@ -194,6 +196,7 @@
 <!-- Auth 弹窗 (V6) -->
 <div class="modal-overlay" id="modal-auth">
   <div class="modal-box bento-glass" style="max-width:420px">
+    <button class="close-modal-btn" onclick="document.getElementById('modal-auth').classList.remove('show')">✕</button>
     <h3 style="font-family:var(--font-heading);font-size:22px">🔐 登录 / 注册</h3>
     <div id="auth-form" style="margin:16px 0">
       <input type="text" class="input-glass" id="auth-username" placeholder="用户名" style="margin-bottom:8px">
@@ -217,6 +220,7 @@
 <!-- V7 Profile Edit Modal -->
 <div class="modal-overlay" id="modal-profile">
   <div class="modal-box bento-glass" style="max-width:440px">
+    <button class="close-modal-btn" onclick="document.getElementById('modal-profile').classList.remove('show')">✕</button>
     <h3 style="font-family:var(--font-heading);font-size:20px"><i data-lucide="user-circle" style="width:22px;height:22px"></i> 编辑个人资料</h3>
 
     <!-- 头像选择 -->
@@ -246,6 +250,7 @@
 <!-- 排行榜 -->
 <div class="modal-overlay" id="modal-leaderboard">
   <div class="modal-box bento-glass" style="max-width:480px">
+    <button class="close-modal-btn" onclick="document.getElementById('modal-leaderboard').classList.remove('show')">✕</button>
     <h3>🏆 排行榜 Top 10</h3>
     <div id="leaderboard-list" style="margin:16px 0;text-align:left"></div>
     <button class="btn btn-secondary" id="btn-close-leaderboard">关闭</button>
@@ -274,6 +279,7 @@
 </div>
 <div class="modal-overlay" id="modal-tutorial">
   <div class="modal-box bento-glass" style="max-width:620px;padding:24px">
+    <button class="close-modal-btn" onclick="document.getElementById('modal-tutorial').classList.remove('show')">✕</button>
     <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <h3 style="font-family:var(--font-heading);font-size:22px;margin:0">🃏 游戏规则</h3>
@@ -321,6 +327,30 @@
     <h3>📊 个人战绩</h3>
     <div id="stats-content" style="margin:16px 0;text-align:left"></div>
     <button class="btn btn-secondary" id="btn-close-stats">关闭</button>
+  </div>
+</div>
+
+<!-- V14: Bento Grid 更新公告 -->
+<div class="modal-overlay" id="modal-updates">
+  <div class="modal-box bento-glass" style="max-width:520px;padding:24px">
+    <button class="close-modal-btn" onclick="document.getElementById('modal-updates').classList.remove('show')">✕</button>
+    <h3 style="font-family:var(--font-heading);font-size:20px;margin-bottom:16px">📢 更新公告</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="rule-subcard">
+        <h4>✨ 新增功能</h4>
+        <p>• 全屏准备室 + 实时聊天</p>
+        <p>• JWT 账号注册/登录</p>
+        <p>• DiceBear 潮牌头像</p>
+        <p>• 黑夜模式一键切换</p>
+      </div>
+      <div class="rule-subcard">
+        <h4>🔧 优化修复</h4>
+        <p>• HTTP 500 开房崩溃修复</p>
+        <p>• 邀请码一键复制</p>
+        <p>• 弹窗红叉快速关闭</p>
+        <p>• 头像渲染防溢出</p>
+      </div>
+    </div>
   </div>
 </div>
 
