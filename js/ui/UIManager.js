@@ -1,227 +1,499 @@
 /**
- * UIManager.js — 纯粹视图渲染器
- * 职责：接收状态 G，更新 DOM。不包含任何业务逻辑。
- * 与 SkinManager 配合，所有颜色通过 CSS 变量流动。
+ * UIManager.js — 纯视图渲染器 (MVC-V)
+ *
+ * 职责：
+ *   1. 监听 app.js 状态变更 → 渲染 DOM
+ *   2. 事件代理 → 将用户操作转发给 app.js
+ *   3. 管理弹窗（选将/万化/濒死/指引）
+ *
+ * 绝不包含任何游戏逻辑。只做 DOM 操作。
  */
+import { app } from '../app.js';
+import { renderGameState } from './gameUI.js';
+import { Toast } from './toast.js';
+import { audioManager } from '../audioManager.js';
 import { skinManager } from './SkinManager.js';
 
-export class UIManager {
-    constructor() {
-        /** @type {object|null} 当前游戏状态快照 */
-        this.state = null;
-        this._prevState = null;
-    }
+// ═══════════════════════════════════════
+// 页面切换
+// ═══════════════════════════════════════
 
-    // ═══ 主入口：完整渲染 ═══
-
-    render(state) {
-        this.state = state;
-        this._renderOpponents();
-        this._renderSelf();
-        this._renderHand();
-        this._renderVFX();
-        this._prevState = JSON.parse(JSON.stringify(state));
-    }
-
-    // ═══ 对手区（Bento 面板） ═══
-
-    _renderOpponents() {
-        const container = document.getElementById('bento-opponents');
-        if (!container) return;
-        container.innerHTML = '';
-
-        const myId = this.state.myPlayerId ?? 0;
-        const isMyTurn = this.state.currentPlayerIndex === myId;
-
-        this.state.players.forEach((p, i) => {
-            if (i === myId) return;
-            const card = this._createPlayerBento(p, i, isMyTurn);
-            container.appendChild(card);
-        });
-    }
-
-    // ═══ 自己区（左下角 Bento） ═══
-
-    _renderSelf() {
-        const container = document.getElementById('bento-self');
-        if (!container) return;
-        container.innerHTML = '';
-
-        const myId = this.state.myPlayerId ?? 0;
-        const me = this.state.players[myId];
-        if (!me) return;
-
-        const card = this._createPlayerBento(me, myId, false, true);
-        container.appendChild(card);
-    }
-
-    // ═══ 手牌区 ═══
-
-    _renderHand() {
-        const container = document.getElementById('my-hand-cards');
-        if (!container) return;
-
-        const myId = this.state.myPlayerId ?? 0;
-        const me = this.state.players[myId];
-        const isSpectating = me && me.isEliminated;
-
-        if (isSpectating || !me || !me.hand) {
-            container.innerHTML = '';
-            return;
-        }
-
-        const prevCount = container.children.length;
-        container.innerHTML = '';
-        container.offsetHeight;
-
-        me.hand.forEach((card, i) => {
-            const div = document.createElement('div');
-            div.className = 'apple-card';
-            div.dataset.index = i;
-
-            // 选中态（需要外部 G 对象提供 selectedCardIndices）
-            if (window.__G && window.__G.selectedCardIndices && window.__G.selectedCardIndices.includes(i)) {
-                div.classList.add('selected');
-            }
-
-            if (card.isJoker) {
-                div.classList.add('card-joker');
-                div.innerHTML = '<span>🃏</span><span style="font-size:12px">Joker</span>';
-            } else {
-                const isRed = card.suit === '♥' || card.suit === '♦';
-                div.classList.add(isRed ? 'suit-red' : 'suit-black');
-                div.innerHTML = `<span>${card.suit}</span><span>${card.rank}</span>`;
-            }
-
-            div.addEventListener('click', () => this._onCardClick(i, div));
-            container.appendChild(div);
-        });
-
-        container.offsetHeight;
-
-        // Staggered animation
-        for (let i = 0; i < Math.min(me.hand.length, container.children.length); i++) {
-            const el = container.children[i];
-            const isNew = i >= prevCount - 1 || prevCount === 0;
-            if (!isNew) continue;
-            setTimeout(() => {
-                el.style.animationDelay = (i * 50) + 'ms';
-                el.classList.add('deal-stagger');
-            }, 60 + i * 50);
-        }
-
-        container.offsetHeight;
-
-        // 550ms ghost guard
-        setTimeout(() => {
-            container.querySelectorAll('.apple-card.deal-stagger').forEach(el => {
-                if (getComputedStyle(el).opacity === '0') {
-                    el.style.opacity = '1';
-                    el.style.animation = 'none';
-                }
-            });
-        }, 550);
-    }
-
-    // ═══ VFX / 飘字 ═══
-
-    _renderVFX() {
-        const st = this.state;
-        if (!st || !st.lastAction) return;
-
-        const { type, targetId, amount } = st.lastAction;
-        const cardEl = document.querySelector(`[data-player-id="${targetId}"]`);
-        if (!cardEl) return;
-
-        const vfx = document.createElement('div');
-        vfx.className = `vfx-popup ${type === 'damage' ? 'vfx-dmg' : 'vfx-shd'}`;
-        vfx.textContent = type === 'damage' ? `-${amount}` : `+${amount} 🛡️`;
-        cardEl.appendChild(vfx);
-        setTimeout(() => vfx.remove(), 1200);
-    }
-
-    // ═══ Bento 玩家卡片 ═══
-
-    _createPlayerBento(p, idx, isTargetable, isSelf = false) {
-        const div = document.createElement('div');
-        div.className = 'bento-card';
-        div.dataset.playerId = idx;
-
-        if (isTargetable) div.classList.add('targetable');
-        if (isSelf) div.classList.add('is-self');
-
-        const aliveChar = p.characters?.find(c => !c.isDead && !c.isDying);
-        const charIdx = p.activeCharIndex >= 0 ? p.activeCharIndex : 0;
-        const displayChar = p.characters?.[charIdx] || aliveChar || p.characters?.[0];
-        if (!displayChar) return div;
-
-        const isRed = displayChar.suit === '♦' || displayChar.suit === '♥';
-        const suitCls = isRed ? 'suit-red' : 'suit-black';
-        const avatar = p.isEliminated ? '😭' : (this.state?.playerAvatars?.[idx] || '🐱');
-        const hpPct = displayChar.maxHp > 0 ? (displayChar.hp / displayChar.maxHp * 100) : 0;
-        const shPct = displayChar.maxHp > 0 ? (displayChar.shield / displayChar.maxHp * 100) : 0;
-
-        div.innerHTML = `
-            <div class="bento-avatar">${avatar}</div>
-            <div class="bento-name">${p.name || '玩家' + (idx + 1)}${isSelf ? ' (你)' : ''}${p.isEliminated ? ' 💀' : ''}</div>
-            <div class="bento-role ${suitCls}">${p.isEliminated ? '已淘汰' : displayChar.suit + displayChar.rank}</div>
-            <div class="bento-hp">${displayChar.hp}/${displayChar.maxHp}${displayChar.shield > 0 ? ' +' + displayChar.shield + '🛡' : ''}</div>
-            <div class="bento-bar">
-                <div class="bento-hp-bar" style="width:${hpPct}%"></div>
-                ${displayChar.shield > 0 ? `<div class="bento-shield-bar" style="width:${shPct}%"></div>` : ''}
-            </div>
-            <div class="bento-hand-count">${p.handCount ?? 0} 张</div>
-        `;
-
-        return div;
-    }
-
-    // ═══ 辅助 ═══
-
-    /** 显示/隐藏确定取消面板 + 按钮状态 */
-    toggleActionPanel(show) {
-        const panel = document.getElementById('action-panel');
-        if (!panel) return;
-        if (show) panel.classList.remove('hidden');
-        else {
-            panel.classList.add('hidden');
-            this._updateConfirmButton(0);
-        }
-    }
-
-    /** 手牌点击：toggle selected → 更新按钮 */
-    _onCardClick(index, el) {
-        el.classList.toggle('selected');
-        const count = document.querySelectorAll('#my-hand-cards .apple-card.selected').length;
-        const panel = document.getElementById('action-panel');
-        if (panel) {
-            if (count > 0) panel.classList.remove('hidden');
-            else panel.classList.add('hidden');
-        }
-        this._updateConfirmButton(count);
-    }
-
-    /** 强制更新确认按钮 disabled 状态 + 文字 */
-    _updateConfirmButton(selectedCount) {
-        const btn = document.getElementById('btn-confirm');
-        if (!btn) return;
-        if (selectedCount > 0) {
-            btn.disabled = false;
-            btn.textContent = `出牌 (${selectedCount})`;
-        } else {
-            btn.disabled = true;
-            btn.textContent = '请选牌';
-        }
-    }
-
-    /** 渲染牌堆信息 */
-    renderDeckInfo() {
-        const el = document.getElementById('deck-info');
-        if (!el || !this.state) return;
-        const cur = this.state.players[this.state.currentPlayerIndex];
-        el.textContent = `🎴 牌堆: ${this.state.deckCount} | 回合 ${this.state.turnCount || 1} | ${cur ? cur.name : '--'} 行动`;
-    }
+export function showPage(name) {
+  document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
+  const page = document.getElementById(`page-${name}`);
+  if (page) page.classList.add('active');
 }
 
-// 全局单例
-export const uiManager = new UIManager();
+export function showModal(id) {
+  document.getElementById(id)?.classList.add('show');
+}
+export function hideModal(id) {
+  document.getElementById(id)?.classList.remove('show');
+}
+
+// ═══════════════════════════════════════
+// Loading
+// ═══════════════════════════════════════
+
+export function showLoading() { document.getElementById('loading-overlay')?.classList.remove('hidden'); }
+export function hideLoading() { document.getElementById('loading-overlay')?.classList.add('hidden'); }
+
+// ═══════════════════════════════════════
+// 初始化
+// ═══════════════════════════════════════
+
+export function initUI() {
+  console.log('[UI] 初始化...');
+
+  // ── 主页 ──
+  initHomePage();
+  // ── 等待大厅 ──
+  initWaitingPage();
+  // ── 游戏页面 ──
+  initGamePage();
+  // ── 通用 ──
+  initFullscreenBtn();
+  initThemeToggle();
+  initTutorialModal();
+
+  // ── 注册 app 状态监听 ──
+  app.onStateChange(state => {
+    renderGameState(state);
+  });
+
+  app.onError(err => {
+    console.error('[UI] Error:', err);
+    Toast.show(err.message || '发生错误', 'error');
+  });
+
+  app.onConnect(connected => {
+    console.log('[UI] 连接:', connected);
+    if (!connected) {
+      document.getElementById('modal-disconnect')?.classList.add('show');
+    } else {
+      document.getElementById('modal-disconnect')?.classList.remove('show');
+    }
+  });
+
+  // ── 恢复主题 ──
+  const savedTheme = localStorage.getItem('pokeWarTheme');
+  if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
+
+  console.log('[UI] 初始化完成 ✓');
+}
+
+// ═══════════════════════════════════════
+// 主页
+// ═══════════════════════════════════════
+
+function initHomePage() {
+  const clickSound = () => audioManager.play('click');
+
+  // 头像选择
+  const preview = document.getElementById('avatar-preview');
+  const pickerDialog = document.getElementById('emoji-picker-dialog');
+  const picker = document.getElementById('emoji-picker');
+
+  preview?.addEventListener('click', () => pickerDialog?.classList.add('show'));
+  picker?.addEventListener('emoji-click', (e) => {
+    app.avatar = e.detail.unicode;
+    if (preview) preview.textContent = app.avatar;
+    pickerDialog?.classList.remove('show');
+  });
+  pickerDialog?.addEventListener('click', (e) => {
+    if (e.target === pickerDialog) pickerDialog.classList.remove('show');
+  });
+
+  // 创建房间
+  document.getElementById('btn-create-room')?.addEventListener('click', async () => {
+    clickSound();
+    app.playerName = document.getElementById('player-name')?.value?.trim() || '小猫猫';
+    showLoading();
+    try {
+      await app.createRoom(4);
+      document.getElementById('display-room-code').textContent = app.matchID;
+      document.getElementById('game-mode-selector').style.display = 'block';
+      showPage('waiting');
+      renderWaitingLobby();
+      hideLoading();
+      Toast.show('房间创建成功！快邀请小伙伴加入吧~ 🐾', 'success');
+    } catch (e) {
+      hideLoading();
+      Toast.show('创建房间失败: ' + e.message, 'error');
+    }
+  });
+
+  // 加入房间
+  document.getElementById('btn-join-room')?.addEventListener('click', async () => {
+    clickSound();
+    app.playerName = document.getElementById('player-name')?.value?.trim() || '小猫猫';
+    const code = document.getElementById('room-code')?.value?.trim();
+    if (!code || code.length !== 4) { Toast.show('请输入4位邀请码！', 'error'); return; }
+    showLoading();
+    try {
+      await app.joinRoom(code);
+      document.getElementById('display-room-code').textContent = code;
+      showPage('waiting');
+      renderWaitingLobby();
+      hideLoading();
+      Toast.show('成功加入房间！', 'success');
+    } catch (e) {
+      hideLoading();
+      Toast.show('加入房间失败: ' + e.message, 'error');
+    }
+  });
+}
+
+// ═══════════════════════════════════════
+// 等待大厅
+// ═══════════════════════════════════════
+
+function initWaitingPage() {
+  const clickSound = () => audioManager.play('click');
+
+  document.getElementById('btn-start-game')?.addEventListener('click', () => {
+    clickSound();
+    const modeRadio = document.querySelector('input[name="gameMode"]:checked');
+    const maxLives = (modeRadio && modeRadio.value === 'quick') ? 1 : 3;
+    // 连接游戏
+    app.connectGame();
+    showPage('game');
+    Toast.show('⚔️ 对战开始！', 'success');
+  });
+
+  document.getElementById('btn-leave-waiting')?.addEventListener('click', () => {
+    clickSound();
+    app.disconnect();
+    location.reload();
+  });
+
+  // 复制邀请码
+  document.addEventListener('click', (e) => {
+    const copyBtn = e.target.closest('#btn-copy-code');
+    if (!copyBtn) return;
+    const el = document.getElementById('display-room-code');
+    const code = el?.textContent?.trim();
+    if (!code || code === '----') { Toast.show('请先生成邀请码', 'error'); return; }
+    copyText(code).then(() => Toast.show('🐾 邀请码已复制！', 'success'))
+      .catch(() => Toast.show('复制失败，请手动复制', 'error'));
+  });
+}
+
+function renderWaitingLobby() {
+  const grid = document.getElementById('players-grid');
+  if (!grid) return;
+  grid.innerHTML = `<div class="player-card">
+    <span class="player-avatar">${app.avatar}</span>
+    <div>
+      <div class="player-name">${app.playerName} (你)</div>
+      <div class="player-status ready">✅ 已准备</div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════
+// 游戏页面
+// ═══════════════════════════════════════
+
+function initGamePage() {
+  const clickSound = () => audioManager.play('click');
+
+  // 万化按钮
+  document.getElementById('btn-wanhua')?.addEventListener('click', () => {
+    clickSound();
+    openWanhuaModal();
+  });
+
+  // 确定出牌
+  document.getElementById('btn-confirm')?.addEventListener('click', () => {
+    clickSound();
+    executePlay();
+  });
+
+  // 取消
+  document.getElementById('btn-cancel')?.addEventListener('click', () => {
+    clickSound();
+    clearSelection();
+  });
+
+  // 手牌区 — 事件代理
+  document.getElementById('hand-area')?.addEventListener('click', (e) => {
+    const card = e.target.closest('.poker-card');
+    if (!card) return;
+    handleCardClick(card);
+  });
+
+  // 对手区 — 事件代理
+  document.getElementById('opponents-area')?.addEventListener('click', (e) => {
+    const mini = e.target.closest('.opponent-mini.targetable');
+    if (!mini) return;
+    handleOpponentClick(mini);
+  });
+
+  // 聊天
+  document.getElementById('btn-game-chat-send')?.addEventListener('click', () => {
+    clickSound();
+    sendGameChat();
+  });
+  document.getElementById('game-chat-input')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendGameChat();
+  });
+
+  // 再来一局 / 退出
+  document.getElementById('btn-restart')?.addEventListener('click', () => { clickSound(); location.reload(); });
+  document.getElementById('btn-leave-room')?.addEventListener('click', () => { clickSound(); app.disconnect(); location.reload(); });
+
+  // 断线弹窗
+  document.getElementById('btn-modal-ok')?.addEventListener('click', () => location.reload());
+
+  // ── 万化弹窗 ──
+  document.getElementById('wanhua-cancel-btn')?.addEventListener('click', () => {
+    clickSound();
+    hideModal('wanhua-modal');
+  });
+  document.getElementById('wanhua-confirm-btn')?.addEventListener('click', () => {
+    clickSound();
+    confirmWanhua();
+  });
+}
+
+// ═══════════════════════════════════════
+// 手牌交互
+// ═══════════════════════════════════════
+
+let selectedCardIndices = [];
+let selectedTargetId = null;
+let declaredSuit = null;
+let pendingWanhuaCards = [];
+
+function handleCardClick(cardEl) {
+  audioManager.play('select');
+  const idx = parseInt(cardEl.dataset.index);
+  if (isNaN(idx)) return;
+
+  // 不可用的牌不响应
+  if (cardEl.classList.contains('unplayable')) return;
+
+  cardEl.classList.toggle('selected');
+
+  if (cardEl.classList.contains('selected')) {
+    if (!selectedCardIndices.includes(idx)) selectedCardIndices.push(idx);
+  } else {
+    selectedCardIndices = selectedCardIndices.filter(i => i !== idx);
+  }
+
+  updateActionButtons();
+}
+
+function handleOpponentClick(miniEl) {
+  audioManager.play('select');
+  const pid = miniEl.dataset.playerId;
+  if (pid === undefined) return;
+
+  // 取消之前的选择
+  document.querySelectorAll('.opponent-mini.targeted').forEach(el => el.classList.remove('targeted'));
+
+  if (selectedTargetId === pid) {
+    selectedTargetId = null;
+  } else {
+    selectedTargetId = pid;
+    miniEl.classList.add('targeted');
+  }
+
+  updateActionButtons();
+}
+
+function updateActionButtons() {
+  const hasCards = selectedCardIndices.length > 0;
+  const hasTarget = selectedTargetId !== null || hasShieldCards();
+  const panel = document.getElementById('floating-actions');
+
+  if (!panel) return;
+
+  const confirmBtn = document.getElementById('btn-confirm');
+  const cancelBtn = document.getElementById('btn-cancel');
+  const wanhuaBtn = document.getElementById('btn-wanhua');
+
+  if (hasCards) {
+    cancelBtn?.classList.remove('hidden');
+
+    // 检查是否需要万化选择
+    if (needsWanhua()) {
+      wanhuaBtn.style.display = 'inline-block';
+      confirmBtn?.classList.add('hidden');
+    } else {
+      wanhuaBtn.style.display = 'none';
+      confirmBtn?.classList.remove('hidden');
+    }
+  } else {
+    confirmBtn?.classList.add('hidden');
+    cancelBtn?.classList.add('hidden');
+    wanhuaBtn.style.display = 'none';
+  }
+}
+
+function hasShieldCards() {
+  const cards = selectedCardIndices.map(i => {
+    const el = document.querySelector(`.poker-card[data-index="${i}"]`);
+    return el ? el.dataset.suit : null;
+  }).filter(Boolean);
+  return cards.length > 0 && cards.every(s => s === '♣');
+}
+
+function needsWanhua() {
+  const cards = selectedCardIndices.map(i => {
+    const el = document.querySelector(`.poker-card[data-index="${i}"]`);
+    return { rank: el?.dataset.rank, isJoker: el?.dataset.isJoker === 'true' };
+  }).filter(c => c.rank);
+  const hasA = cards.some(c => c.rank === 'A');
+  const nonJokers = cards.filter(c => !c.isJoker);
+  return hasA && nonJokers.length >= 1 && !declaredSuit;
+}
+
+function clearSelection() {
+  document.querySelectorAll('#hand-area .poker-card.selected').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.opponent-mini.targeted').forEach(el => el.classList.remove('targeted'));
+  selectedCardIndices = [];
+  selectedTargetId = null;
+  declaredSuit = null;
+  updateActionButtons();
+}
+
+function executePlay() {
+  if (!selectedCardIndices.length) return;
+
+  if (hasShieldCards()) {
+    // 护盾不需要目标
+    app.playCards(selectedCardIndices, null, declaredSuit);
+  } else {
+    if (selectedTargetId === null) {
+      Toast.show('请选择攻击目标！', 'error');
+      return;
+    }
+    app.playCards(selectedCardIndices, selectedTargetId, declaredSuit);
+  }
+
+  clearSelection();
+}
+
+// ═══════════════════════════════════════
+// 万化弹窗
+// ═══════════════════════════════════════
+
+function openWanhuaModal() {
+  // 收集可选花色
+  const suits = new Set();
+  selectedCardIndices.forEach(i => {
+    const el = document.querySelector(`.poker-card[data-index="${i}"]`);
+    const suit = el?.dataset.suit;
+    if (suit && suit !== 'null') suits.add(suit);
+  });
+
+  const container = document.getElementById('wanhua-suit-options');
+  if (!container) return;
+  container.innerHTML = '';
+
+  for (const s of suits) {
+    const btn = document.createElement('button');
+    btn.className = `wanhua-suit-btn ${s === '♦' || s === '♥' ? 'suit-red' : 'suit-black'}`;
+    btn.textContent = s;
+    btn.style.color = (s === '♦' || s === '♥') ? 'var(--suit-red)' : 'var(--suit-black)';
+    btn.addEventListener('click', () => {
+      container.querySelectorAll('.wanhua-suit-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      declaredSuit = s;
+    });
+    container.appendChild(btn);
+  }
+
+  showModal('wanhua-modal');
+}
+
+function confirmWanhua() {
+  if (!declaredSuit) {
+    Toast.show('请选择一个花色', 'error');
+    return;
+  }
+  hideModal('wanhua-modal');
+  updateActionButtons();
+  // 显示确定按钮（万化花色已选）
+  document.getElementById('btn-wanhua').style.display = 'none';
+  document.getElementById('btn-confirm')?.classList.remove('hidden');
+}
+
+// ═══════════════════════════════════════
+// 游戏聊天
+// ═══════════════════════════════════════
+
+function sendGameChat() {
+  const input = document.getElementById('game-chat-input');
+  const text = input?.value?.trim();
+  if (!text) return;
+  input.value = '';
+
+  const container = document.getElementById('game-chat-messages');
+  if (container) {
+    const msg = document.createElement('div');
+    msg.className = 'chat-msg self';
+    msg.innerHTML = `<b>${app.playerName}:</b> ${escapeHtml(text)}`;
+    container.appendChild(msg);
+    container.scrollTop = container.scrollHeight;
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ═══════════════════════════════════════
+// 工具
+// ═══════════════════════════════════════
+
+function initFullscreenBtn() {
+  const btn = document.getElementById('btn-fullscreen');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen?.() || document.documentElement.webkitRequestFullscreen?.();
+    } else {
+      document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+    }
+  });
+  document.addEventListener('fullscreenchange', () => {
+    if (btn) btn.textContent = document.fullscreenElement ? '🔳' : '🔲';
+  });
+}
+
+function initThemeToggle() {
+  const btn = document.getElementById('btn-toggle-theme');
+  btn?.addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    const next = cur === 'dark' ? '' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('pokeWarTheme', next);
+    audioManager.play('click');
+  });
+}
+
+function initTutorialModal() {
+  const close = () => hideModal('modal-tutorial');
+  document.getElementById('btn-show-tutorial')?.addEventListener('click', () => { audioManager.play('click'); showModal('modal-tutorial'); });
+  document.getElementById('btn-tutorial-ok')?.addEventListener('click', () => { audioManager.play('click'); close(); });
+  document.getElementById('btn-game-tutorial')?.addEventListener('click', () => { audioManager.play('click'); showModal('modal-tutorial'); });
+}
+
+function copyText(str) {
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(str);
+  }
+  const ta = document.createElement('textarea');
+  ta.value = str; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); return Promise.resolve(); }
+  finally { document.body.removeChild(ta); }
+}
+
+// 导出供外部使用
+export { selectedCardIndices, selectedTargetId, declaredSuit, clearSelection };
