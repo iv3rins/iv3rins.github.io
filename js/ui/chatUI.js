@@ -70,25 +70,13 @@ export function addGameChat(cls, text) {
     addChat('unknown', '', text);
 }
 
-/** 发送大厅聊天 */
+/** 发送大厅聊天 — 由 lobbyUI 的 sendRoomChat 处理 (REST API) */
 export function sendWaitingChat() {
-    const input = document.getElementById('waiting-chat-input');
-    const text = input.value.trim();
-    if (!text) return;
-    // 服务器会广播 CHAT 给所有人（包括自己），本地不再预览
-    if (G.ws && G.ws.isConnected) {
-        G.ws.send({ type: 'chat', payload: { text } });
-    }
-    input.value = '';
+    // 已迁移至 lobbyUI.js sendRoomChat() → REST /api/room/chat
+    console.warn('[chatUI] sendWaitingChat deprecated, use lobbyUI.sendRoomChat');
 }
 
 export function sendGameChat() {
-    const input = document.getElementById('game-chat-input');
-    const text = input.value.trim();
-    if (!text) return;
-    // 服务器会广播 CHAT 给所有人（包括自己），本地不再预览
-    if (G.ws && G.ws.isConnected) {
-        G.ws.send({ type: 'chat', payload: { text } });
-    }
-    input.value = '';
+    // 已迁移至 UIManager.js sendGameChat() → 本地渲染
+    console.warn('[chatUI] sendGameChat deprecated, use UIManager.sendGameChat');
 }

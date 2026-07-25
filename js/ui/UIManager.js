@@ -14,6 +14,7 @@ import { Toast } from './toast.js';
 import { audioManager } from '../audioManager.js';
 import { skinManager } from './SkinManager.js';
 import { setTheme } from '../state.js';
+import { ICON } from './lobbyUI.js';
 
 // ═══════════════════════════════════════
 // 页面切换
@@ -184,8 +185,8 @@ function renderWaitingLobby() {
   grid.innerHTML = `<div class="player-card">
     <img src="${app.avatar}" alt="avatar" class="player-avatar" style="width:64px;height:64px;border-radius:14px;border:3px solid #000;object-fit:cover">
     <div>
-      <div class="player-name">${app.playerName} (你)</div>
-      <div class="player-status ready">${ICON.check} 已准备</div>
+      <div class="player-name">${escapeHtml(app.playerName)} (你)</div>
+      <div class="player-status ready">${ICON.check_green} 已准备</div>
     </div>
   </div>`;
 }
@@ -416,8 +417,10 @@ function confirmWanhua() {
   hideModal('wanhua-modal');
   updateActionButtons();
   // 显示确定按钮（万化花色已选）
-  document.getElementById('btn-wanhua')?.style && (document.getElementById('btn-wanhua').style.display = 'none');
-  document.getElementById('btn-confirm')?.classList.remove('hidden');
+  const wanhuaBtn = document.getElementById('btn-wanhua');
+  if (wanhuaBtn) wanhuaBtn.style.display = 'none';
+  const confirmBtn = document.getElementById('btn-confirm');
+  if (confirmBtn) confirmBtn.classList.remove('hidden');
 }
 
 // ═══════════════════════════════════════
