@@ -349,7 +349,7 @@ export function initLobby() {
   // ── 更新公告 ──
   document.getElementById('btn-updates')?.addEventListener('click', () => {
     cs();
-    Toast.show('V8: Neo-Brutalism · JWT Auth · Lucide Icons · SQLite', 'success');
+    Toast.show('V12: SPA Rooms · Real-time Chat · JWT Auth · SQLite', 'success');
   });
 
   // ── 加载在线人数 ──
@@ -425,22 +425,31 @@ function renderLeaderboard(rows) {
 let _roomPollTimer = null;
 
 function switchToWaitingRoom(code) {
-  document.getElementById('main-lobby-view').style.display = 'none';
+  const mainLobby = document.getElementById('main-lobby-view');
   const wr = document.getElementById('waiting-room-view');
-  if (wr) wr.style.display = 'flex';
   const codeEl = document.getElementById('wr-room-code');
+  const btnStart = document.getElementById('btn-wr-start');
+  const btnReady = document.getElementById('btn-wr-ready');
+  const btnLeave = document.getElementById('btn-wr-leave');
+  const btnChat = document.getElementById('btn-wr-chat-send');
+  const chatInput = document.getElementById('wr-chat-input');
+
+  // ★ 判空保护
+  if (!mainLobby || !wr) { console.error('[WR] missing main-lobby-view or waiting-room-view'); return; }
+
+  mainLobby.style.display = 'none';
+  wr.style.display = 'flex';
   if (codeEl) codeEl.textContent = code;
 
-  document.getElementById('btn-wr-start').style.display = app.isHost ? 'inline-block' : 'none';
-  document.getElementById('btn-wr-ready').style.display = app.isHost ? 'none' : 'inline-block';
+  if (btnStart) btnStart.style.display = app.isHost ? 'inline-block' : 'none';
+  if (btnReady) btnReady.style.display = app.isHost ? 'none' : 'inline-block';
 
-  // 开始游戏 (房主)
-  document.getElementById('btn-wr-start').onclick = async () => {
+  if (btnStart) btnStart.onclick = async () => {
     try {
       const data = await app.startRoom();
       stopRoomPolling();
-      document.getElementById('waiting-room-view').style.display = 'none';
-      document.getElementById('main-lobby-view').style.display = 'none';
+      if (wr) wr.style.display = 'none';
+      if (mainLobby) mainLobby.style.display = 'none';
       app.matchID = data.matchID;
       app.connectGame();
       showPage('game');
@@ -448,19 +457,28 @@ function switchToWaitingRoom(code) {
     } catch (e) { Toast.show(e.message, 'error'); }
   };
 
-  document.getElementById('btn-wr-ready').onclick = () => Toast.show('已准备!', 'success');
+  if (btnReady) btnReady.onclick = () => Toast.show('已准备!', 'success');
 
-  document.getElementById('btn-wr-leave').onclick = () => {
+  if (btnLeave) btnLeave.onclick = () => {
     stopRoomPolling();
-    document.getElementById('waiting-room-view').style.display = 'none';
-    document.getElementById('main-lobby-view').style.display = 'flex';
+    if (wr) wr.style.display = 'none';
+    if (mainLobby) mainLobby.style.display = 'flex';
     app.roomCode = null;
     Toast.show('已离开房间');
   };
 
-  // 聊天发送
-  document.getElementById('btn-wr-chat-send').onclick = sendRoomChat;
-  document.getElementById('wr-chat-input').onkeydown = (e) => { if (e.key === 'Enter') sendRoomChat(); };
+  if (btnChat) btnChat.onclick = sendRoomChat;
+  if (chatInput) chatInput.onkeydown = (e) => { if (e.key === 'Enter') sendRoomChat(); };
+
+  // V12: 复制邀请码
+  const btnCopy = document.getElementById('btn-copy-room-code');
+  if (btnCopy) btnCopy.onclick = () => {
+    const codeEl = document.getElementById('wr-room-code');
+    const code = codeEl?.textContent?.trim();
+    if (code && code !== '----') {
+      navigator.clipboard?.writeText(code).then(() => Toast.show('✅ 邀请码已复制!', 'success')).catch(() => {});
+    }
+  };
 }
 
 async function sendRoomChat() {

@@ -857,8 +857,11 @@ html, body {
   color: #000;
   border: var(--border-thick);
   box-shadow: var(--shadow-hard);
-  font-family: var(--font-heading);
-  font-weight: 800; font-size: 14px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif; /* ★ 正文字体, 不用 Impact */
+  font-weight: 700; font-size: 1rem;
+  letter-spacing: normal;
+  -webkit-text-stroke: 0; /* ★ 去掉重型描边 */
+  text-shadow: none;
   padding: 12px 24px; border-radius: 8px;
   text-align: center;
   animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards;
