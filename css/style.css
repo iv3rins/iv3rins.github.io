@@ -786,6 +786,7 @@ html.dark-theme .avatar-option {
   background: var(--glass-bg); color: var(--text-main);
 }
 .drop-target {
+  position: relative;
   flex: 1; min-width: 120px; min-height: 60px;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
   border: 3px dashed var(--text-main); border-radius: 12px;
@@ -797,6 +798,27 @@ html.dark-theme .avatar-option {
 /* ── 右侧: 日志/聊天面板 (贯穿全高) ── */
 .battle-right {
   grid-area: right; display: flex; min-height: 0; overflow: hidden;
+}
+
+/* ═══ ★ 持久化聊天系统 (body 级, 脱离页面生命周期) ═══ */
+.chat-system-overlay {
+  position: fixed; top: 0; right: 0; bottom: 0;
+  width: 320px; z-index: 300;
+  padding: 8px;
+  pointer-events: none;
+}
+.chat-system-overlay > .chat-system-panel {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column; padding: 12px; gap: 6px;
+  overflow: hidden;
+  pointer-events: auto;
+}
+.chat-system-panel .panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0; padding-bottom: 6px; border-bottom: 3px solid #000;
+}
+.chat-system-panel .panel-head h3 {
+  font-family: 'Impact', 'Arial Black', sans-serif; font-size: 14px; margin: 0;
 }
 .info-log-panel {
   flex: 1; display: flex; flex-direction: column; padding: 12px; gap: 6px;
@@ -864,6 +886,25 @@ html.dark-theme .avatar-option {
   font-size: 16px; font-weight: 700; color: var(--color-hp);
   text-align: center; min-height: 24px;
   animation: fadeIn 0.3s ease;
+}
+
+/* ★ 出牌动画卡牌 (play-zone 中央) */
+.played-card {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: #FFF; border: 3px solid #000;
+  border-radius: 12px; box-shadow: 6px 6px 0px #000;
+  padding: 16px 24px; text-align: center;
+  animation: cardPlayIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 20; pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.played-card-suit { font-size: 48px; line-height: 1; }
+.played-card-value { font-size: 28px; font-weight: 900; font-family: 'Impact', sans-serif; color: #000; }
+.played-card-name { font-size: 12px; color: #555; margin-top: 4px; }
+@keyframes cardPlayIn {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.3) rotate(-15deg); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
 }
 
 /* 浮动操作按钮 */

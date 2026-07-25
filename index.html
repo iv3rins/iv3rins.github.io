@@ -24,6 +24,24 @@
   <div class="spinner"></div><div class="loading-text">连接中...</div>
 </div>
 
+<!-- ═══ ★ 持久化聊天系统 (脱离页面生命周期) ═══ -->
+<div id="chat-system" class="chat-system-overlay" style="display:none">
+  <div class="chat-system-panel neo-bento">
+    <div class="panel-head">
+      <h3>💬 对战聊天</h3>
+      <button class="close-modal-btn" id="btn-chat-close">✕</button>
+    </div>
+    <div class="log-list" id="chat-system-messages"></div>
+    <div class="chat-input-row">
+      <input type="text" class="chat-input input-glass" id="chat-system-input" placeholder="输入消息...">
+      <button class="btn btn-small" id="btn-chat-system-send">发送</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 主视图容器 (页面切换作用域) ═══ -->
+<div id="app-view">
+
 <!-- ═══════════════════════════════════════════
    🏠 大厅主页
    ═══════════════════════════════════════════ -->
@@ -432,6 +450,8 @@
     </div>
   </div>
 </div>
+</div>
+<!-- ═══ #app-view 结束 ═══ -->
 
 <!-- ═══ 入口 ═══ -->
 <script type="module" src="./js/main.js"></script>

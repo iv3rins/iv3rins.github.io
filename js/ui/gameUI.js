@@ -225,6 +225,8 @@ function showActionBroadcast(action, G) {
     case 'attack':
       msg = `⚔️ ${attackerName} → ${targetName} ${action.suit} ${action.amount}点 (实伤${action.actualDmg})${action.immune ? ' 免疫!' : ''}`;
       audioManager.play('attack');
+      // ★ 出牌动画: 在 play-zone 中央渲染卡牌
+      spawnPlayCard(action.suit, action.amount, attackerName);
       break;
     case 'shield':
       msg = `🛡️ ${attackerName} 获得 ${action.amount} 点护盾`;
@@ -233,10 +235,12 @@ function showActionBroadcast(action, G) {
     case 'jokerRevive':
       msg = `🃏 ${attackerName} 用 Joker 复活了 ${targetName}`;
       audioManager.play('joker');
+      spawnPlayCard('🃏', 0, attackerName);
       break;
     case 'jokerExecute':
       msg = `💀 ${attackerName} 用双 Joker 斩杀了 ${targetName}`;
       audioManager.play('joker');
+      spawnPlayCard('🃏🃏', 0, attackerName);
       break;
     case 'rescue':
       msg = `💖 ${attackerName} 用 Joker 救援了 ${targetName}`;
@@ -258,6 +262,31 @@ function showActionBroadcast(action, G) {
     el.offsetHeight; // reflow
     el.style.animation = 'fadeIn 0.3s ease';
   }
+}
+
+/** ★ 在 play-zone 中央渲染出牌卡牌动画 */
+function spawnPlayCard(suit, value, playerName) {
+  const dropTarget = document.querySelector('.drop-target');
+  if (!dropTarget) return;
+
+  // 清除旧卡牌
+  const old = dropTarget.querySelector('.played-card');
+  if (old) old.remove();
+
+  const card = document.createElement('div');
+  card.className = 'played-card';
+  const suitColor = (suit === '♦' || suit === '♥') ? 'var(--suit-red)' : 'var(--suit-black)';
+  card.innerHTML = `
+    <span class="played-card-suit" style="color:${suitColor}">${suit}</span>
+    <span class="played-card-value">${value}</span>
+    <span class="played-card-name">${escapeHtml(playerName)}</span>
+  `;
+  dropTarget.appendChild(card);
+
+  // 3 秒后自动清除
+  setTimeout(() => {
+    if (card.parentNode) card.remove();
+  }, 3000);
 }
 
 // ═══════════════════════════════════════

@@ -64,7 +64,7 @@ async function initDB() {
       is_guest      INTEGER DEFAULT 0,
       wins          INTEGER DEFAULT 0,
       losses        INTEGER DEFAULT 0,
-      rating        INTEGER DEFAULT 1000,
+      rating        INTEGER DEFAULT 0,
       created       INTEGER DEFAULT (strftime('%s','now'))
     )
   `);
@@ -379,7 +379,7 @@ server.app.use(async (ctx, next) => {
       const totalMatches = wins + losses;
       userData = {
         id: r[0], name: r[1], avatar: r[2],
-        wins, losses, rating: Number(r[5]) || 1000,
+        wins, losses, rating: Number(r[5]) || 0,
         matches: totalMatches,
         winRate: totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0,
       };
@@ -428,7 +428,7 @@ server.app.use(async (ctx, next) => {
     }
 
     const token = jwt.sign({ userId: id, isGuest: 0 }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
-    ctx.body = { success: true, token, playerId: id, playerName: username, avatar: avatar || '🐱', wins: 0, losses: 0, rating: 1000, matches: 0, winRate: 0 };
+    ctx.body = { success: true, token, playerId: id, playerName: username, avatar: avatar || '🐱', wins: 0, losses: 0, rating: 0, matches: 0, winRate: 0 };
   } catch (e) { ctx.status = 500; ctx.body = { error: e.message }; }
 });
 
@@ -450,7 +450,7 @@ server.app.use(async (ctx, next) => {
     const winRate = matches > 0 ? Math.round((wins / matches) * 100) : 0;
 
     const token = jwt.sign({ userId: r[0], isGuest: 0 }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
-    ctx.body = { success: true, token, playerId: r[0], playerName: r[1], avatar: r[2], wins, losses, rating: Number(r[6]) || 1000, matches, winRate };
+    ctx.body = { success: true, token, playerId: r[0], playerName: r[1], avatar: r[2], wins, losses, rating: Number(r[6]) || 0, matches, winRate };
   } catch (e) { ctx.status = 500; ctx.body = { error: e.message }; }
 });
 
@@ -464,7 +464,7 @@ server.app.use(async (ctx, next) => {
     db.run('INSERT INTO users (id, name, avatar, is_guest) VALUES (?, ?, ?, 1)', [id, name, avatar || '🐱']);
 
     const token = jwt.sign({ userId: id, isGuest: 1 }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
-    ctx.body = { success: true, token, playerId: id, playerName: name, avatar: avatar || '🐱', wins: 0, losses: 0, rating: 1000, matches: 0, winRate: 0 };
+    ctx.body = { success: true, token, playerId: id, playerName: name, avatar: avatar || '🐱', wins: 0, losses: 0, rating: 0, matches: 0, winRate: 0 };
   } catch (e) { ctx.status = 500; ctx.body = { error: e.message }; }
 });
 

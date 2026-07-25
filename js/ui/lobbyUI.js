@@ -130,7 +130,7 @@ export function initLobby() {
       app.losses = data.losses || 0;
       app.matches = data.matches || 0;
       app.winRate = data.winRate || 0;
-      app.rating = data.rating || 1000;
+      app.rating = data.rating || 0;
       localStorage.setItem('pokeWarToken', data.token);
       localStorage.setItem('pokeWarPlayerId', data.playerId);
       localStorage.setItem('pokeWarName', data.playerName);
@@ -166,7 +166,7 @@ export function initLobby() {
       app.losses = data.losses || 0;
       app.matches = data.matches || 0;
       app.winRate = data.winRate || 0;
-      app.rating = data.rating || 1000;
+      app.rating = data.rating || 0;
       localStorage.setItem('pokeWarToken', data.token);
       localStorage.setItem('pokeWarPlayerId', data.playerId);
       localStorage.setItem('pokeWarName', data.playerName);
@@ -209,7 +209,7 @@ export function initLobby() {
   document.getElementById('btn-auth-logout')?.addEventListener('click', () => {
     app.jwtToken = null; app.isLoggedIn = false; app.isGuest = false;
     app.playerName = '玩家';
-    app.wins = 0; app.losses = 0; app.matches = 0; app.winRate = 0; app.rating = 1000;
+    app.wins = 0; app.losses = 0; app.matches = 0; app.winRate = 0; app.rating = 0;
     localStorage.removeItem('pokeWarToken');
     localStorage.removeItem('pokeWarIsLoggedIn');
     localStorage.removeItem('pokeWarIsGuest');
@@ -244,7 +244,7 @@ export function initLobby() {
   app.losses = Number(localStorage.getItem('pokeWarLosses')) || 0;
   app.matches = Number(localStorage.getItem('pokeWarMatches')) || 0;
   app.winRate = Number(localStorage.getItem('pokeWarWinRate')) || 0;
-  app.rating = Number(localStorage.getItem('pokeWarRating')) || 1000;
+  app.rating = Number(localStorage.getItem('pokeWarRating')) || 0;
 
   // ── 编辑按钮 → 打开 Profile Modal ──
   // ── V7: Profile Badge click → 打开 Profile Modal (原 auth 已迁移至 modal-profile) ──
@@ -395,7 +395,7 @@ export function initLobby() {
             <div style="display:flex;gap:16px;justify-content:center;margin-top:8px">
               <span>${ICON.trophy} ${wins}胜</span>
               <span>${ICON.skull} ${losses}负</span>
-              <span>${ICON.star} ${data.user.rating || 1000}分</span>
+              <span>${ICON.star} ${data.user.rating || 0}分</span>
             </div>
             <div style="margin-top:6px;font-size:13px;font-weight:800;color:var(--text-muted)">
               ${ICON.play} 总场次: ${matches} &nbsp;|&nbsp; 胜率: ${winRate}%
