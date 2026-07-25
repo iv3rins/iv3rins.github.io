@@ -107,12 +107,13 @@ function initHomePage() {
   // 创建房间
   document.getElementById('btn-create-room')?.addEventListener('click', async () => {
     clickSound();
-    app.playerName = document.getElementById('player-name')?.value?.trim() || '小猫猫';
+    app.playerName = document.getElementById('player-name')?.value?.trim() || app.playerName;
     showLoading();
     try {
       await app.createRoom(4);
       document.getElementById('display-room-code').textContent = app.matchID;
-      document.getElementById('game-mode-selector').style.display = 'block';
+      const modeEl = document.getElementById('game-mode-selector');
+      if (modeEl) modeEl.style.display = 'block';
       showPage('waiting');
       renderWaitingLobby();
       hideLoading();
@@ -126,7 +127,7 @@ function initHomePage() {
   // 加入房间
   document.getElementById('btn-join-room')?.addEventListener('click', async () => {
     clickSound();
-    app.playerName = document.getElementById('player-name')?.value?.trim() || '小猫猫';
+    app.playerName = document.getElementById('player-name')?.value?.trim() || app.playerName;
     const code = document.getElementById('room-code')?.value?.trim();
     if (!code || code.length !== 4) { Toast.show('请输入4位邀请码！', 'error'); return; }
     showLoading();
@@ -319,16 +320,16 @@ function updateActionButtons() {
 
     // 检查是否需要万化选择
     if (needsWanhua()) {
-      wanhuaBtn.style.display = 'inline-block';
+      if (wanhuaBtn) wanhuaBtn.style.display = 'inline-block';
       confirmBtn?.classList.add('hidden');
     } else {
-      wanhuaBtn.style.display = 'none';
+      if (wanhuaBtn) wanhuaBtn.style.display = 'none';
       confirmBtn?.classList.remove('hidden');
     }
   } else {
     confirmBtn?.classList.add('hidden');
     cancelBtn?.classList.add('hidden');
-    wanhuaBtn.style.display = 'none';
+    if (wanhuaBtn) wanhuaBtn.style.display = 'none';
   }
 }
 
@@ -417,7 +418,7 @@ function confirmWanhua() {
   hideModal('wanhua-modal');
   updateActionButtons();
   // 显示确定按钮（万化花色已选）
-  document.getElementById('btn-wanhua').style.display = 'none';
+  document.getElementById('btn-wanhua')?.style && (document.getElementById('btn-wanhua').style.display = 'none');
   document.getElementById('btn-confirm')?.classList.remove('hidden');
 }
 

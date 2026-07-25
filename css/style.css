@@ -3,39 +3,13 @@
    粗黑描边 · 硬核阴影 · 荧光跳色 · 重型排版
    ════════════════════════════════════════════════════ */
 
-/* ── V15: 黑夜模式 (反转色) — 蓝图锁定版 ── */
+/* ── V15: 黑夜模式 — 纯变量驱动 (零 invert 作弊) ── */
 html.dark-theme {
-  filter: invert(1) hue-rotate(180deg);
-  background-color: #111 !important;
+  /* ★ 不再使用全局 invert — 完全由 CSS 变量控制 */
 }
-/* 头像、图片、SVG 必须二次反转，防止变成负片 */
-html.dark-theme img,
-html.dark-theme svg,
-html.dark-theme .avatar,
-html.dark-theme .emoji-icon,
-html.dark-theme .avatar-option,
-html.dark-theme [data-lucide],
-html.dark-theme .user-avatar,
-html.dark-theme .nb-icon,
-html.dark-theme .nb-icon-sm,
-html.dark-theme .nb-icon-lg {
-  filter: invert(1) hue-rotate(180deg);
-}
-/* 向后兼容 body.dark-mode */
+/* 向后兼容 body.dark-mode (legacy) */
 body.dark-mode {
-  filter: invert(1) hue-rotate(180deg);
-  background-color: #111 !important;
-}
-body.dark-mode img,
-body.dark-mode .avatar,
-body.dark-mode .emoji-icon,
-body.dark-mode .avatar-option,
-body.dark-mode [data-lucide],
-body.dark-mode svg.nb-icon,
-body.dark-mode svg.nb-icon-sm,
-body.dark-mode svg.nb-icon-lg,
-body.dark-mode .nb-icon {
-  filter: invert(1) hue-rotate(180deg);
+  /* ★ 不再使用全局 invert */
 }
 
 /* ── CSS 变量: Neo-Brutalism Light ── */
@@ -317,7 +291,7 @@ html, body {
 .nav-right { display: flex; align-items: center; gap: 10px; }
 .nav-player-id { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
 
-/* ── Hero — 巨型标题 + text-stroke ── */
+/* ── Hero — 巨型标题 ── */
 .lobby-hero {
   text-align: center; padding: 40px 20px 28px;
 }
@@ -328,8 +302,9 @@ html, body {
   letter-spacing: -2px;
   line-height: 1;
   color: var(--accent-green);
-  -webkit-text-stroke: 2px #000;
-  text-stroke: 2px #000;
+  /* ★ 中文标题禁止描边 — 仅保留纯色 */
+  -webkit-text-stroke: 0;
+  text-stroke: 0;
 }
 .hero-sub {
   font-size: 1.2rem; font-weight: 800; color: var(--text-main);
@@ -561,14 +536,20 @@ html, body {
   outline: none;
 }
 
+/* ── Invite Code Display — 高优先级视觉强化 ── */
 .room-code-display {
-  font-size: 20px; font-weight: 700;
-  color: var(--text-primary);
-  display: flex; align-items: center; gap: 10px;
+  font-size: 22px; font-weight: 900;
+  color: #000;
+  background: #FFF;
+  border: var(--border-thick); border-radius: 10px;
+  padding: 10px 18px; display: inline-flex; align-items: center; gap: 10px;
+  box-shadow: var(--shadow-hard-sm);
+  font-family: var(--font-heading);
 }
 .room-code-display span {
-  letter-spacing: 4px; font-size: 24px;
-  background: rgba(0, 122, 255, 0.1); padding: 6px 16px; border-radius: 10px;
+  letter-spacing: 4px; font-size: 28px;
+  color: var(--accent-blue);
+  background: rgba(0, 87, 255, 0.08); padding: 6px 16px; border-radius: 10px;
 }
 
 .host-only-ui { width: 100%; max-width: 400px; }

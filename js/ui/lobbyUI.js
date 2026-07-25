@@ -285,7 +285,7 @@ export function initLobby() {
   // Profile Modal: 保存
   document.getElementById('btn-save-profile')?.addEventListener('click', () => {
     cs();
-    const name = document.getElementById('profile-name')?.value?.trim() || '小猫猫';
+    const name = document.getElementById('profile-name')?.value?.trim() || '玩家';
     const customUrl = document.getElementById('custom-avatar-url')?.value?.trim();
     const selectedAvatar = document.querySelector('#avatar-selector .avatar-option.selected');
     const avatar = (customUrl && customUrl.startsWith('http')) ? customUrl
