@@ -171,6 +171,18 @@ function generateMatchID() {
 }
 
 // ═══════════════════════════════════════
+// 1b. 虚拟准备大厅 (Virtual Waiting Room) — data only
+// ═══════════════════════════════════════
+
+const rooms = new Map();
+function genRoomCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return rooms.has(code) ? genRoomCode() : code;
+}
+
+// ═══════════════════════════════════════
 // 2. boardgame.io Server
 // ═══════════════════════════════════════
 
@@ -245,6 +257,8 @@ server.app.use(async (ctx, next) => {
 });
 
 server.app.use(async (ctx, next) => {
+  // ★ 跳过 boardgame.io 路由，不消费其 request body
+  if (ctx.path.startsWith('/games/') || ctx.path.startsWith('/socket.io')) return next();
   if (['POST', 'PUT', 'PATCH'].includes(ctx.method) && ctx.is('application/json')) {
     ctx.request.body = await new Promise((resolve) => {
       let data = '';
@@ -255,6 +269,67 @@ server.app.use(async (ctx, next) => {
     });
   }
   await next();
+});
+
+// ═══════════════════════════════════════
+// V9 Virtual Room APIs
+// ═══════════════════════════════════════
+
+server.app.use(async (ctx, next) => {
+  if (ctx.path !== '/api/room/create' || ctx.method !== 'POST') return next();
+  try {
+    const { playerId, playerName, avatar } = ctx.request.body || {};
+    if (!playerId || !playerName) { ctx.status = 400; ctx.body = { error: '缺少玩家信息' }; return; }
+    const code = genRoomCode();
+    rooms.set(code, { host: playerId, players: [{ id: playerId, name: playerName, avatar: avatar || '🐱', ready: true }], maxPlayers: 4, createdAt: Date.now() });
+    console.log(`[Room] 创建: ${code} by ${playerName}`);
+    ctx.body = { roomCode: code };
+  } catch (e) { ctx.status = 500; ctx.body = { error: e.message }; }
+});
+
+server.app.use(async (ctx, next) => {
+  if (ctx.path !== '/api/room/join' || ctx.method !== 'POST') return next();
+  try {
+    const { roomCode, playerId, playerName, avatar } = ctx.request.body || {};
+    if (!roomCode || !playerId || !playerName) { ctx.status = 400; ctx.body = { error: '缺少参数' }; return; }
+    const room = rooms.get(roomCode.toUpperCase());
+    if (!room) { ctx.status = 404; ctx.body = { error: '房间不存在' }; return; }
+    if (room.players.length >= room.maxPlayers) { ctx.status = 400; ctx.body = { error: '房间已满' }; return; }
+    if (room.players.find(p => p.id === playerId)) { ctx.status = 400; ctx.body = { error: '已在房间中' }; return; }
+    room.players.push({ id: playerId, name: playerName, avatar: avatar || '🐱', ready: false });
+    console.log(`[Room] ${playerName} 加入 ${roomCode} (${room.players.length}/${room.maxPlayers})`);
+    ctx.body = { roomCode, players: room.players, host: room.host };
+  } catch (e) { ctx.status = 500; ctx.body = { error: e.message }; }
+});
+
+server.app.use(async (ctx, next) => {
+  const m = ctx.path.match(/^\/api\/room\/status\/(.+)$/);
+  if (!m || ctx.method !== 'GET') return next();
+  const room = rooms.get(m[1].toUpperCase());
+  if (!room) { ctx.status = 404; ctx.body = { error: '房间不存在' }; return; }
+  ctx.body = { roomCode: m[1].toUpperCase(), players: room.players, host: room.host };
+});
+
+server.app.use(async (ctx, next) => {
+  if (ctx.path !== '/api/room/start' || ctx.method !== 'POST') return next();
+  try {
+    const { roomCode, playerId } = ctx.request.body || {};
+    if (!roomCode || !playerId) { ctx.status = 400; ctx.body = { error: '缺少参数' }; return; }
+    const room = rooms.get(roomCode.toUpperCase());
+    if (!room) { ctx.status = 404; ctx.body = { error: '房间不存在' }; return; }
+    if (room.host !== playerId) { ctx.status = 403; ctx.body = { error: '仅房主可开局' }; return; }
+    if (room.players.length < 2) { ctx.status = 400; ctx.body = { error: '至少需要 2 名玩家' }; return; }
+    const numPlayers = room.players.length;
+    console.log(`[Room] 开局: ${roomCode} (${numPlayers} players)`);
+    const res = await fetch(`http://localhost:${PORT}/games/poke-war/create`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ numPlayers }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Create match failed');
+    rooms.delete(roomCode.toUpperCase());
+    ctx.body = { matchID: data.matchID, numPlayers, players: room.players };
+  } catch (e) { console.error('[Room] 开局失败:', e.message); ctx.status = 500; ctx.body = { error: e.message }; }
 });
 
 /** GET /api/leaderboard — 排行榜 Top 10 (排除游客) */

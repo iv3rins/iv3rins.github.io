@@ -25,7 +25,7 @@
 </div>
 
 <!-- ═══════════════════════════════════════════
-   🏠 大厅主页 — V4 Bento Grid
+   🏠 大厅主页 — V8
    ═══════════════════════════════════════════ -->
 <div class="page-view active" id="page-home">
   <div class="lobby-layout">
@@ -46,10 +46,9 @@
       </div>
     </nav>
 
-    <!-- Hero -->
+  <!-- Hero -->
     <section class="lobby-hero">
-      <h1 class="hero-title">扑克战争 <span class="hero-sub">PokeWar</span></h1>
-      <p class="hero-desc">多人联机卡牌对战 · WebSocket 实时同步 · 三大摸牌法则</p>
+      <h1 class="hero-title">扑克战争 <span class="hero-sub">POKEWAR</span></h1>
       <div class="hero-stats">
         <span class="hero-stat">🟢 <b id="online-count">--</b> 在线</span>
         <span class="hero-stat">⚔️ <b id="matches-today">--</b> 场对局</span>
@@ -62,10 +61,7 @@
         <i data-lucide="gamepad-2" class="bento-icon-lg"></i>
         <h3>创建房间</h3>
         <p>生成邀请码，与好友对战</p>
-        <div class="bento-card-bottom" id="create-room-options" style="display:none">
-          <input type="text" class="input-glass" id="room-player-name" placeholder="昵称" value="小猫猫">
-          <button class="btn btn-primary" id="btn-create-room"><i data-lucide="plus-circle" style="width:16px;height:16px"></i> 创建</button>
-        </div>
+        <button class="btn btn-primary" id="btn-create-room"><i data-lucide="plus-circle" style="width:16px;height:16px"></i> 创建</button>
       </div>
 
       <div class="bento-card" id="card-quick-match">
@@ -93,7 +89,19 @@
       </div>
     </section>
 
-    <!-- Footer -->
+    <!-- V9 Waiting Room Overlay (默认隐藏) -->
+    <div id="waiting-room" style="display:none;max-width:680px;margin:0 auto 20px;padding:0 20px">
+      <div class="bento-card" style="padding:24px">
+        <h3 style="font-family:var(--font-heading)">⏳ 准备室</h3>
+        <p style="margin:8px 0">房间码: <b class="neo-number" id="wr-room-code">----</b></p>
+        <div id="wr-players" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0"></div>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <button class="btn btn-primary" id="btn-wr-start" style="display:none">🚀 开始游戏</button>
+          <button class="btn btn-secondary" id="btn-wr-ready" style="display:none">✅ 准备</button>
+          <button class="btn btn-danger" id="btn-wr-leave">🚪 离开房间</button>
+        </div>
+      </div>
+    </div>
     <footer class="lobby-footer">
       <button class="btn-footer btn-footer-green" id="btn-my-stats"><i data-lucide="user" style="width:16px;height:16px"></i> 个人战绩</button>
       <button class="btn-footer btn-footer-gold" id="btn-rules"><i data-lucide="book-open" style="width:16px;height:16px"></i> 游戏规则</button>
@@ -285,9 +293,9 @@
       <!-- 特殊牌型 -->
       <div class="rule-subcard" style="grid-column:1/-1">
         <h4>✨ 特殊牌型</h4>
-        <div style="display:flex;gap:10px;margin-top:6px;flex-wrap:wrap">
-          <span class="tag tag-ace">A 万化</span> 点数 +1，强行浸染花色，<b>无视免疫</b>！
-          <span class="tag tag-joker">Joker</span> <b>单张复活</b>阵亡角色 · <b>双张秒杀</b>存活角色！
+        <div class="rules-section-special" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;line-height:1.8;margin-top:6px">
+          <span class="tag tag-ace">A 万化</span> <span>点数 +1，强行浸染花色，<b>无视免疫</b>！</span>
+          <span class="tag tag-joker">Joker</span> <span><b>单张复活</b>阵亡角色 · <b>双张秒杀</b>存活角色！</span>
         </div>
       </div>
     </div>

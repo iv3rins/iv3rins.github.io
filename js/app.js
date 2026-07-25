@@ -270,7 +270,50 @@ class AppController {
     return this.state?.G?.players || {};
   }
 
-  // ═══ V4: REST API 方法 ═══
+  // ═══ V9: Virtual Room APIs ═══
+
+  /** 创建虚拟房间 */
+  async createVirtualRoom() {
+    const res = await fetch(`${SERVER_ORIGIN}/api/room/create`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerId: this.playerId, playerName: this.playerName, avatar: this.avatar }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error || 'Create failed');
+    const data = await res.json();
+    this.roomCode = data.roomCode;
+    this.isHost = true;
+    return data;
+  }
+
+  /** 加入虚拟房间 */
+  async joinVirtualRoom(code) {
+    const res = await fetch(`${SERVER_ORIGIN}/api/room/join`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roomCode: code, playerId: this.playerId, playerName: this.playerName, avatar: this.avatar }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error || 'Join failed');
+    const data = await res.json();
+    this.roomCode = data.roomCode;
+    this.isHost = (data.host === this.playerId);
+    return data;
+  }
+
+  /** 轮询房间状态 */
+  async getRoomStatus() {
+    const res = await fetch(`${SERVER_ORIGIN}/api/room/status/${this.roomCode}`);
+    if (!res.ok) throw new Error('Room gone');
+    return res.json();
+  }
+
+  /** 房主开始游戏 */
+  async startRoom() {
+    const res = await fetch(`${SERVER_ORIGIN}/api/room/start`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roomCode: this.roomCode, playerId: this.playerId }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error || 'Start failed');
+    return res.json();
+  }
 
   /** 获取服务器 Origin */
   getServerOrigin() { return SERVER_ORIGIN; }

@@ -22,6 +22,10 @@ export function showPage(name) {
 
 function showModal(id) { document.getElementById(id)?.classList.add('show'); }
 function hideModal(id) { document.getElementById(id)?.classList.remove('show'); }
+/** V8: 关闭所有弹窗 */
+function closeAllModals() {
+  document.querySelectorAll('.modal-overlay.show').forEach(m => m.classList.remove('show'));
+}
 
 // ═══════════════════════════════════════
 // 初始化大厅
@@ -59,11 +63,8 @@ export function initLobby() {
 
   document.getElementById('btn-close-profile')?.addEventListener('click', () => hideModal('modal-profile'));
 
-  // ── V6: Auth 系统 ──
-  const authBtn = document.getElementById('btn-edit-profile');
-  authBtn?.addEventListener('click', () => {
-    cs();
-    // 如果已登录，显示用户信息
+  // ── V6: Auth system (通过 Badge 点击或独立按钮触发) ──
+  const openAuth = () => {
     if (app.isLoggedIn) {
       document.getElementById('auth-form').style.display = 'none';
       document.getElementById('auth-user-info').style.display = 'block';
@@ -72,7 +73,13 @@ export function initLobby() {
       document.getElementById('auth-form').style.display = 'block';
       document.getElementById('auth-user-info').style.display = 'none';
     }
+    closeAllModals();
     showModal('modal-auth');
+  };
+  // 点击 profile-badge (不含按钮区域) → 打开 Auth
+  document.getElementById('profile-badge')?.addEventListener('click', (e) => {
+    if (e.target.closest('button')) return; // 不拦截按钮点击
+    cs(); openAuth();
   });
 
   document.getElementById('btn-auth-login')?.addEventListener('click', async () => {
@@ -175,10 +182,12 @@ export function initLobby() {
   }
 
   // ── 编辑按钮 → 打开 Profile Modal ──
-  document.getElementById('btn-edit-profile')?.addEventListener('click', () => {
+  // ── V7: Profile Badge click → 打开 Profile Modal (原 auth 已迁移至 modal-profile) ──
+  document.getElementById('btn-edit-profile')?.addEventListener('click', (e) => {
+    e.stopPropagation(); // ★ 防止冒泡触发 badge 外层
     cs();
+    closeAllModals();
     document.getElementById('profile-name').value = app.playerName;
-    // 恢复头像选择状态
     const sel = document.querySelector(`.avatar-option[data-avatar="${CSS.escape(app.avatar)}"]`);
     document.querySelectorAll('.avatar-option').forEach(o => o.classList.remove('selected'));
     if (sel) sel.classList.add('selected');
@@ -224,46 +233,33 @@ export function initLobby() {
 
   document.getElementById('btn-close-profile')?.addEventListener('click', () => hideModal('modal-profile'));
 
-  // ── 创建房间 ──
-  const cardCreate = document.getElementById('card-create-room');
-  cardCreate?.addEventListener('click', (e) => {
-    if (e.target.closest('button') || e.target.closest('input')) return;
-    const opts = document.getElementById('create-room-options');
-    opts.style.display = opts.style.display === 'none' ? 'flex' : 'none';
-  });
-
+  // ── V9: 创建虚拟房间 ──
   document.getElementById('btn-create-room')?.addEventListener('click', async () => {
     cs();
-    const name = document.getElementById('room-player-name')?.value?.trim() || '小猫猫';
-    app.playerName = name;
-    updateNavPlayerId();
-    app.registerPlayer();
     try {
       document.getElementById('btn-create-room').textContent = '⏳ 创建中...';
-      await app.createRoom(4);
-      document.getElementById('display-room-code').textContent = app.matchID;
-      showPage('waiting');
-      renderWaitingLobby();
-      Toast.show('房间创建成功!', 'success');
+      const data = await app.createVirtualRoom();
+      app.roomCode = data.roomCode;
+      showWaitingRoom(data.roomCode);
+      startRoomPolling();
+      Toast.show('房间创建成功! 邀请码: ' + data.roomCode, 'success');
     } catch (e) {
       Toast.show('创建失败: ' + e.message, 'error');
     } finally {
-      document.getElementById('btn-create-room').textContent = '✨ 创建';
+      document.getElementById('btn-create-room').textContent = '创建';
     }
   });
 
-  // ── 加入房间 ──
+  // ── V9: 加入虚拟房间 ──
   document.getElementById('btn-join-room')?.addEventListener('click', async () => {
     cs();
     const code = document.getElementById('room-code')?.value?.trim();
     if (!code || code.length !== 4) { Toast.show('请输入4位邀请码', 'error'); return; }
-    app.playerName = document.getElementById('room-player-name')?.value?.trim() || '小猫猫';
-    app.registerPlayer();
     try {
-      await app.joinRoom(code);
-      document.getElementById('display-room-code').textContent = code;
-      showPage('waiting');
-      renderWaitingLobby();
+      const data = await app.joinVirtualRoom(code);
+      app.roomCode = data.roomCode;
+      showWaitingRoom(data.roomCode);
+      startRoomPolling();
       Toast.show('加入成功!', 'success');
     } catch (e) {
       Toast.show('加入失败: ' + e.message, 'error');
@@ -353,7 +349,7 @@ export function initLobby() {
   // ── 更新公告 ──
   document.getElementById('btn-updates')?.addEventListener('click', () => {
     cs();
-    Toast.show('V4: Bento Grid 大厅 · 排行榜 · 快速匹配 · SQLite 数据库', 'success');
+    Toast.show('V8: Neo-Brutalism · JWT Auth · Lucide Icons · SQLite', 'success');
   });
 
   // ── 加载在线人数 ──
@@ -422,13 +418,83 @@ function renderLeaderboard(rows) {
   }).join('');
 }
 
-export function renderWaitingLobby() {
-  const grid = document.getElementById('players-grid');
-  if (!grid) return;
-  grid.innerHTML = `<div class="player-card">
-    <span class="player-avatar">${app.avatar}</span>
-    <div><div class="player-name">${app.playerName} (你)</div><div class="player-status ready">✅</div></div>
-  </div>`;
+// ═══════════════════════════════════════
+// V9: Waiting Room
+// ═══════════════════════════════════════
+
+let _roomPollTimer = null;
+
+function showWaitingRoom(code) {
+  const wr = document.getElementById('waiting-room');
+  const codeEl = document.getElementById('wr-room-code');
+  if (wr) wr.style.display = 'block';
+  if (codeEl) codeEl.textContent = code;
+
+  // 按钮显示
+  document.getElementById('btn-wr-start').style.display = app.isHost ? 'inline-block' : 'none';
+  document.getElementById('btn-wr-ready').style.display = app.isHost ? 'none' : 'inline-block';
+
+  // 开始游戏 (房主)
+  document.getElementById('btn-wr-start').onclick = async () => {
+    try {
+      const data = await app.startRoom();
+      if (_roomPollTimer) clearInterval(_roomPollTimer);
+      document.getElementById('waiting-room').style.display = 'none';
+      app.matchID = data.matchID;
+      app.connectGame();
+      Toast.show('游戏开始!', 'success');
+    } catch (e) { Toast.show(e.message, 'error'); }
+  };
+
+  // 准备按钮
+  document.getElementById('btn-wr-ready').onclick = () => {
+    Toast.show('已准备! (等待房主开始)', 'success');
+  };
+
+  // 离开
+  document.getElementById('btn-wr-leave').onclick = () => {
+    if (_roomPollTimer) clearInterval(_roomPollTimer);
+    document.getElementById('waiting-room').style.display = 'none';
+    app.roomCode = null;
+    Toast.show('已离开房间');
+  };
+}
+
+function startRoomPolling() {
+  if (_roomPollTimer) clearInterval(_roomPollTimer);
+  _roomPollTimer = setInterval(async () => {
+    try {
+      const data = await app.getRoomStatus();
+      renderWRPlayers(data.players, data.host);
+    } catch {
+      if (_roomPollTimer) clearInterval(_roomPollTimer);
+      document.getElementById('waiting-room').style.display = 'none';
+      Toast.show('房间已解散', 'error');
+    }
+  }, 2000);
+}
+
+function renderWRPlayers(players, host) {
+  const container = document.getElementById('wr-players');
+  if (!container) return;
+  let html = '';
+  for (let i = 0; i < 4; i++) {
+    const p = players[i];
+    if (p) {
+      html += `<div class="wr-player-slot filled">
+        <img src="${p.avatar}" alt="" style="width:40px;height:40px;border-radius:8px;border:2px solid #000">
+        <span style="font-size:12px;font-weight:800">${esc(p.name)}</span>
+        ${p.id === host ? '<span style="font-size:10px;color:var(--accent-green)">👑房主</span>' : ''}
+        <span style="font-size:10px">${p.ready ? '✅' : '⏳'}</span>
+      </div>`;
+    } else {
+      html += `<div class="wr-player-slot empty">
+        <span style="font-size:24px;color:var(--text-muted)">?</span>
+        <span style="font-size:11px;color:var(--text-muted)">等待加入</span>
+      </div>`;
+    }
+  }
+  container.innerHTML = html;
 }
 
 function esc(s) { return (s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
