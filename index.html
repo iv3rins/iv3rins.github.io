@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>扑克战争 PokeWar — V4</title>
+  <title>扑克战争 PokeWar — V7</title>
   <link rel="stylesheet" href="./css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/boardgame.io@0.50.2/dist/boardgameio.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
@@ -32,12 +33,16 @@
     <!-- TopNav -->
     <nav class="lobby-topnav">
       <div class="nav-left">
-        <span class="nav-logo">🃏 PokeWar</span>
+        <span class="nav-logo">PokeWar</span>
       </div>
       <div class="nav-right">
-        <button class="btn-icon" id="btn-toggle-theme" title="切换主题">🎨</button>
-        <span class="nav-player-id" id="nav-player-id">未登录</span>
-        <button class="btn btn-small" id="btn-edit-profile">✏️ 昵称</button>
+        <button class="btn-icon" id="btn-toggle-theme" title="切换主题"><i data-lucide="sun-moon"></i></button>
+        <!-- V7: Mini Profile Badge -->
+        <div class="profile-badge" id="profile-badge">
+          <img id="badge-avatar" src="https://api.dicebear.com/7.x/micah/svg?seed=Felix" alt="avatar" style="width:32px;height:32px;border-radius:8px;border:2px solid #000">
+          <span id="badge-name">小猫猫</span>
+          <button class="btn btn-small" id="btn-edit-profile" style="padding:4px 8px;font-size:11px"><i data-lucide="settings" style="width:14px;height:14px"></i></button>
+        </div>
       </div>
     </nav>
 
@@ -51,57 +56,34 @@
       </div>
     </section>
 
-    <!-- Player Profile: DiceBear Avatars + Name -->
-    <section class="lobby-profile" style="max-width:680px;margin:0 auto 16px;padding:0 20px">
-      <div class="bento-card" style="flex-direction:row;gap:16px;padding:16px 20px;align-items:flex-start">
-        <img id="avatar-preview" src="https://api.dicebear.com/7.x/micah/svg?seed=Felix" alt="avatar" style="width:64px;height:64px;border:var(--border-thick);border-radius:12px">
-        <div style="flex:1">
-          <input type="text" class="input-glass" id="player-name-input" placeholder="输入超酷的昵称" value="小猫猫" style="margin-bottom:6px">
-          <div class="avatar-selector" id="avatar-selector">
-            <img class="avatar-option selected" data-avatar="https://api.dicebear.com/7.x/micah/svg?seed=Felix" src="https://api.dicebear.com/7.x/micah/svg?seed=Felix" alt="avatar">
-            <img class="avatar-option" data-avatar="https://api.dicebear.com/7.x/micah/svg?seed=Max" src="https://api.dicebear.com/7.x/micah/svg?seed=Max" alt="avatar">
-            <img class="avatar-option" data-avatar="https://api.dicebear.com/7.x/micah/svg?seed=Luna" src="https://api.dicebear.com/7.x/micah/svg?seed=Luna" alt="avatar">
-            <img class="avatar-option" data-avatar="https://api.dicebear.com/7.x/micah/svg?seed=Oliver" src="https://api.dicebear.com/7.x/micah/svg?seed=Oliver" alt="avatar">
-            <img class="avatar-option" data-avatar="https://api.dicebear.com/7.x/micah/svg?seed=Bella" src="https://api.dicebear.com/7.x/micah/svg?seed=Bella" alt="avatar">
-            <img class="avatar-option" data-avatar="https://api.dicebear.com/7.x/micah/svg?seed=Shadow" src="https://api.dicebear.com/7.x/micah/svg?seed=Shadow" alt="avatar">
-          </div>
-          <input type="url" class="input-glass" id="custom-avatar-url" placeholder="或粘贴自定义图片 URL..." style="margin-top:6px;font-size:12px">
-        </div>
-      </div>
-    </section>
-
     <!-- Action Grid -->
     <section class="lobby-grid">
-      <!-- 创建房间 -->
       <div class="bento-card" id="card-create-room">
-        <div class="bento-icon">🎮</div>
+        <i data-lucide="gamepad-2" class="bento-icon-lg"></i>
         <h3>创建房间</h3>
         <p>生成邀请码，与好友对战</p>
         <div class="bento-card-bottom" id="create-room-options" style="display:none">
           <input type="text" class="input-glass" id="room-player-name" placeholder="昵称" value="小猫猫">
-          <button class="btn btn-primary" id="btn-create-room">✨ 创建</button>
+          <button class="btn btn-primary" id="btn-create-room"><i data-lucide="plus-circle" style="width:16px;height:16px"></i> 创建</button>
         </div>
       </div>
 
-      <!-- 快速匹配 -->
       <div class="bento-card" id="card-quick-match">
-        <div class="bento-icon">🔥</div>
+        <i data-lucide="zap" class="bento-icon-lg"></i>
         <h3>快速匹配</h3>
         <p>自动匹配实力相近的对手</p>
         <button class="btn btn-primary" id="btn-quick-match">开始匹配</button>
       </div>
 
-      <!-- 排行榜 -->
       <div class="bento-card" id="card-leaderboard">
-        <div class="bento-icon">🏆</div>
+        <i data-lucide="trophy" class="bento-icon-lg"></i>
         <h3>排行榜</h3>
         <p>全服积分 Top 10</p>
         <button class="btn btn-ghost" id="btn-leaderboard">查看排行</button>
       </div>
 
-      <!-- 加入房间 -->
       <div class="bento-card" id="card-join-room">
-        <div class="bento-icon">🚪</div>
+        <i data-lucide="door-open" class="bento-icon-lg"></i>
         <h3>加入房间</h3>
         <p>输入 4 位邀请码加入</p>
         <div class="join-group">
@@ -113,9 +95,9 @@
 
     <!-- Footer -->
     <footer class="lobby-footer">
-      <button class="btn-footer btn-footer-green" id="btn-my-stats">📊 个人战绩</button>
-      <button class="btn-footer btn-footer-gold" id="btn-rules">📖 游戏规则</button>
-      <button class="btn-footer btn-footer-blue" id="btn-updates">📢 更新公告</button>
+      <button class="btn-footer btn-footer-green" id="btn-my-stats"><i data-lucide="user" style="width:16px;height:16px"></i> 个人战绩</button>
+      <button class="btn-footer btn-footer-gold" id="btn-rules"><i data-lucide="book-open" style="width:16px;height:16px"></i> 游戏规则</button>
+      <button class="btn-footer btn-footer-blue" id="btn-updates"><i data-lucide="megaphone" style="width:16px;height:16px"></i> 更新公告</button>
     </footer>
   </div>
 </div>
@@ -209,14 +191,31 @@
   </div>
 </div>
 
-<!-- 昵称编辑 -->
+<!-- V7 Profile Edit Modal -->
 <div class="modal-overlay" id="modal-profile">
-  <div class="modal-box bento-glass">
-    <h3>✏️ 修改昵称</h3>
-    <input type="text" class="input-glass" id="profile-name" placeholder="输入昵称" style="width:100%;margin:16px 0">
+  <div class="modal-box bento-glass" style="max-width:440px">
+    <h3 style="font-family:var(--font-heading);font-size:20px"><i data-lucide="user-circle" style="width:22px;height:22px"></i> 编辑个人资料</h3>
+
+    <!-- 头像选择 -->
+    <div style="margin:16px 0">
+      <p style="font-weight:800;margin-bottom:8px;font-size:13px">选择头像</p>
+      <div class="avatar-selector" id="avatar-selector">
+        <img class="avatar-option selected" data-avatar="https://api.dicebear.com/7.x/micah/svg?seed=Felix" src="https://api.dicebear.com/7.x/micah/svg?seed=Felix">
+        <img class="avatar-option" data-avatar="https://api.dicebear.com/7.x/micah/svg?seed=Max" src="https://api.dicebear.com/7.x/micah/svg?seed=Max">
+        <img class="avatar-option" data-avatar="https://api.dicebear.com/7.x/micah/svg?seed=Luna" src="https://api.dicebear.com/7.x/micah/svg?seed=Luna">
+        <img class="avatar-option" data-avatar="https://api.dicebear.com/7.x/micah/svg?seed=Oliver" src="https://api.dicebear.com/7.x/micah/svg?seed=Oliver">
+        <img class="avatar-option" data-avatar="https://api.dicebear.com/7.x/micah/svg?seed=Bella" src="https://api.dicebear.com/7.x/micah/svg?seed=Bella">
+        <img class="avatar-option" data-avatar="https://api.dicebear.com/7.x/micah/svg?seed=Shadow" src="https://api.dicebear.com/7.x/micah/svg?seed=Shadow">
+      </div>
+      <input type="url" class="input-glass" id="custom-avatar-url" placeholder="或粘贴自定义图片 URL..." style="margin-top:8px;font-size:12px">
+    </div>
+
+    <!-- 昵称 -->
+    <input type="text" class="input-glass" id="profile-name" placeholder="输入昵称" style="margin-bottom:12px">
+
     <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" id="btn-save-profile">保存</button>
-      <button class="btn btn-secondary" id="btn-close-profile">取消</button>
+      <button class="btn btn-primary" id="btn-save-profile" style="flex:1">保存</button>
+      <button class="btn btn-secondary" id="btn-close-profile" style="flex:1">取消</button>
     </div>
   </div>
 </div>
@@ -304,5 +303,6 @@
 
 <!-- ═══ 入口 ═══ -->
 <script type="module" src="./js/main.js"></script>
+<script>lucide.createIcons();</script>
 </body>
 </html>

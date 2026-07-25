@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/iv3rins/iv3rins.github.io#readme",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "boardgame.io": "^0.50.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",

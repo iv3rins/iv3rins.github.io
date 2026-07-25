@@ -15,12 +15,17 @@ import { PokeWar } from './game.js';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { extname } from 'path';
 import { createHash, randomUUID } from 'crypto';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 const require = createRequire(import.meta.url);
 const { Server, Origins } = require('boardgame.io/dist/cjs/server.js');
 const initSqlJs = require('sql.js');
 
 const PORT = process.env.PORT || 8080;
+const JWT_SECRET = process.env.JWT_SECRET || 'pokewar-jwt-' + Date.now().toString(36);
+const JWT_EXPIRES = '7d';
+const BCRYPT_ROUNDS = 10;
 const DEV_MODE = process.env.NODE_ENV !== 'production';
 const DB_PATH = './pokeWar.db';
 const DB_SAVE_INTERVAL = 30000; // 30 秒持久化一次
@@ -252,29 +257,6 @@ server.app.use(async (ctx, next) => {
   await next();
 });
 
-/** POST /api/matchmake — 加入匹配队列 */
-server.app.use(async (ctx, next) => {
-  if (ctx.path !== '/api/matchmake' || ctx.method !== 'POST') return next();
-  try {
-    const { playerId, playerName, avatar } = ctx.request.body || {};
-
-    if (!playerId || !playerName) {
-      ctx.status = 400;
-      ctx.body = { error: '缺少 playerId 或 playerName' };
-      return;
-    }
-
-    // 确保用户已注册
-    ensureUser(playerId, playerName, avatar);
-
-    const result = await addToQueue(playerId, playerName, avatar);
-    ctx.body = { success: true, ...result };
-  } catch (e) {
-    ctx.status = 500;
-    ctx.body = { error: e.message };
-  }
-});
-
 /** GET /api/leaderboard — 排行榜 Top 10 (排除游客) */
 server.app.use(async (ctx, next) => {
   if (ctx.path !== '/api/leaderboard' || ctx.method !== 'GET') return next();
@@ -316,24 +298,26 @@ server.app.use(async (ctx, next) => {
 });
 
 // ═══════════════════════════════════════
-// V6 Auth APIs
+// V6 Auth: JWT + Bcrypt
 // ═══════════════════════════════════════
 
-function hashPassword(pw) { return createHash('sha256').update(pw).digest('hex'); }
-
-/** POST /api/register — 注册正式用户 */
+/** POST /api/register — 注册 */
 server.app.use(async (ctx, next) => {
   if (ctx.path !== '/api/register' || ctx.method !== 'POST') return next();
   try {
     const { username, password, avatar } = ctx.request.body || {};
     if (!username || !password) { ctx.status = 400; ctx.body = { error: '用户名和密码不能为空' }; return; }
-    // 检查用户名是否已被注册
+    if (username.length < 2 || password.length < 4) { ctx.status = 400; ctx.body = { error: '用户名至少2字，密码至少4位' }; return; }
     const exist = db.exec('SELECT id FROM users WHERE name = ? AND is_guest = 0', [username]);
     if (exist.length) { ctx.status = 409; ctx.body = { error: '用户名已存在' }; return; }
+
     const id = 'u_' + randomUUID().substring(0, 12);
+    const pwdHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
     db.run('INSERT INTO users (id, name, avatar, password_hash, is_guest) VALUES (?, ?, ?, ?, 0)',
-      [id, username, avatar || '🐱', hashPassword(password)]);
-    ctx.body = { success: true, playerId: id, playerName: username, avatar: avatar || '🐱' };
+      [id, username, avatar || '🐱', pwdHash]);
+
+    const token = jwt.sign({ userId: id, isGuest: 0 }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+    ctx.body = { success: true, token, playerId: id, playerName: username, avatar: avatar || '🐱' };
   } catch (e) { ctx.status = 500; ctx.body = { error: e.message }; }
 });
 
@@ -343,31 +327,61 @@ server.app.use(async (ctx, next) => {
   try {
     const { username, password } = ctx.request.body || {};
     if (!username || !password) { ctx.status = 400; ctx.body = { error: '用户名和密码不能为空' }; return; }
-    const pwHash = hashPassword(password);
-    const rows = db.exec('SELECT id, name, avatar, wins, losses, rating FROM users WHERE name = ? AND password_hash = ? AND is_guest = 0',
-      [username, pwHash]);
-    if (!rows.length) { ctx.status = 401; ctx.body = { error: '用户名或密码错误' }; return; }
+    const rows = db.exec('SELECT id, name, avatar, password_hash, wins, losses, rating FROM users WHERE name = ? AND is_guest = 0', [username]);
+    if (!rows.length) { ctx.status = 404; ctx.body = { error: '用户不存在' }; return; }
     const r = rows[0].values[0];
-    ctx.body = { success: true, playerId: r[0], playerName: r[1], avatar: r[2], wins: r[3], losses: r[4], rating: r[5] };
+    const valid = await bcrypt.compare(password, r[3]);
+    if (!valid) { ctx.status = 401; ctx.body = { error: '密码错误' }; return; }
+
+    const token = jwt.sign({ userId: r[0], isGuest: 0 }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+    ctx.body = { success: true, token, playerId: r[0], playerName: r[1], avatar: r[2], wins: r[4], losses: r[5], rating: r[6] };
   } catch (e) { ctx.status = 500; ctx.body = { error: e.message }; }
 });
 
-/** POST /api/guest — 游客试玩 */
+/** POST /api/guest — 游客 */
 server.app.use(async (ctx, next) => {
   if (ctx.path !== '/api/guest' || ctx.method !== 'POST') return next();
   try {
     const { playerName, avatar } = ctx.request.body || {};
     const id = 'g_' + randomUUID().substring(0, 10);
-    const name = playerName || '游客' + Math.random().toString(36).substring(2, 6);
+    const name = playerName || 'Guest_' + Math.random().toString(36).substring(2, 6).toUpperCase();
     db.run('INSERT INTO users (id, name, avatar, is_guest) VALUES (?, ?, ?, 1)', [id, name, avatar || '🐱']);
-    ctx.body = { success: true, playerId: id, playerName: name, avatar: avatar || '🐱' };
+
+    const token = jwt.sign({ userId: id, isGuest: 1 }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
+    ctx.body = { success: true, token, playerId: id, playerName: name, avatar: avatar || '🐱' };
   } catch (e) { ctx.status = 500; ctx.body = { error: e.message }; }
 });
 
-// ── 旧兼容: 匿名注册 ──
+// ═══════════════════════════════════════
+// JWT 鉴权中间件
+// ═══════════════════════════════════════
+
+function verifyToken(ctx, next) {
+  const auth = ctx.get('Authorization') || '';
+  const match = auth.match(/^Bearer\s+(.+)$/i);
+  if (!match) { ctx.status = 401; ctx.body = { error: '未提供 Token' }; return; }
+  try {
+    const payload = jwt.verify(match[1], JWT_SECRET);
+    ctx.state.user = { userId: payload.userId, isGuest: !!payload.isGuest };
+    return next();
+  } catch {
+    ctx.status = 401; ctx.body = { error: 'Token 无效或已过期' };
+  }
+}
+
+/** POST /api/matchmake — 快速匹配 (需 JWT) */
 server.app.use(async (ctx, next) => {
-  if (ctx.path === '/api/register' || ctx.path === '/api/login' || ctx.path === '/api/guest') return next();
-  await next();
+  if (ctx.path !== '/api/matchmake' || ctx.method !== 'POST') return next();
+  return verifyToken(ctx, async () => {
+    try {
+      const { playerName, avatar } = ctx.request.body || {};
+      const playerId = ctx.state.user.userId;
+      if (!playerId) { ctx.status = 400; ctx.body = { error: '无效用户' }; return; }
+      ensureUser(playerId, playerName || 'Unknown', avatar);
+      const result = await addToQueue(playerId, playerName || 'Unknown', avatar);
+      ctx.body = { success: true, ...result };
+    } catch (e) { ctx.status = 500; ctx.body = { error: e.message }; }
+  });
 });
 
 /** GET /api/online — 在线人数 */

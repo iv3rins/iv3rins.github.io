@@ -43,6 +43,8 @@ class AppController {
     /** V6: 登录状态 */
     this.isLoggedIn = false;
     this.isGuest = false;
+    /** V6: JWT Token */
+    this.jwtToken = localStorage.getItem('pokeWarToken') || null;
 
     /** 游戏完整状态 (G + ctx) */
     this.state = null;
@@ -294,12 +296,13 @@ class AppController {
     } catch (e) { /* offline OK */ }
   }
 
-  /** 加入快速匹配队列 */
+  /** 加入快速匹配队列 (需 JWT) */
   async joinMatchmaking() {
+    const headers = { 'Content-Type': 'application/json' };
+    if (this.jwtToken) headers['Authorization'] = `Bearer ${this.jwtToken}`;
     const res = await fetch(`${SERVER_ORIGIN}/api/matchmake`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ playerId: this.playerId, playerName: this.playerName, avatar: this.avatar }),
+      method: 'POST', headers,
+      body: JSON.stringify({ playerName: this.playerName, avatar: this.avatar }),
     });
     if (!res.ok) throw new Error((await res.json()).error || 'Matchmake failed');
     return res.json();
