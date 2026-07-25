@@ -78,7 +78,7 @@ export function initLobby() {
 
   document.getElementById('btn-save-profile')?.addEventListener('click', () => {
     cs();
-    const name = document.getElementById('profile-name')?.value?.trim() || '小猫猫';
+    const name = document.getElementById('profile-name')?.value?.trim() || '玩家';
     app.playerName = name;
     updateNavPlayerId();
     hideModal('modal-profile');
@@ -203,7 +203,7 @@ export function initLobby() {
 
   document.getElementById('btn-auth-logout')?.addEventListener('click', () => {
     app.jwtToken = null; app.isLoggedIn = false; app.isGuest = false;
-    app.playerName = '小猫猫';
+    app.playerName = '玩家';
     app.wins = 0; app.losses = 0; app.matches = 0; app.winRate = 0; app.rating = 1000;
     localStorage.removeItem('pokeWarToken');
     localStorage.removeItem('pokeWarIsLoggedIn');
@@ -331,7 +331,7 @@ export function initLobby() {
     cs();
     const btn = document.getElementById('btn-quick-match');
     if (btn.classList.contains('btn-matching')) return; // 防连点
-    app.playerName = document.getElementById('room-player-name')?.value?.trim() || '小猫猫';
+    app.playerName = document.getElementById('room-player-name')?.value?.trim() || '玩家';
     app.registerPlayer();
 
     btn.innerHTML = `${ICON.search} 匹配中...`;
@@ -456,7 +456,7 @@ function updateBadgeUI() {
   const badgeAvatar = document.getElementById('badge-avatar');
   const badgeName = document.getElementById('badge-name');
   if (badgeAvatar) badgeAvatar.src = app.avatar;
-  if (badgeName) badgeName.textContent = app.playerName || '小猫猫';
+  if (badgeName) badgeName.textContent = app.playerName || '玩家';
 }
 
 /** 旧兼容 */

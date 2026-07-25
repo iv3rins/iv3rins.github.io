@@ -40,7 +40,7 @@
         <!-- V7: Mini Profile Badge -->
         <div class="profile-badge" id="profile-badge">
           <img id="badge-avatar" src="https://api.dicebear.com/7.x/micah/svg?seed=Felix" alt="avatar" style="width:32px;height:32px;border-radius:8px;border:2px solid #000">
-          <span id="badge-name">小猫猫</span>
+          <span id="badge-name"></span>
           <button class="btn btn-small" id="btn-edit-profile" style="padding:4px 8px;font-size:11px"><i data-lucide="settings" style="width:14px;height:14px"></i></button>
         </div>
       </div>
@@ -104,7 +104,7 @@
     </nav>
     <div style="display:flex;gap:16px;flex:1;padding:16px;max-width:960px;margin:0 auto;width:100%;min-height:0;align-items:stretch">
       <!-- 左侧: 玩家列表 + 房间设置 60% -->
-      <div class="bento-card" style="flex:6;display:flex;flex-direction:column;padding:20px">
+      <div class="bento-card-panel" style="flex:6;display:flex;flex-direction:column;padding:20px">
         <h3 class="neo-heading" style="font-size:18px;margin-bottom:8px"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 准备室 · <b class="neo-number" id="wr-room-code">----</b>
           <button class="btn btn-small neo-button" id="btn-copy-room-code" style="font-size:11px;padding:4px 8px;cursor:pointer"><svg class="nb-icon-sm" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 复制邀请码</button>
         </h3>
@@ -130,7 +130,7 @@
         </div>
       </div>
       <!-- 右侧: 聊天 40% -->
-      <div id="room-chat-container" class="bento-card" style="flex:4;display:flex;flex-direction:column;padding:16px">
+      <div id="room-chat-container" class="bento-card-panel" style="flex:4;display:flex;flex-direction:column;padding:16px">
         <h4 style="font-family:var(--font-heading);margin-bottom:8px"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 房间聊天</h4>
         <div id="wr-chat-messages" style="flex:1;overflow-y:auto;background:#FFF;border:2px solid #000;border-radius:8px;padding:8px;margin-bottom:8px;font-size:13px;min-height:0"></div>
         <div style="display:flex;gap:8px;align-items:center">
@@ -346,7 +346,7 @@
 
 <!-- V14: Bento Grid 更新公告 -->
 <div class="modal-overlay" id="modal-updates">
-  <div class="modal-box bento-card" style="max-width:520px;padding:24px">
+  <div class="modal-box bento-card-panel" style="max-width:520px;padding:24px">
     <button class="close-modal-btn" id="btn-close-updates">✕</button>
     <h3 class="neo-heading" style="font-size:20px;margin-bottom:16px"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg> 更新公告</h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">

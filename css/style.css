@@ -333,6 +333,17 @@ html, body {
 }
 @media (max-width: 480px) { .lobby-grid { grid-template-columns: 1fr; } }
 
+/* ── 准备室面板 (无全局居中污染) ── */
+.bento-card-panel {
+  background: #FFFFFF;
+  border: var(--border-thick);
+  box-shadow: var(--shadow-hard);
+  border-radius: 12px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.bento-card-panel:hover { transform: translate(-2px, -2px); box-shadow: 10px 10px 0px #000; }
+.bento-icon { font-size: 44px; }
+/* 大厅卡片 (居中布局) */
 .bento-card {
   background: #FFFFFF;
   border: var(--border-thick);
@@ -345,7 +356,6 @@ html, body {
   cursor: default;
 }
 .bento-card:hover { transform: translate(-2px, -2px); box-shadow: 10px 10px 0px #000; }
-.bento-icon { font-size: 44px; }
 .bento-card h3 { font-family: var(--font-heading); font-size: 20px; font-weight: 800; color: #000; }
 .bento-card p { font-size: 13px; color: var(--text-muted); }
 .bento-card .btn { margin-top: 8px; width: 100%; }
