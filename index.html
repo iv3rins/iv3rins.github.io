@@ -120,35 +120,34 @@
       <div class="nav-left"><span class="nav-logo">PokeWar</span></div>
       <div class="nav-right"><button class="btn btn-danger btn-small" id="btn-wr-leave"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> 离开</button></div>
     </nav>
-    <div style="display:flex;gap:16px;flex:1;padding:16px;max-width:960px;margin:0 auto;width:100%;min-height:0;align-items:stretch">
-      <!-- 左侧: 玩家列表 + 房间设置 60% -->
-      <div class="bento-card-panel" style="flex:6;display:flex;flex-direction:column;padding:20px">
-        <h3 class="neo-heading" style="font-size:18px;margin-bottom:8px"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 准备室 · <b class="neo-number" id="wr-room-code">----</b>
-          <button class="btn btn-small neo-button" id="btn-copy-room-code" style="font-size:11px;padding:4px 8px;cursor:pointer"><svg class="nb-icon-sm" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 复制邀请码</button>
+    <div class="wr-wrapper" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;flex:1;padding:20px;max-width:720px;margin:0 auto;width:100%;min-height:0">
+      <!-- ★ 统一 neo-bento 卡片 -->
+      <div class="neo-bento" style="width:100%;padding:24px;display:flex;flex-direction:column;align-items:center;gap:16px">
+        <h3 class="neo-heading" style="font-size:20px"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 准备室 · <b class="neo-number" id="wr-room-code">----</b>
+          <button class="btn btn-small" id="btn-copy-room-code" style="font-size:11px;padding:4px 8px"><svg class="nb-icon-sm" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 复制</button>
         </h3>
-        <!-- ★ 玩家座位坑位 — 独立容器，仅定向刷新 -->
-        <div id="player-slots-container" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;flex:1"></div>
-        <!-- ★ 房间设置 — 仅初始化一次 -->
-        <div id="room-settings-container" style="margin-top:12px;padding-top:12px;border-top:2px solid #000">
+        <!-- 玩家座位 -->
+        <div id="player-slots-container" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;width:100%"></div>
+        <!-- 房间设置 -->
+        <div id="room-settings-container" style="width:100%;padding-top:12px;border-top:2px solid #000">
           <p style="font-weight:800;font-size:13px;margin-bottom:6px">游戏模式</p>
           <div style="display:flex;gap:8px">
             <label class="mode-card" style="flex:1;padding:8px;border:2px solid #000;border-radius:8px;text-align:center;cursor:pointer;font-size:12px">
-              <input type="radio" name="wrGameMode" value="classic" checked style="display:none">
-              <span style="font-weight:800">⚡ 快速模式</span><br><small>1 条命</small>
+              <input type="radio" name="wrGameMode" value="quick" style="display:none"><span style="font-weight:800">⚡ 快速</span><br><small>1命</small>
             </label>
             <label class="mode-card" style="flex:1;padding:8px;border:2px solid #000;border-radius:8px;text-align:center;cursor:pointer;font-size:12px">
-              <input type="radio" name="wrGameMode" value="classic">
-              <span style="font-weight:800">🐾 常规模式</span><br><small>3 条命</small>
+              <input type="radio" name="wrGameMode" value="classic" checked style="display:none"><span style="font-weight:800">🐾 常规</span><br><small>3命</small>
             </label>
           </div>
         </div>
-        <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+        <!-- 操作按钮 -->
+        <div style="display:flex;gap:8px;justify-content:center">
           <button class="btn btn-primary" id="btn-wr-start" style="display:none"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> 开始游戏</button>
           <button class="btn btn-secondary" id="btn-wr-ready" style="display:none"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 准备</button>
         </div>
       </div>
-      <!-- 右侧: 聊天 40% -->
-      <div id="room-chat-container" class="bento-card-panel" style="flex:4;display:flex;flex-direction:column;padding:16px;min-height:0">
+      <!-- 房间聊天 -->
+      <div id="room-chat-container" class="neo-bento" style="width:100%;display:flex;flex-direction:column;padding:16px;min-height:0;max-height:300px">
         <h4 style="font-family:var(--font-heading);margin-bottom:8px;flex-shrink:0"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 房间聊天</h4>
         <div id="wr-chat-messages"></div>
         <div class="chat-input-row">
@@ -345,7 +344,6 @@
     <button class="close-modal-btn" onclick="document.getElementById('modal-leaderboard').classList.remove('show')">✕</button>
     <h3><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 6 9 6 9z"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 18 9 18 9z"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg> 排行榜 Top 10</h3>
     <div id="leaderboard-list" style="margin:16px 0;text-align:left"></div>
-    <button class="btn btn-secondary" id="btn-close-leaderboard">关闭</button>
   </div>
 </div>
 
@@ -370,7 +368,7 @@
   <div class="modal-box bento-glass"><h3><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> 濒死救援</h3><p id="dying-desc"></p><div id="dying-countdown">10</div><div id="dying-actions"></div></div>
 </div>
 <div class="modal-overlay" id="modal-tutorial">
-  <div class="modal-box bento-glass" style="max-width:640px;padding:24px;overflow-y:auto;max-height:90vh">
+  <div class="modal-box bento-glass" style="width:85vw;max-width:900px;height:auto;max-height:95vh;padding:28px;overflow:hidden !important">
     <button class="close-modal-btn" onclick="document.getElementById('modal-tutorial').classList.remove('show')">✕</button>
     <!-- Header -->
     <div style="margin-bottom:20px">
@@ -421,9 +419,9 @@
 </div>
 <div class="modal-overlay" id="modal-stats">
   <div class="modal-box bento-glass" style="max-width:480px">
+    <button class="close-modal-btn" onclick="document.getElementById('modal-stats').classList.remove('show')">✕</button>
     <h3><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> 个人战绩</h3>
     <div id="stats-content" style="margin:16px 0;text-align:left"></div>
-    <button class="btn btn-secondary" id="btn-close-stats">关闭</button>
   </div>
 </div>
 
