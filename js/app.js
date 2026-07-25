@@ -14,11 +14,10 @@ import { PokeWar } from '../game.js';
 const { Client, LobbyClient, SocketIO } = window.BoardgameIO || {};
 
 // ══════════════════════════════════════════════════
-// ★ 统一服务器 Origin 地址
-//   动态获取当前域名/协议，端口降级到 8080
-//   DEFAULT_SERVER 旧值缺少 http:// 导致 Socket.IO 解析崩溃
+// ★ V4: 统一同源 — 消除一切 CORS
+//   window.location.origin 保证前后端绝对同源
 // ══════════════════════════════════════════════════
-const SERVER_ORIGIN = `${location.protocol}//${location.hostname}:${location.port || '8080'}`;
+const SERVER_ORIGIN = window.location.origin;
 
 // ═══════════════════════════════════════════
 // AppController — 单例
@@ -39,6 +38,8 @@ class AppController {
     this.playerName = '玩家';
     /** @type {string} Emoji 头像 */
     this.avatar = '🐱';
+    /** @type {string} V4: 持久化玩家 ID (localStorage) */
+    this.playerId = this._loadPlayerId();
 
     /** 游戏完整状态 (G + ctx) */
     this.state = null;
@@ -262,6 +263,57 @@ class AppController {
   /** 获取所有玩家 */
   getAllPlayers() {
     return this.state?.G?.players || {};
+  }
+
+  // ═══ V4: REST API 方法 ═══
+
+  /** 获取服务器 Origin */
+  getServerOrigin() { return SERVER_ORIGIN; }
+
+  /** 生成/加载持久化玩家 ID */
+  _loadPlayerId() {
+    let id = localStorage.getItem('pokeWarPlayerId');
+    if (!id) {
+      id = 'p_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+      localStorage.setItem('pokeWarPlayerId', id);
+    }
+    return id;
+  }
+
+  /** 注册/更新用户到服务器 */
+  async registerPlayer() {
+    try {
+      await fetch(`${SERVER_ORIGIN}/api/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerId: this.playerId, playerName: this.playerName, avatar: this.avatar }),
+      });
+    } catch (e) { /* offline OK */ }
+  }
+
+  /** 加入快速匹配队列 */
+  async joinMatchmaking() {
+    const res = await fetch(`${SERVER_ORIGIN}/api/matchmake`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ playerId: this.playerId, playerName: this.playerName, avatar: this.avatar }),
+    });
+    if (!res.ok) throw new Error((await res.json()).error || 'Matchmake failed');
+    return res.json();
+  }
+
+  /** 获取排行榜 */
+  async fetchLeaderboard() {
+    const res = await fetch(`${SERVER_ORIGIN}/api/leaderboard`);
+    if (!res.ok) throw new Error('Leaderboard fetch failed');
+    return res.json();
+  }
+
+  /** 获取个人战绩 */
+  async fetchStats(playerId) {
+    const res = await fetch(`${SERVER_ORIGIN}/api/stats/${playerId || this.playerId}`);
+    if (!res.ok) throw new Error('Stats fetch failed');
+    return res.json();
   }
 
   /** 断开连接 */

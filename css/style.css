@@ -253,42 +253,118 @@ html, body {
 .input-glass::placeholder { color: var(--text-muted); }
 
 /* ═══════════════════════════════════════
-   🏠 主页
+   🏠 大厅主页 — V4 Bento Grid
    ═══════════════════════════════════════ */
-.home-container {
+.lobby-layout {
   width: 100%; height: 100%;
-  display: flex; align-items: center; justify-content: center;
+  display: flex; flex-direction: column;
+  overflow-y: auto; overflow-x: hidden;
+  padding: 0;
 }
-.home-box {
-  padding: 40px 32px;
-  max-width: 380px; width: 90%;
+
+/* ── TopNav ── */
+.lobby-topnav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--glass-border);
+  position: sticky; top: 0; z-index: 50;
+}
+.nav-left { display: flex; align-items: center; gap: 8px; }
+.nav-logo { font-weight: 800; font-size: 18px; color: var(--text-primary); }
+.nav-right { display: flex; align-items: center; gap: 10px; }
+.nav-player-id { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
+
+/* ── Hero ── */
+.lobby-hero {
+  text-align: center; padding: 36px 20px 28px;
+}
+.hero-title { font-size: 36px; font-weight: 900; color: var(--text-primary); letter-spacing: 2px; }
+.hero-sub { font-size: 20px; font-weight: 400; color: var(--text-secondary); display: block; margin-top: 4px; }
+.hero-desc { font-size: 14px; color: var(--text-muted); margin-top: 8px; }
+.hero-stats { display: flex; gap: 24px; justify-content: center; margin-top: 16px; }
+.hero-stat { font-size: 14px; color: var(--text-secondary); }
+.hero-stat b { color: var(--color-primary); font-size: 18px; }
+
+/* ── Action Grid: 4 卡片 ── */
+.lobby-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 0 20px 20px;
+  max-width: 640px; margin: 0 auto; width: 100%;
+}
+@media (max-width: 480px) {
+  .lobby-grid { grid-template-columns: 1fr; }
+}
+
+.bento-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--glass-radius);
+  padding: 24px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
   text-align: center;
-  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  cursor: default;
 }
-.home-logo {
-  width: 80px; height: 80px;
-  font-size: 48px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 50%;
+.bento-card:hover { transform: translateY(-2px); box-shadow: var(--glass-shadow); }
+.bento-icon { font-size: 40px; }
+.bento-card h3 { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+.bento-card p { font-size: 13px; color: var(--text-muted); }
+.bento-card .btn { margin-top: 8px; width: 100%; }
+.bento-card-bottom { width: 100%; margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+.bento-card-bottom .input-glass { width: 100%; }
+
+/* ── Footer Buttons ── */
+.lobby-footer {
+  display: flex; gap: 12px; justify-content: center;
+  padding: 16px 20px 24px; flex-wrap: wrap;
+}
+.btn-footer {
+  padding: 14px 28px; border-radius: 16px;
+  border: none; font-size: 15px; font-weight: 700;
+  font-family: var(--font); cursor: pointer;
+  color: #fff; transition: transform var(--transition-fast);
+}
+.btn-footer:hover { transform: scale(1.05); }
+.btn-footer:active { transform: scale(0.96); }
+.btn-footer-green { background: linear-gradient(135deg, #34c759, #30b350); }
+.btn-footer-gold { background: linear-gradient(135deg, #fdcb6e, #f5a623); color: #1d1d1f; }
+.btn-footer-blue { background: linear-gradient(135deg, #0a84ff, #5ea8ff); }
+
+/* ── 匹配中动画 ── */
+.btn-matching {
+  animation: pulse 1.5s ease-in-out infinite;
+  pointer-events: none; opacity: 0.7;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+/* ── 排行榜列表 ── */
+.leaderboard-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: 12px;
+  margin-bottom: 6px;
   background: var(--glass-bg);
   border: var(--glass-border);
-  cursor: pointer;
-  transition: transform var(--transition-spring);
+  font-size: 14px;
 }
-.home-logo:hover { transform: scale(1.1) rotate(5deg); }
-.home-title { font-size: 28px; font-weight: 800; color: var(--text-primary); }
-.home-subtitle { font-size: 13px; color: var(--text-muted); }
+.leaderboard-rank { width: 28px; font-weight: 800; text-align: center; }
+.leaderboard-rank.gold { color: #f5a623; }
+.leaderboard-rank.silver { color: #a0a0b0; }
+.leaderboard-rank.bronze { color: #cd7f32; }
+.leaderboard-name { flex: 1; font-weight: 600; color: var(--text-primary); }
+.leaderboard-rating { font-weight: 700; color: var(--color-primary); }
 
-.input-group { width: 100%; }
-.input-group .input-glass { width: 100%; }
-
-.room-actions {
-  width: 100%; display: flex; flex-direction: column; gap: 10px;
-}
-.room-actions .btn { width: 100%; }
-.join-group {
-  display: flex; gap: 8px;
-}
+/* ── 保留旧样式兼容 ── */
+.join-group { display: flex; gap: 8px; }
 .join-group .input-glass { flex: 1; }
 
 /* ═══════════════════════════════════════

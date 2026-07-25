@@ -3,274 +3,231 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>扑克战争 (PokeWar) — boardgame.io v3.0</title>
+  <title>扑克战争 PokeWar — V4</title>
   <link rel="stylesheet" href="./css/style.css">
-  <!-- boardgame.io CDN (全局 window.BoardgameIO) -->
   <script src="https://cdn.jsdelivr.net/npm/boardgame.io@0.50.2/dist/boardgameio.min.js"></script>
-  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1/index.js"></script>
 </head>
 <body>
 
 <!-- ═══ 横屏提示 ═══ -->
 <div id="orientation-prompt" class="orientation-prompt">
   <div class="rotate-icon">🔄</div>
-  <div>请将手机旋转至横屏以获得最佳游玩体验 🐾</div>
+  <div>请旋转至横屏 🐾</div>
 </div>
 
-<!-- ═══ 顶部悬浮栏 ═══ -->
-<div class="top-bar">
-  <button class="btn-icon" id="btn-fullscreen" title="全屏">🔲</button>
-  <button class="btn-icon" id="btn-game-tutorial" title="玩法说明">❓</button>
-  <button class="btn-icon" id="btn-toggle-theme" title="切换风格">🎨</button>
-</div>
-
-<!-- ═══ Toast 容器 ═══ -->
+<!-- ═══ Toast ═══ -->
 <div class="toast-container" id="toast-container"></div>
 
 <!-- ═══ Loading ═══ -->
 <div class="loading-overlay hidden" id="loading-overlay">
-  <div class="spinner"></div>
-  <div class="loading-text">连接中...</div>
+  <div class="spinner"></div><div class="loading-text">连接中...</div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-   🏠 主页
-   ══════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════
+   🏠 大厅主页 — V4 Bento Grid
+   ═══════════════════════════════════════════ -->
 <div class="page-view active" id="page-home">
-  <div class="home-container">
-    <div class="home-box bento-glass">
-      <div class="home-logo" id="avatar-preview">🐱</div>
-      <h2 class="home-title">PokeWar</h2>
-      <p class="home-subtitle">点击头像选择你的 Emoji</p>
-      <div class="input-group">
-        <input type="text" id="player-name" class="input-glass" placeholder="输入可爱的昵称..." value="小猫猫">
+  <div class="lobby-layout">
+
+    <!-- TopNav -->
+    <nav class="lobby-topnav">
+      <div class="nav-left">
+        <span class="nav-logo">🃏 PokeWar</span>
       </div>
-      <div class="room-actions">
-        <button class="btn btn-primary" id="btn-create-room">✨ 创建房间</button>
+      <div class="nav-right">
+        <button class="btn-icon" id="btn-toggle-theme" title="切换主题">🎨</button>
+        <span class="nav-player-id" id="nav-player-id">未登录</span>
+        <button class="btn btn-small" id="btn-edit-profile">✏️ 昵称</button>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="lobby-hero">
+      <h1 class="hero-title">扑克战争 <span class="hero-sub">PokeWar</span></h1>
+      <p class="hero-desc">多人联机卡牌对战 · WebSocket 实时同步 · 三大摸牌法则</p>
+      <div class="hero-stats">
+        <span class="hero-stat">🟢 <b id="online-count">--</b> 在线</span>
+        <span class="hero-stat">⚔️ <b id="matches-today">--</b> 场对局</span>
+      </div>
+    </section>
+
+    <!-- Action Grid: 4 卡片 -->
+    <section class="lobby-grid">
+      <!-- 创建房间 -->
+      <div class="bento-card" id="card-create-room">
+        <div class="bento-icon">🎮</div>
+        <h3>创建房间</h3>
+        <p>生成邀请码，与好友对战</p>
+        <div class="bento-card-bottom" id="create-room-options" style="display:none">
+          <input type="text" class="input-glass" id="room-player-name" placeholder="昵称" value="小猫猫">
+          <button class="btn btn-primary" id="btn-create-room">✨ 创建</button>
+        </div>
+      </div>
+
+      <!-- 快速匹配 -->
+      <div class="bento-card" id="card-quick-match">
+        <div class="bento-icon">🔥</div>
+        <h3>快速匹配</h3>
+        <p>自动匹配实力相近的对手</p>
+        <button class="btn btn-primary" id="btn-quick-match">开始匹配</button>
+      </div>
+
+      <!-- 排行榜 -->
+      <div class="bento-card" id="card-leaderboard">
+        <div class="bento-icon">🏆</div>
+        <h3>排行榜</h3>
+        <p>全服积分 Top 10</p>
+        <button class="btn btn-ghost" id="btn-leaderboard">查看排行</button>
+      </div>
+
+      <!-- 加入房间 -->
+      <div class="bento-card" id="card-join-room">
+        <div class="bento-icon">🚪</div>
+        <h3>加入房间</h3>
+        <p>输入 4 位邀请码加入</p>
         <div class="join-group">
-          <input type="text" id="room-code" class="input-glass" placeholder="4位邀请码" maxlength="4">
+          <input type="text" class="input-glass" id="room-code" placeholder="邀请码" maxlength="4">
           <button class="btn btn-secondary" id="btn-join-room">加入</button>
         </div>
-        <button class="btn btn-ghost" id="btn-show-tutorial">📖 玩法说明</button>
       </div>
-    </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="lobby-footer">
+      <button class="btn-footer btn-footer-green" id="btn-my-stats">📊 个人战绩</button>
+      <button class="btn-footer btn-footer-gold" id="btn-rules">📖 游戏规则</button>
+      <button class="btn-footer btn-footer-blue" id="btn-updates">📢 更新公告</button>
+    </footer>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-   ⏳ 等待大厅
-   ══════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════
+   ⏳ 等待大厅 (精简版)
+   ═══════════════════════════════════════════ -->
 <div class="page-view" id="page-waiting">
   <div class="waiting-container">
     <div class="waiting-main bento-glass">
-      <h2>✨ 等待可爱的玩家加入 ✨</h2>
-      <div class="room-code-display">
-        房间邀请码: <span id="display-room-code">----</span>
-        <button class="btn btn-small" id="btn-copy-code">复制</button>
-      </div>
-      <!-- 游戏模式选择 (仅房主可见) -->
-      <div id="game-mode-selector" class="host-only-ui" style="display:none">
-        <p class="mode-title">✨ 选择游戏模式 ✨</p>
-        <div class="mode-options">
-          <label class="mode-card">
-            <input type="radio" name="gameMode" value="quick" checked>
-            <div class="mode-content">
-              <span class="mode-icon">⚡</span>
-              <span class="mode-name">快速模式</span>
-              <span class="mode-desc">1条命，速战速决!</span>
-            </div>
-          </label>
-          <label class="mode-card">
-            <input type="radio" name="gameMode" value="classic">
-            <div class="mode-content">
-              <span class="mode-icon">🐾</span>
-              <span class="mode-name">常规模式</span>
-              <span class="mode-desc">3条命，绝地反击!</span>
-            </div>
-          </label>
-        </div>
-      </div>
+      <h2>✨ 等待玩家加入 ✨</h2>
+      <div class="room-code-display">房间码: <span id="display-room-code">----</span> <button class="btn btn-small" id="btn-copy-code">复制</button></div>
       <div class="players-grid" id="players-grid"></div>
-      <div class="action-buttons">
-        <button class="btn btn-primary" id="btn-start-game">🚀 开始游戏</button>
-        <button class="btn btn-danger" id="btn-leave-waiting">🚪 离开房间</button>
-      </div>
-    </div>
-    <div class="chat-sidebar bento-glass">
-      <div class="chat-header">💬 房间聊天室</div>
-      <div class="chat-messages" id="waiting-chat-messages"></div>
-      <div class="chat-input">
-        <input type="text" placeholder="说点什么..." id="waiting-chat-input">
-        <button class="btn btn-small" id="btn-waiting-chat-send">发送</button>
-      </div>
+      <button class="btn btn-primary" id="btn-start-game">🚀 开始游戏</button>
+      <button class="btn btn-danger" id="btn-leave-waiting">🚪 离开</button>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
-   🎮 游戏对局 — 三国杀主视角布局
-   ══════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════
+   🎮 游戏对局 (精简版 — 保留核心功能)
+   ═══════════════════════════════════════════ -->
 <div class="page-view" id="page-game">
   <div class="game-layout">
-
-    <!-- ── 对手区: 屏幕上方 ── -->
-    <div class="opponents-area" id="opponents-area">
-      <!-- 动态填充对手 Bento 卡 -->
-    </div>
-
-    <!-- ── 中央战场区 ── -->
+    <div class="opponents-area" id="opponents-area"></div>
     <div class="battlefield bento-glass" id="battlefield">
       <div class="battle-info">
-        <span class="battle-stat">🎴 牌堆: <b id="deck-count">--</b></span>
-        <span class="battle-stat">🔄 回合: <b id="turn-display">--</b></span>
-        <span class="battle-stat">👤 当前: <b id="current-player-display">--</b></span>
+        <span>🎴 <b id="deck-count">--</b></span>
+        <span>🔄 <b id="turn-display">--</b></span>
       </div>
       <div class="battle-action-msg" id="battle-action-msg"></div>
     </div>
-
-    <!-- ── 自己角色信息: 左下角超大 ── -->
     <div class="self-char bento-glass" id="self-char">
       <div class="char-avatar-large" id="self-avatar">🐱</div>
       <div class="char-stats">
-        <div class="stat-row">
-          <span class="stat-label">❤️</span>
-          <div class="hp-bar"><div class="hp-fill" id="self-hp-fill"></div></div>
-          <span class="stat-val" id="self-hp-val">10/10</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">🛡️</span>
-          <div class="shield-bar"><div class="shield-fill" id="self-shield-fill"></div></div>
-          <span class="stat-val" id="self-shield-val">0</span>
-        </div>
-        <div class="stat-row char-info-row">
-          <span class="char-suit" id="self-suit">♠</span>
-          <span class="char-rank" id="self-rank">K</span>
-          <span class="char-lives" id="self-lives">❤️x3</span>
-        </div>
+        <div class="stat-row"><span>❤️</span><div class="hp-bar"><div class="hp-fill" id="self-hp-fill"></div></div><span id="self-hp-val">10/10</span></div>
+        <div class="stat-row"><span>🛡️</span><div class="shield-bar"><div class="shield-fill" id="self-shield-fill"></div></div><span id="self-shield-val">0</span></div>
       </div>
     </div>
-
-    <!-- ── 底部操作台: 手牌沉底 ── -->
     <div class="player-dashboard" id="player-dashboard">
-      <!-- 浮动操作按钮 -->
-      <div class="floating-actions" id="floating-actions">
+      <div class="floating-actions">
         <button class="btn-action btn-wanhua" id="btn-wanhua" style="display:none">✨ 万化</button>
         <button class="btn-action btn-confirm hidden" id="btn-confirm">出牌</button>
         <button class="btn-action btn-cancel hidden" id="btn-cancel">取消</button>
       </div>
-      <!-- 手牌区 — 沉底叠放 -->
-      <div class="hand-area" id="hand-area">
-        <!-- 动态填充卡牌 -->
-      </div>
+      <div class="hand-area" id="hand-area"></div>
     </div>
-
-    <!-- ── 游戏聊天 ── -->
-    <div class="game-chat bento-glass" id="game-chat-box">
-      <div class="chat-header">💬 战斗聊天室</div>
-      <div class="chat-messages" id="game-chat-messages"></div>
-      <div class="chat-input">
-        <input type="text" placeholder="输入聊天内容..." id="game-chat-input">
-        <button class="btn btn-small" id="btn-game-chat-send">发送</button>
-      </div>
-    </div>
-
-    <!-- ── 动画层 ── -->
     <div class="anim-layer" id="anim-layer"></div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
+<!-- ═══════════════════════════════════════════
    🏆 结算
-   ══════════════════════════════════════════════════════ -->
+   ═══════════════════════════════════════════ -->
 <div class="page-view" id="page-result">
-  <div class="result-container">
-    <div class="result-panel bento-glass">
-      <div class="ribbon">🏆 游戏结束 🏆</div>
-      <ul class="stats-list">
-        <li><span class="icon">👑</span><span class="label">最终赢家:</span><span class="value" id="stat-winner">---</span></li>
-        <li><span class="icon">⚔️</span><span class="label">战斗回合:</span><span class="value" id="stat-rounds">---</span></li>
-        <li><span class="icon">💀</span><span class="label">幸存人数:</span><span class="value" id="stat-survivors">---</span></li>
-      </ul>
-      <div class="result-actions">
-        <button class="btn btn-primary" id="btn-restart">🔄 再来一局</button>
-        <button class="btn btn-secondary" id="btn-leave-room">🚪 退出房间</button>
-      </div>
-    </div>
-  </div>
+  <div class="result-container"><div class="result-panel bento-glass">
+    <div class="ribbon">🏆 游戏结束 🏆</div>
+    <ul class="stats-list">
+      <li><span>👑</span><span>赢家:</span><span id="stat-winner">---</span></li>
+      <li><span>⚔️</span><span>回合:</span><span id="stat-rounds">---</span></li>
+    </ul>
+    <button class="btn btn-primary" id="btn-restart">🔄 再来一局</button>
+    <button class="btn btn-secondary" id="btn-leave-room">🚪 退出</button>
+  </div></div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════
+<!-- ═══════════════════════════════════════════
    📦 弹窗
-   ══════════════════════════════════════════════════════ -->
+   ═══════════════════════════════════════════ -->
 
-<!-- Emoji 选择器 -->
-<div class="modal-overlay" id="emoji-picker-dialog">
+<!-- 昵称编辑 -->
+<div class="modal-overlay" id="modal-profile">
   <div class="modal-box bento-glass">
-    <h3>🎨 选择你的头像</h3>
-    <emoji-picker id="emoji-picker"></emoji-picker>
-    <button class="btn btn-small" onclick="document.getElementById('emoji-picker-dialog').classList.remove('show')">关闭</button>
+    <h3>✏️ 修改昵称</h3>
+    <input type="text" class="input-glass" id="profile-name" placeholder="输入昵称" style="width:100%;margin:16px 0">
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" id="btn-save-profile">保存</button>
+      <button class="btn btn-secondary" id="btn-close-profile">取消</button>
+    </div>
   </div>
 </div>
 
-<!-- 万化浸染选择 -->
-<div id="wanhua-modal" class="modal-overlay">
-  <div class="modal-box bento-glass wanhua-modal-content">
-    <div class="wanhua-header">
-      <h3>✨ 万能浸染 ✨</h3>
-      <p>选择 A 的同化花色（A 自身花色 或 其他牌的花色），点数 +1</p>
-    </div>
+<!-- 排行榜 -->
+<div class="modal-overlay" id="modal-leaderboard">
+  <div class="modal-box bento-glass" style="max-width:480px">
+    <h3>🏆 排行榜 Top 10</h3>
+    <div id="leaderboard-list" style="margin:16px 0;text-align:left"></div>
+    <button class="btn btn-secondary" id="btn-close-leaderboard">关闭</button>
+  </div>
+</div>
+
+<!-- 万化弹窗 -->
+<div class="modal-overlay" id="wanhua-modal">
+  <div class="modal-box bento-glass">
+    <h3>✨ 万能浸染 ✨</h3>
+    <p>选择 A 的同化花色（点数 +1）</p>
     <div id="wanhua-suit-options" class="wanhua-suit-options"></div>
     <div class="wanhua-actions">
-      <button id="wanhua-cancel-btn" class="btn btn-secondary">取消</button>
-      <button id="wanhua-confirm-btn" class="btn btn-primary">✨ 确认 ✨</button>
+      <button class="btn btn-secondary" id="wanhua-cancel-btn">取消</button>
+      <button class="btn btn-primary" id="wanhua-confirm-btn">确认</button>
     </div>
   </div>
 </div>
 
-<!-- 首发选将 -->
-<div id="modal-starter" class="modal-overlay">
-  <div class="modal-box bento-glass" style="max-width:500px">
-    <h3>⚔️ 请选择您的首发角色</h3>
-    <p id="starter-subtitle" style="color:var(--text-muted);font-size:14px;margin-bottom:15px">选择一个角色作为首发，其余两个待机：</p>
-    <div id="starter-options" style="display:flex;gap:15px;justify-content:center;margin:20px 0"></div>
-  </div>
+<!-- 选将 / 濒死 / 规则 / 战绩 弹窗 — 动态填充 -->
+<div class="modal-overlay" id="modal-starter">
+  <div class="modal-box bento-glass"><h3>⚔️ 选择首发角色</h3><div id="starter-options" style="display:flex;gap:15px;justify-content:center;margin:20px 0"></div></div>
 </div>
-
-<!-- 濒死救援 -->
-<div id="modal-dying" class="modal-overlay">
-  <div class="modal-box bento-glass" style="max-width:450px">
-    <h3>⚠️ 有人濒死！</h3>
-    <p id="dying-desc" style="color:var(--text-muted);font-size:14px;margin-bottom:10px"></p>
-    <div id="dying-countdown" style="font-size:32px;font-weight:900;color:var(--color-danger);text-align:center;margin:10px 0">10</div>
-    <div id="dying-actions" style="display:flex;gap:12px;justify-content:center;margin-top:15px"></div>
-  </div>
+<div class="modal-overlay" id="modal-dying">
+  <div class="modal-box bento-glass"><h3>⚠️ 濒死救援</h3><p id="dying-desc"></p><div id="dying-countdown">10</div><div id="dying-actions"></div></div>
 </div>
-
-<!-- 新手指引 -->
-<div id="modal-tutorial" class="modal-overlay">
+<div class="modal-overlay" id="modal-tutorial">
   <div class="modal-box bento-glass" style="max-width:420px">
-    <h3 style="color:var(--color-hp)">🎮 游戏玩法</h3>
-    <div style="text-align:left;font-size:14px;line-height:1.7;color:var(--text-primary);margin-top:15px">
-      <p>• ♠ 黑桃 <span style="color:var(--color-hp)">双倍伤害</span> • ♣ 梅花 <span style="color:var(--color-shield)">加护盾</span></p>
-      <p>• ♥ 红桃 <span style="color:var(--suit-red)">吸血</span> • ♦ 方块 <span style="color:var(--color-gold)">摸牌</span></p>
-      <p>• A 万化：可选 A 自身花色 或 被万化牌花色，A 点数固定 +1</p>
-      <p>• Joker 可插队或复活死亡角色</p>
-      <p style="margin-top:8px;font-size:13px;color:var(--text-muted)">合理分配护盾与输出，先破盾再斩杀！</p>
+    <h3>🎮 游戏规则</h3>
+    <div style="text-align:left;line-height:1.8;color:var(--text-primary);margin:12px 0">
+      <p>• ♠ 黑桃 <span style="color:var(--color-hp)">双倍伤害</span> · ♣ 梅花 <span style="color:var(--color-shield)">护盾</span></p>
+      <p>• ♥ 红桃 <span style="color:var(--suit-red)">吸血</span> · ♦ 方块 <span style="color:var(--color-gold)">摸牌</span></p>
+      <p>• A 万化 · Joker 复活/斩杀</p>
     </div>
-    <button class="btn btn-primary" id="btn-tutorial-ok" style="margin-top:18px;width:100%">知道了</button>
+    <button class="btn btn-secondary" onclick="document.getElementById('modal-tutorial').classList.remove('show')">知道了</button>
+  </div>
+</div>
+<div class="modal-overlay" id="modal-stats">
+  <div class="modal-box bento-glass" style="max-width:480px">
+    <h3>📊 个人战绩</h3>
+    <div id="stats-content" style="margin:16px 0;text-align:left"></div>
+    <button class="btn btn-secondary" id="btn-close-stats">关闭</button>
   </div>
 </div>
 
-<!-- 断线弹窗 -->
-<div class="modal-overlay" id="modal-disconnect">
-  <div class="modal-box bento-glass">
-    <h3>😿 连接断开</h3>
-    <p id="modal-disconnect-text">房主已断开连接，房间已解散。</p>
-    <button class="btn btn-primary" id="btn-modal-ok">返回主页</button>
-  </div>
-</div>
-
-<!-- ═══ 入口脚本 ═══ -->
+<!-- ═══ 入口 ═══ -->
 <script type="module" src="./js/main.js"></script>
 </body>
 </html>

@@ -176,14 +176,21 @@ try {
   check(`import: ${e.message}`, false);
 }
 
-// ═══ 13. CORS origins in server.mjs ═══
-console.log('\n── server.mjs CORS ──');
+// ═══ 13. server.mjs CORS + SQLite ═══
+console.log('\n── server.mjs V4 ──');
 import { readFileSync } from 'fs';
 const svr = readFileSync('./server.mjs', 'utf-8');
 check('origins array', svr.includes('ALLOWED_ORIGINS'));
 check('game.n1komajor.top', svr.includes('game.n1komajor.top'));
 check('apiOrigins', svr.includes('apiOrigins'));
 check('https variant', svr.includes('https://game.n1komajor.top'));
+check('SQLite initDB', svr.includes('initDB'));
+check('REST /api/leaderboard', svr.includes('/api/leaderboard'));
+check('REST /api/matchmake', svr.includes('/api/matchmake'));
+check('REST /api/stats', svr.includes('/api/stats'));
+check('REST /api/register', svr.includes('/api/register'));
+check('Body parser', svr.includes('JSON.parse(data)'));
+check('SERVER_ORIGIN = origin', readFileSync('./js/app.js', 'utf-8').includes('window.location.origin'));
 
 // ═══ Summary ═══
 console.log(`\n══════════════════════════`);
