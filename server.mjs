@@ -214,40 +214,59 @@ const MIME = {
   '.ico': 'image/x-icon', '.ogg': 'audio/ogg', '.mp3': 'audio/mpeg',
 };
 
+// ★ 核心修复：静态文件拦截器 (放在最前面)
 server.app.use(async (ctx, next) => {
-  if (ctx.path.startsWith('/games/') || ctx.path.startsWith('/api/')) return next();
+  // 如果是 WebSocket 握手或 API 接口，放行给后面的中间件
+  if (ctx.path.startsWith('/socket.io') || ctx.path.startsWith('/games') || ctx.path.startsWith('/api')) {
+    return await next();
+  }
 
   let fp = '.' + ctx.path;
   if (fp === './') fp = './index.html';
   const ext = extname(fp).toLowerCase();
+
+  // 1. 文件存在，响应对应的 MIME 类型
   if (existsSync(fp) && MIME[ext]) {
     ctx.type = MIME[ext];
     ctx.body = readFileSync(fp);
-    return;
+    return; // 终止响应，绝不调用 next()！
   }
+
+  // 2. SPA 兜底：没有后缀的路由默认返回 index.html
   if (!ext || !MIME[ext]) {
-    if (existsSync('./index.html')) { ctx.type = MIME['.html']; ctx.body = readFileSync('./index.html'); return; }
+    if (existsSync('./index.html')) {
+      ctx.type = MIME['.html'];
+      ctx.body = readFileSync('./index.html');
+      return; // 终止响应，绝不调用 next()！
+    }
   }
+
   await next();
 });
 
 // ═══════════════════════════════════════
-// 4. REST API 路由
+// 4. CORS 兜底 + Body Parser
 // ═══════════════════════════════════════
 
-/** GET /api/leaderboard — 排行榜 Top 10 */
 server.app.use(async (ctx, next) => {
-  if (ctx.path !== '/api/leaderboard' || ctx.method !== 'GET') return next();
-  try {
-    const result = db.exec('SELECT id, name, avatar, wins, losses, rating FROM users ORDER BY rating DESC LIMIT 10');
-    const rows = result.length ? result[0].values.map(r => ({
-      id: r[0], name: r[1], avatar: r[2], wins: r[3], losses: r[4], rating: r[5],
-    })) : [];
-    ctx.body = { leaderboard: rows };
-  } catch (e) {
-    ctx.status = 500;
-    ctx.body = { error: e.message };
+  ctx.set('Access-Control-Allow-Origin', '*');
+  ctx.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  ctx.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (ctx.method === 'OPTIONS') { ctx.status = 204; return; }
+  await next();
+});
+
+server.app.use(async (ctx, next) => {
+  if (['POST', 'PUT', 'PATCH'].includes(ctx.method) && ctx.is('application/json')) {
+    ctx.request.body = await new Promise((resolve) => {
+      let data = '';
+      ctx.req.on('data', chunk => data += chunk);
+      ctx.req.on('end', () => {
+        try { resolve(JSON.parse(data)); } catch { resolve({}); }
+      });
+    });
   }
+  await next();
 });
 
 /** POST /api/matchmake — 加入匹配队列 */
