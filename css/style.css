@@ -3,13 +3,35 @@
    粗黑描边 · 硬核阴影 · 荧光跳色 · 重型排版
    ════════════════════════════════════════════════════ */
 
-/* ── V15: 黑夜模式 — 纯变量驱动 (零 invert 作弊) ── */
+/* ── V15→V20: 黑夜模式 — 纯 CSS 变量驱动 (零 invert，零 filter) ── */
 html.dark-theme {
-  /* ★ 不再使用全局 invert — 完全由 CSS 变量控制 */
+  /* ★ 通过 CSS 变量覆盖实现深色模式，不使用任何 filter */
+  --bg-color: #1A1A2E;
+  --text-main: #EAEAEA;
+  --text-muted: #A0A0B0;
+  --primary-acid: #CCFF00;
+  --accent-blue: #448AFF;
+  --danger-red: #FF5252;
+
+  --glass-bg: #16213E;
+  --panel-bg: #16213E;
+  --card-bg: #1A1A3E;
+
+  --border-thick: 3px solid #444466;
+  --border-thin: 2px solid #444466;
+  --shadow-hard: 6px 6px 0px #000000;
+  --shadow-hard-sm: 4px 4px 0px #000000;
+
+  /* 卡牌在暗色模式下的花色 */
+  --suit-red: #FF6B6B;
+  --suit-black: #E0E0E0;
+
+  /* 暗色模式下的特殊覆盖 */
+  --card-selected-glow: 0 0 0 4px var(--primary-acid), 4px 4px 0px #000;
 }
 /* 向后兼容 body.dark-mode (legacy) */
 body.dark-mode {
-  /* ★ 不再使用全局 invert */
+  /* ★ 不再使用全局 invert — 由 html.dark-theme 变量驱动 */
 }
 
 /* ── CSS 变量: Neo-Brutalism Acid Green (Spotify Wrapped Style) ── */
@@ -89,32 +111,7 @@ body.dark-mode {
   --accent-yellow: #FFD600;
 }
 
-/* ── 黑夜模式: CSS 滤镜反转法 (零变量覆盖, 杜绝文本吞噬) ── */
-html.dark-theme {
-  background-color: #111 !important;
-  filter: invert(1) hue-rotate(180deg);
-}
-/* ★ 二次反转: 保护图片/头像/SVG/酸性绿强调色, 防止变成负片 */
-html.dark-theme img,
-html.dark-theme .anti-invert,
-html.dark-theme .poker-card,
-html.dark-theme .character-avatar-img,
-html.dark-theme .avatar-option,
-html.dark-theme .btn-primary,
-html.dark-theme .btn-wanhua,
-html.dark-theme .btn-confirm,
-html.dark-theme .btn-danger,
-html.dark-theme .phase-pill,
-html.dark-theme .close-modal-btn,
-html.dark-theme .identity-sticker,
-html.dark-theme .hp-fill,
-html.dark-theme .shield-fill,
-html.dark-theme .phase-timer,
-html.dark-theme .tag-ace,
-html.dark-theme .tag-joker,
-html.dark-theme .suit-block {
-  filter: invert(1) hue-rotate(180deg);
-}
+/* ★ 二次反转已移除: 纯变量驱动暗色模式，无需 filter 反转 */
 
 /* ═══════════════════════════════════════
    Reset & Base
@@ -386,15 +383,7 @@ html, body {
 .avatar-option:hover { transform: translate(-1px, -1px); box-shadow: var(--shadow-hard-sm); }
 .avatar-option.selected { border-color: var(--accent-green); box-shadow: 0 0 0 3px var(--accent-green); }
 
-/* ★ 通用 avatar 类: 禁止暗色模式反色 */
-.avatar, img[src*="dicebear"], img[src*="avatar"] {
-  /* 暗色模式下不反转 */
-}
-html.dark-theme .avatar,
-html.dark-theme img[src*="dicebear"],
-html.dark-theme .avatar-option {
-  filter: none;
-}
+/* ★ 通用 avatar 类: 暗色模式下正常显示（纯变量驱动，无需 filter 反转） */
 
 /* ── Rule Sub-cards (Bento Grid Rules) ── */
 .rule-subcard {
@@ -680,7 +669,7 @@ html.dark-theme .avatar-option {
     "bottom    arena";
   gap: 10px;
   padding: 10px;
-  background: #F4F4F0;
+  background: var(--bg-color);
 }
 
 /* ★ 对手区: 顶部全宽, flex wrap 平铺 (最高12人) */
@@ -689,21 +678,23 @@ html.dark-theme .avatar-option {
   display: flex; gap: 8px; padding: 8px 12px;
   justify-content: center; align-items: center; flex-wrap: wrap;
   overflow-y: auto;
-  background: #FFF; border: 3px solid #000; border-radius: 12px;
-  box-shadow: 6px 6px 0px #000;
+  background: var(--glass-bg);
+  border: var(--border-thick);
+  border-radius: 12px;
+  box-shadow: var(--shadow-hard);
 }
 
 /* ═══ Neo-Brutalism 通用卡片: Bento 便当盒 ═══ */
 .neo-bento {
-  background: #FFFFFF;
-  border: 3px solid #000000;
-  box-shadow: 6px 6px 0px #000000;
+  background: var(--glass-bg);
+  border: var(--border-thick);
+  box-shadow: var(--shadow-hard);
   border-radius: 12px;
   transition: transform 0.2s, box-shadow 0.2s;
 }
 .neo-bento:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 10px 10px 0px #000000;
+  box-shadow: 10px 10px 0px var(--text-main);
 }
 
 /* ── 中央竞技场 ── */
@@ -716,8 +707,10 @@ html.dark-theme .avatar-option {
 /* 阶段指示器 (竞技场顶部) */
 .phase-pill {
   display: inline-flex; align-items: center; gap: 14px;
-  background: #000; color: #CCFF00;
-  border: 3px solid #000; box-shadow: 4px 4px 0px #000;
+  background: var(--text-main);
+  color: var(--primary-acid);
+  border: var(--border-thick);
+  box-shadow: var(--shadow-hard-sm);
   border-radius: 50px; padding: 8px 28px;
   font-family: 'Impact', 'Arial Black', sans-serif; font-weight: 900; font-size: 16px;
   align-self: center;
@@ -749,16 +742,16 @@ html.dark-theme .avatar-option {
 .draw-pile, .discard-pile {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
   font-size: 12px; font-weight: 700; padding: 8px 12px;
-  border: 3px solid #000; border-radius: 8px;
-  background: #FFF; color: #000;
+  border: var(--border-thick); border-radius: 8px;
+  background: var(--glass-bg); color: var(--text-main);
 }
 .drop-target {
   position: relative;
   flex: 1; min-width: 120px; min-height: 60px;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
-  border: 3px dashed #000; border-radius: 12px;
+  border: 3px dashed var(--text-main); border-radius: 12px;
   font-weight: 800; font-size: 13px;
-  color: #000; background: #F4F4F0;
+  color: var(--text-main); background: var(--bg-color);
 }
 
 /* ═══ ★ 持久化聊天系统 (body 级) ═══ */
@@ -878,8 +871,8 @@ html.dark-theme .avatar-option {
 .played-card {
   position: absolute; top: 50%; left: 50%;
   transform: translate(-50%, -50%);
-  background: #FFF; border: 3px solid #000;
-  border-radius: 12px; box-shadow: 6px 6px 0px #000;
+  background: var(--glass-bg); border: var(--border-thick);
+  border-radius: 12px; box-shadow: var(--shadow-hard);
   padding: 16px 24px; text-align: center;
   animation: cardPlayIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   z-index: 20; pointer-events: none;

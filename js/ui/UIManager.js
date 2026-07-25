@@ -9,27 +9,16 @@
  * 绝不包含任何游戏逻辑。只做 DOM 操作。
  */
 import { app } from '../app.js';
-import { renderGameState } from './gameUI.js';
+import { renderGameState, initGamePageEvents, clearSelection, selectedCardIndices, selectedTargetId, declaredSuit } from './gameUI.js';
 import { Toast } from './toast.js';
 import { audioManager } from '../audioManager.js';
-import { ICON } from './lobbyUI.js';
+import { ICON, showPage, showModal, hideModal } from './lobbyUI.js';
 
-// ═══════════════════════════════════════
-// 页面切换
-// ═══════════════════════════════════════
+// ★ 重新导出，供 main.js 使用
+export { showPage, showModal, hideModal };
 
-export function showPage(name) {
-  document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
-  const page = document.getElementById(`page-${name}`);
-  if (page) page.classList.add('active');
-}
-
-export function showModal(id) {
-  document.getElementById(id)?.classList.add('show');
-}
-export function hideModal(id) {
-  document.getElementById(id)?.classList.remove('show');
-}
+// ★ 游戏页事件清理句柄
+let _gamePageCleanup = null;
 
 // ═══════════════════════════════════════
 // Loading
@@ -193,231 +182,20 @@ function renderWaitingLobby() {
 // ═══════════════════════════════════════
 
 function initGamePage() {
-  const clickSound = () => audioManager.play('click');
+  // ★ 使用 gameUI.js 的统一事件初始化（含 cleanup 句柄）
+  _gamePageCleanup = initGamePageEvents();
 
-  // 万化按钮
-  document.getElementById('btn-wanhua')?.addEventListener('click', () => {
-    clickSound();
-    openWanhuaModal();
-  });
-
-  // 确定出牌
-  document.getElementById('btn-confirm')?.addEventListener('click', () => {
-    clickSound();
-    executePlay();
-  });
-
-  // 取消
-  document.getElementById('btn-cancel')?.addEventListener('click', () => {
-    clickSound();
-    clearSelection();
-  });
-
-  // 手牌区 — 事件代理
-  document.getElementById('hand-area')?.addEventListener('click', (e) => {
-    const card = e.target.closest('.poker-card');
-    if (!card) return;
-    handleCardClick(card);
-  });
-
-  // 对手区 — 事件代理
-  document.getElementById('opponents-area')?.addEventListener('click', (e) => {
-    const mini = e.target.closest('.opponent-mini.targetable');
-    if (!mini) return;
-    handleOpponentClick(mini);
-  });
-
-  // 聊天
+  // 聊天系统事件
   document.getElementById('btn-game-chat-send')?.addEventListener('click', () => {
-    clickSound();
+    audioManager.play('click');
     sendGameChat();
   });
   document.getElementById('game-chat-input')?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') sendGameChat();
   });
 
-  // 再来一局 / 退出
-  document.getElementById('btn-restart')?.addEventListener('click', () => { clickSound(); location.reload(); });
-  document.getElementById('btn-leave-room')?.addEventListener('click', () => { clickSound(); app.disconnect(); location.reload(); });
-
   // 断线弹窗
   document.getElementById('btn-modal-ok')?.addEventListener('click', () => location.reload());
-
-  // ── 万化弹窗 ──
-  document.getElementById('wanhua-cancel-btn')?.addEventListener('click', () => {
-    clickSound();
-    hideModal('wanhua-modal');
-  });
-  document.getElementById('wanhua-confirm-btn')?.addEventListener('click', () => {
-    clickSound();
-    confirmWanhua();
-  });
-}
-
-// ═══════════════════════════════════════
-// 手牌交互
-// ═══════════════════════════════════════
-
-let selectedCardIndices = [];
-let selectedTargetId = null;
-let declaredSuit = null;
-let pendingWanhuaCards = [];
-
-function handleCardClick(cardEl) {
-  audioManager.play('select');
-  const idx = parseInt(cardEl.dataset.index);
-  if (isNaN(idx)) return;
-
-  // 不可用的牌不响应
-  if (cardEl.classList.contains('unplayable')) return;
-
-  cardEl.classList.toggle('selected');
-
-  if (cardEl.classList.contains('selected')) {
-    if (!selectedCardIndices.includes(idx)) selectedCardIndices.push(idx);
-  } else {
-    selectedCardIndices = selectedCardIndices.filter(i => i !== idx);
-  }
-
-  updateActionButtons();
-}
-
-function handleOpponentClick(miniEl) {
-  audioManager.play('select');
-  const pid = miniEl.dataset.playerId;
-  if (pid === undefined) return;
-
-  // 取消之前的选择
-  document.querySelectorAll('.opponent-mini.targeted').forEach(el => el.classList.remove('targeted'));
-
-  if (selectedTargetId === pid) {
-    selectedTargetId = null;
-  } else {
-    selectedTargetId = pid;
-    miniEl.classList.add('targeted');
-  }
-
-  updateActionButtons();
-}
-
-function updateActionButtons() {
-  const hasCards = selectedCardIndices.length > 0;
-  const hasTarget = selectedTargetId !== null || hasShieldCards();
-  const panel = document.getElementById('floating-actions');
-
-  if (!panel) return;
-
-  const confirmBtn = document.getElementById('btn-confirm');
-  const cancelBtn = document.getElementById('btn-cancel');
-  const wanhuaBtn = document.getElementById('btn-wanhua');
-
-  if (hasCards) {
-    cancelBtn?.classList.remove('hidden');
-
-    // 检查是否需要万化选择
-    if (needsWanhua()) {
-      if (wanhuaBtn) wanhuaBtn.style.display = 'inline-block';
-      confirmBtn?.classList.add('hidden');
-    } else {
-      if (wanhuaBtn) wanhuaBtn.style.display = 'none';
-      confirmBtn?.classList.remove('hidden');
-    }
-  } else {
-    confirmBtn?.classList.add('hidden');
-    cancelBtn?.classList.add('hidden');
-    if (wanhuaBtn) wanhuaBtn.style.display = 'none';
-  }
-}
-
-function hasShieldCards() {
-  const cards = selectedCardIndices.map(i => {
-    const el = document.querySelector(`.poker-card[data-index="${i}"]`);
-    return el ? el.dataset.suit : null;
-  }).filter(Boolean);
-  return cards.length > 0 && cards.every(s => s === '♣');
-}
-
-function needsWanhua() {
-  const cards = selectedCardIndices.map(i => {
-    const el = document.querySelector(`.poker-card[data-index="${i}"]`);
-    return { rank: el?.dataset.rank, isJoker: el?.dataset.isJoker === 'true' };
-  }).filter(c => c.rank);
-  const hasA = cards.some(c => c.rank === 'A');
-  const nonJokers = cards.filter(c => !c.isJoker);
-  return hasA && nonJokers.length >= 1 && !declaredSuit;
-}
-
-function clearSelection() {
-  document.querySelectorAll('#hand-area .poker-card.selected').forEach(el => el.classList.remove('selected'));
-  document.querySelectorAll('.opponent-mini.targeted').forEach(el => el.classList.remove('targeted'));
-  selectedCardIndices = [];
-  selectedTargetId = null;
-  declaredSuit = null;
-  updateActionButtons();
-}
-
-function executePlay() {
-  if (!selectedCardIndices.length) return;
-
-  if (hasShieldCards()) {
-    // 护盾不需要目标
-    app.playCards(selectedCardIndices, null, declaredSuit);
-  } else {
-    if (selectedTargetId === null) {
-      Toast.show('请选择攻击目标！', 'error');
-      return;
-    }
-    app.playCards(selectedCardIndices, selectedTargetId, declaredSuit);
-  }
-
-  clearSelection();
-}
-
-// ═══════════════════════════════════════
-// 万化弹窗
-// ═══════════════════════════════════════
-
-function openWanhuaModal() {
-  // 收集可选花色
-  const suits = new Set();
-  selectedCardIndices.forEach(i => {
-    const el = document.querySelector(`.poker-card[data-index="${i}"]`);
-    const suit = el?.dataset.suit;
-    if (suit && suit !== 'null') suits.add(suit);
-  });
-
-  const container = document.getElementById('wanhua-suit-options');
-  if (!container) return;
-  container.innerHTML = '';
-
-  for (const s of suits) {
-    const btn = document.createElement('button');
-    btn.className = `wanhua-suit-btn ${s === '♦' || s === '♥' ? 'suit-red' : 'suit-black'}`;
-    btn.textContent = s;
-    btn.style.color = (s === '♦' || s === '♥') ? 'var(--suit-red)' : 'var(--suit-black)';
-    btn.addEventListener('click', () => {
-      container.querySelectorAll('.wanhua-suit-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      declaredSuit = s;
-    });
-    container.appendChild(btn);
-  }
-
-  showModal('wanhua-modal');
-}
-
-function confirmWanhua() {
-  if (!declaredSuit) {
-    Toast.show('请选择一个花色', 'error');
-    return;
-  }
-  hideModal('wanhua-modal');
-  updateActionButtons();
-  // 显示确定按钮（万化花色已选）
-  const wanhuaBtn = document.getElementById('btn-wanhua');
-  if (wanhuaBtn) wanhuaBtn.style.display = 'none';
-  const confirmBtn = document.getElementById('btn-confirm');
-  if (confirmBtn) confirmBtn.classList.remove('hidden');
 }
 
 // ═══════════════════════════════════════
@@ -483,5 +261,5 @@ function copyText(str) {
   finally { document.body.removeChild(ta); }
 }
 
-// 导出供外部使用
+// 导出供外部使用（已移至 gameUI.js）
 export { selectedCardIndices, selectedTargetId, declaredSuit, clearSelection };

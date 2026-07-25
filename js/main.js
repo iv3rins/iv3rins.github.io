@@ -40,14 +40,24 @@ function initBotPractice() {
       const card = document.createElement('div');
       card.className = 'bento-card';
       card.id = 'card-bot-practice';
-      card.innerHTML = `
-        <i data-lucide=\"bot\" class=\"bento-icon-lg\"></i>
-        <h3>🤖 单机练习</h3>
-        <p>本地 1v3 Bot 对战</p>
-        <button class=\"btn btn-primary\" id=\"btn-bot-practice\">开始练习</button>
-      `;
+      // ★ 使用 DOM API 构建，避免 innerHTML 转义问题
+      const icon = document.createElement('i');
+      icon.setAttribute('data-lucide', 'bot');
+      icon.className = 'bento-icon-lg';
+      const h3 = document.createElement('h3');
+      h3.textContent = '🤖 单机练习';
+      const p = document.createElement('p');
+      p.textContent = '本地 1v3 Bot 对战';
+      const button = document.createElement('button');
+      button.className = 'btn btn-primary';
+      button.id = 'btn-bot-practice';
+      button.textContent = '开始练习';
+      card.appendChild(icon);
+      card.appendChild(h3);
+      card.appendChild(p);
+      card.appendChild(button);
       grid.appendChild(card);
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
     }
   }
   // 延迟绑定事件
