@@ -60,13 +60,18 @@ export function initLobby() {
   // ── TopNav ──
   document.getElementById('btn-toggle-theme')?.addEventListener('click', () => {
     cs();
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
+    const html = document.documentElement;
+    html.classList.toggle('dark-theme');
+    const isDark = html.classList.contains('dark-theme');
+    // 向后兼容: 同步 body.dark-mode
+    if (isDark) document.body.classList.add('dark-mode');
+    else document.body.classList.remove('dark-mode');
     localStorage.setItem('pokeWarDarkMode', isDark ? '1' : '0');
   });
 
   // 恢复黑夜模式
   if (localStorage.getItem('pokeWarDarkMode') === '1') {
+    document.documentElement.classList.add('dark-theme');
     document.body.classList.add('dark-mode');
   }
 

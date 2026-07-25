@@ -3,7 +3,25 @@
    粗黑描边 · 硬核阴影 · 荧光跳色 · 重型排版
    ════════════════════════════════════════════════════ */
 
-/* ── V14: 黑夜模式 (反转色) ── */
+/* ── V15: 黑夜模式 (反转色) — 蓝图锁定版 ── */
+html.dark-theme {
+  filter: invert(1) hue-rotate(180deg);
+  background-color: #111 !important;
+}
+/* 头像、图片、SVG 必须二次反转，防止变成负片 */
+html.dark-theme img,
+html.dark-theme svg,
+html.dark-theme .avatar,
+html.dark-theme .emoji-icon,
+html.dark-theme .avatar-option,
+html.dark-theme [data-lucide],
+html.dark-theme .user-avatar,
+html.dark-theme .nb-icon,
+html.dark-theme .nb-icon-sm,
+html.dark-theme .nb-icon-lg {
+  filter: invert(1) hue-rotate(180deg);
+}
+/* 向后兼容 body.dark-mode */
 body.dark-mode {
   filter: invert(1) hue-rotate(180deg);
   background-color: #111 !important;
@@ -398,8 +416,8 @@ html, body {
 .suit-club { background: var(--accent-blue); color: #FFF; }
 .suit-diamond { background: var(--accent-yellow); color: #000; }
 
-/* 数字/英文特效: V7 重型描边 (仅 Impact 字体) */
-.neo-number {
+/* 仅限纯数字/英文: 允许重型描边 (V7 legacy — 已被底部定义覆盖) */
+.neo-number-v7 {
   font-family: 'Impact', 'Arial Black', sans-serif;
   font-weight: 900;
   color: var(--accent-green);
@@ -875,20 +893,26 @@ html, body {
 .close-modal-btn:active { transform: scale(0.95); box-shadow: none; }
 
 /* ── Neo-Brutalism 排版类 ── */
-/* 中文标题: 纯黑加粗, 无描边无阴影 (杜绝字体重影) */
-.neo-heading {
+/* 中文标题/文本: 纯黑实体, 无任何描边与阴影 (杜绝字体重影) */
+.neo-heading, .neo-body, .modal-title, .lobby-title {
   font-family: var(--font-heading);
-  -webkit-text-stroke: 0;
-  text-shadow: none;
-  color: #000000;
   font-weight: 900;
-  letter-spacing: 1px;
+  color: #000000 !important;
+  -webkit-text-stroke: 0px !important;
+  text-shadow: none !important;
 }
+.neo-heading { letter-spacing: 1px; }
 .neo-body {
   font-family: var(--font);
   font-weight: 600;
   line-height: 1.6;
   color: var(--text-main);
+}
+/* 仅限纯数字/英文: 允许重型描边 */
+.neo-number {
+  font-family: 'Impact', sans-serif;
+  -webkit-text-stroke: 1.5px #000000;
+  text-shadow: 2px 2px 0px #000000;
 }
 
 .modal-box { position: relative; } /* 确保 close-btn 的 absolute 相对于 modal-box */

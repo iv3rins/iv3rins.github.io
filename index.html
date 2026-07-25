@@ -132,8 +132,8 @@
       <!-- 右侧: 聊天 40% -->
       <div id="room-chat-container" class="bento-card-panel" style="flex:4;display:flex;flex-direction:column;padding:16px">
         <h4 style="font-family:var(--font-heading);margin-bottom:8px"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 房间聊天</h4>
-        <div id="wr-chat-messages" style="flex:1;overflow-y:auto;background:#FFF;border:2px solid #000;border-radius:8px;padding:8px;margin-bottom:8px;font-size:13px;min-height:0"></div>
-        <div style="display:flex;gap:8px;align-items:center">
+        <div id="wr-chat-messages" style="flex:1;overflow-y:auto;background:#FFF;border:2px solid #000;border-radius:8px;padding:8px;margin-bottom:8px;font-size:13px;min-height:300px"></div>
+        <div class="chat-input-area" style="display:flex;align-items:center;gap:8px;box-sizing:border-box">
           <input type="text" class="input-glass" id="wr-chat-input" placeholder="输入消息..." style="flex:1;height:48px;box-sizing:border-box">
           <button class="btn btn-small" id="btn-wr-chat-send" style="height:48px;box-sizing:border-box;white-space:nowrap">发送</button>
         </div>
