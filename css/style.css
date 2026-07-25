@@ -318,17 +318,36 @@ html, body {
 
 /* ── Avatar Selector ── */
 .avatar-selector {
-  display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 8px 0;
+  display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-start; margin: 4px 0;
 }
 .avatar-option {
-  width: 48px; height: 48px; font-size: 28px;
-  border: var(--border-thin); border-radius: 12px;
-  background: #FFF; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px;
+  border: var(--border-thin); border-radius: 10px;
+  background: #FFF; cursor: pointer; object-fit: cover;
   transition: all var(--transition-fast);
 }
 .avatar-option:hover { transform: translate(-1px, -1px); box-shadow: var(--shadow-hard-sm); }
-.avatar-option.selected { background: var(--accent-green); border-color: #000; box-shadow: var(--shadow-hard-sm); }
+.avatar-option.selected { border-color: var(--accent-green); box-shadow: 0 0 0 3px var(--accent-green); }
+
+/* ── Rule Sub-cards (Bento Grid Rules) ── */
+.rule-subcard {
+  border: 2px solid #000; border-radius: 8px;
+  padding: 14px; background: #FFF;
+  font-size: 13px; line-height: 1.7; color: #000;
+}
+.rule-subcard h4 { font-family: var(--font-heading); font-size: 15px; margin-bottom: 6px; }
+
+/* ── Suit Blocks (4 color blocks in rules) ── */
+.suit-block {
+  text-align: center; padding: 8px 4px; border-radius: 8px;
+  border: 2px solid #000; font-weight: 800; font-size: 13px;
+}
+.suit-block span { font-size: 22px; display: block; }
+.suit-block small { font-size: 11px; font-weight: 400; }
+.suit-spade { background: #1A1A1A; color: #FFF; }
+.suit-heart { background: #FF1744; color: #FFF; }
+.suit-club { background: var(--accent-blue); color: #FFF; }
+.suit-diamond { background: var(--accent-yellow); color: #000; }
 
 /* ── Rule Tags ── */
 .tag {

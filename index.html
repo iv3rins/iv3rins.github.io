@@ -51,20 +51,21 @@
       </div>
     </section>
 
-    <!-- Player Profile: Avatar + Name -->
+    <!-- Player Profile: DiceBear Avatars + Name -->
     <section class="lobby-profile" style="max-width:680px;margin:0 auto 16px;padding:0 20px">
-      <div class="bento-card" style="flex-direction:row;gap:16px;padding:16px 20px">
-        <div id="avatar-preview" style="font-size:48px;line-height:1">🐱</div>
+      <div class="bento-card" style="flex-direction:row;gap:16px;padding:16px 20px;align-items:flex-start">
+        <img id="avatar-preview" src="https://api.dicebear.com/7.x/micah/svg?seed=Felix" alt="avatar" style="width:64px;height:64px;border:var(--border-thick);border-radius:12px">
         <div style="flex:1">
-          <input type="text" class="input-glass" id="player-name-input" placeholder="输入超酷的昵称" value="小猫猫" style="margin-bottom:8px">
+          <input type="text" class="input-glass" id="player-name-input" placeholder="输入超酷的昵称" value="小猫猫" style="margin-bottom:6px">
           <div class="avatar-selector" id="avatar-selector">
-            <span class="avatar-option selected" data-avatar="🐱">🐱</span>
-            <span class="avatar-option" data-avatar="🐶">🐶</span>
-            <span class="avatar-option" data-avatar="🦊">🦊</span>
-            <span class="avatar-option" data-avatar="🐰">🐰</span>
-            <span class="avatar-option" data-avatar="🐯">🐯</span>
-            <span class="avatar-option" data-avatar="💀">💀</span>
+            <img class="avatar-option selected" data-avatar="https://api.dicebear.com/7.x/micah/svg?seed=Felix" src="https://api.dicebear.com/7.x/micah/svg?seed=Felix" alt="avatar">
+            <img class="avatar-option" data-avatar="https://api.dicebear.com/7.x/micah/svg?seed=Max" src="https://api.dicebear.com/7.x/micah/svg?seed=Max" alt="avatar">
+            <img class="avatar-option" data-avatar="https://api.dicebear.com/7.x/micah/svg?seed=Luna" src="https://api.dicebear.com/7.x/micah/svg?seed=Luna" alt="avatar">
+            <img class="avatar-option" data-avatar="https://api.dicebear.com/7.x/micah/svg?seed=Oliver" src="https://api.dicebear.com/7.x/micah/svg?seed=Oliver" alt="avatar">
+            <img class="avatar-option" data-avatar="https://api.dicebear.com/7.x/micah/svg?seed=Bella" src="https://api.dicebear.com/7.x/micah/svg?seed=Bella" alt="avatar">
+            <img class="avatar-option" data-avatar="https://api.dicebear.com/7.x/micah/svg?seed=Shadow" src="https://api.dicebear.com/7.x/micah/svg?seed=Shadow" alt="avatar">
           </div>
+          <input type="url" class="input-glass" id="custom-avatar-url" placeholder="或粘贴自定义图片 URL..." style="margin-top:6px;font-size:12px">
         </div>
       </div>
     </section>
@@ -185,6 +186,29 @@
    📦 弹窗
    ═══════════════════════════════════════════ -->
 
+<!-- Auth 弹窗 (V6) -->
+<div class="modal-overlay" id="modal-auth">
+  <div class="modal-box bento-glass" style="max-width:420px">
+    <h3 style="font-family:var(--font-heading);font-size:22px">🔐 登录 / 注册</h3>
+    <div id="auth-form" style="margin:16px 0">
+      <input type="text" class="input-glass" id="auth-username" placeholder="用户名" style="margin-bottom:8px">
+      <input type="password" class="input-glass" id="auth-password" placeholder="密码" style="margin-bottom:12px">
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" id="btn-auth-login" style="flex:1">登录</button>
+        <button class="btn btn-secondary" id="btn-auth-register" style="flex:1">注册</button>
+      </div>
+      <div style="text-align:center;margin-top:12px">
+        <button class="btn btn-ghost" id="btn-auth-guest">🎲 游客试玩 (不保存战绩)</button>
+      </div>
+    </div>
+    <div id="auth-user-info" style="display:none;margin:16px 0">
+      <p id="auth-info-text" style="font-weight:800"></p>
+      <button class="btn btn-danger" id="btn-auth-logout" style="margin-top:8px">退出登录</button>
+    </div>
+    <button class="btn btn-small" id="btn-close-auth" style="margin-top:8px">关闭</button>
+  </div>
+</div>
+
 <!-- 昵称编辑 -->
 <div class="modal-overlay" id="modal-profile">
   <div class="modal-box bento-glass">
@@ -227,30 +251,47 @@
   <div class="modal-box bento-glass"><h3>⚠️ 濒死救援</h3><p id="dying-desc"></p><div id="dying-countdown">10</div><div id="dying-actions"></div></div>
 </div>
 <div class="modal-overlay" id="modal-tutorial">
-  <div class="modal-box bento-glass" style="max-width:520px">
-    <h3 style="font-family:var(--font-heading);font-size:24px">🃏 游戏规则</h3>
-    <div style="text-align:left;line-height:1.9;font-size:14px;color:#000;margin:16px 0">
-
-      <p style="font-weight:800;margin-top:12px">📋 基础设定</p>
-      <p>每人 3 个角色（J/Q/K），手牌上限 <b>7 张</b>。击杀奖励摸 3 张，换将摸 5 张。</p>
-
-      <p style="font-weight:800;margin-top:12px">⚔️ 花色特效</p>
-      <p><span class="tag tag-spade">♠ 黑桃</span> 造成 <b>双倍伤害</b>（极具侵略性）</p>
-      <p><span class="tag tag-heart">♥ 红桃</span> 造成伤害时提供 <b>等额吸血</b> 回复</p>
-      <p><span class="tag tag-club">♣ 梅花</span> 打出时加 <b>护盾</b>；角色是♣则攻击 <b>穿甲</b></p>
-      <p><span class="tag tag-diamond">♦ 方块</span> 触发 <b>五谷丰登</b>，全场轮序摸牌</p>
-
-      <p style="font-weight:800;margin-top:12px">✨ 特殊牌型</p>
-      <p><span class="tag tag-ace">A 万化</span> 点数固定 +1，强行改变牌组花色，<b>无视同花色免疫</b>！</p>
-      <p><span class="tag tag-joker">Joker 王牌</span> 无视回合限制。<b>单张复活</b>阵亡角色；<b>双张秒杀</b>敌方！</p>
-
-      <p style="font-weight:800;margin-top:12px">🔁 三大摸牌法则</p>
-      <p>① ♦ 方块出牌 → 全场轮序摸牌直到满足攻击点数</p>
-      <p>② 手牌全空或仅剩 Joker → 自动补 3 张</p>
-      <p>③ 角色阵亡 → 清空手牌 → 换将摸 5 张 → 击杀者摸 3 张</p>
-
+  <div class="modal-box bento-glass" style="max-width:620px;padding:24px">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h3 style="font-family:var(--font-heading);font-size:22px;margin:0">🃏 游戏规则</h3>
+      <button class="btn btn-small" onclick="document.getElementById('modal-tutorial').classList.remove('show')" style="font-weight:800">✕ 关闭</button>
     </div>
-    <button class="btn btn-primary" onclick="document.getElementById('modal-tutorial').classList.remove('show')">知道了!</button>
+
+    <!-- Bento Grid: 2x2 sub-cards -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <!-- 基础设定 -->
+      <div class="rule-subcard">
+        <h4>📋 基础设定</h4>
+        <p>每人 <b>3 个角色</b> (J/Q/K)，手牌上限 <b>7 张</b></p>
+        <p>击杀奖励 <b>摸 3 张</b>，换将 <b>摸 5 张</b></p>
+      </div>
+      <!-- 摸牌法则 -->
+      <div class="rule-subcard">
+        <h4>🔁 三大摸牌法则</h4>
+        <p>① ♦ 方块 → 全场轮序摸牌</p>
+        <p>② 空手/仅Joker → 补 3 张</p>
+        <p>③ 阵亡 → 换将摸 5 + 击杀摸 3</p>
+      </div>
+      <!-- 花色特效 -->
+      <div class="rule-subcard" style="grid-column:1/-1">
+        <h4>⚔️ 花色特效</h4>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px">
+          <div class="suit-block suit-spade"><span>♠</span> 黑桃<br><small>双倍伤害</small></div>
+          <div class="suit-block suit-heart"><span>♥</span> 红桃<br><small>等额吸血</small></div>
+          <div class="suit-block suit-club"><span>♣</span> 梅花<br><small>护盾/穿甲</small></div>
+          <div class="suit-block suit-diamond"><span>♦</span> 方块<br><small>五谷丰登</small></div>
+        </div>
+      </div>
+      <!-- 特殊牌型 -->
+      <div class="rule-subcard" style="grid-column:1/-1">
+        <h4>✨ 特殊牌型</h4>
+        <div style="display:flex;gap:10px;margin-top:6px;flex-wrap:wrap">
+          <span class="tag tag-ace">A 万化</span> 点数 +1，强行浸染花色，<b>无视免疫</b>！
+          <span class="tag tag-joker">Joker</span> <b>单张复活</b>阵亡角色 · <b>双张秒杀</b>存活角色！
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 <div class="modal-overlay" id="modal-stats">

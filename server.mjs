@@ -14,6 +14,7 @@ import { createRequire } from 'module';
 import { PokeWar } from './game.js';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { extname } from 'path';
+import { createHash, randomUUID } from 'crypto';
 
 const require = createRequire(import.meta.url);
 const { Server, Origins } = require('boardgame.io/dist/cjs/server.js');
@@ -51,15 +52,21 @@ async function initDB() {
   // ── 建表 ──
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
-      id        TEXT PRIMARY KEY,
-      name      TEXT NOT NULL,
-      avatar    TEXT DEFAULT '🐱',
-      wins      INTEGER DEFAULT 0,
-      losses    INTEGER DEFAULT 0,
-      rating    INTEGER DEFAULT 1000,
-      created   INTEGER DEFAULT (strftime('%s','now'))
+      id            TEXT PRIMARY KEY,
+      name          TEXT NOT NULL,
+      avatar        TEXT DEFAULT '🐱',
+      password_hash TEXT DEFAULT NULL,
+      is_guest      INTEGER DEFAULT 0,
+      wins          INTEGER DEFAULT 0,
+      losses        INTEGER DEFAULT 0,
+      rating        INTEGER DEFAULT 1000,
+      created       INTEGER DEFAULT (strftime('%s','now'))
     )
   `);
+
+  // V6 迁移: 旧表补字段
+  try { db.run('ALTER TABLE users ADD COLUMN password_hash TEXT DEFAULT NULL'); } catch {}
+  try { db.run('ALTER TABLE users ADD COLUMN is_guest INTEGER DEFAULT 0'); } catch {}
 
   db.run(`
     CREATE TABLE IF NOT EXISTS match_history (
@@ -268,6 +275,18 @@ server.app.use(async (ctx, next) => {
   }
 });
 
+/** GET /api/leaderboard — 排行榜 Top 10 (排除游客) */
+server.app.use(async (ctx, next) => {
+  if (ctx.path !== '/api/leaderboard' || ctx.method !== 'GET') return next();
+  try {
+    const result = db.exec('SELECT id, name, avatar, wins, losses, rating FROM users WHERE is_guest = 0 ORDER BY rating DESC LIMIT 10');
+    const rows = result.length ? result[0].values.map(r => ({
+      id: r[0], name: r[1], avatar: r[2], wins: r[3], losses: r[4], rating: r[5],
+    })) : [];
+    ctx.body = { leaderboard: rows };
+  } catch (e) { ctx.status = 500; ctx.body = { error: e.message }; }
+});
+
 /** GET /api/stats/:id — 个人战绩 */
 server.app.use(async (ctx, next) => {
   const m = ctx.path.match(/^\/api\/stats\/(.+)$/);
@@ -296,18 +315,59 @@ server.app.use(async (ctx, next) => {
   }
 });
 
-/** POST /api/register — 注册/更新用户 */
+// ═══════════════════════════════════════
+// V6 Auth APIs
+// ═══════════════════════════════════════
+
+function hashPassword(pw) { return createHash('sha256').update(pw).digest('hex'); }
+
+/** POST /api/register — 注册正式用户 */
 server.app.use(async (ctx, next) => {
   if (ctx.path !== '/api/register' || ctx.method !== 'POST') return next();
   try {
-    const { playerId, playerName, avatar } = ctx.request.body || {};
-    if (!playerId || !playerName) { ctx.status = 400; ctx.body = { error: '缺少参数' }; return; }
-    ensureUser(playerId, playerName, avatar);
-    ctx.body = { success: true };
-  } catch (e) {
-    ctx.status = 500;
-    ctx.body = { error: e.message };
-  }
+    const { username, password, avatar } = ctx.request.body || {};
+    if (!username || !password) { ctx.status = 400; ctx.body = { error: '用户名和密码不能为空' }; return; }
+    // 检查用户名是否已被注册
+    const exist = db.exec('SELECT id FROM users WHERE name = ? AND is_guest = 0', [username]);
+    if (exist.length) { ctx.status = 409; ctx.body = { error: '用户名已存在' }; return; }
+    const id = 'u_' + randomUUID().substring(0, 12);
+    db.run('INSERT INTO users (id, name, avatar, password_hash, is_guest) VALUES (?, ?, ?, ?, 0)',
+      [id, username, avatar || '🐱', hashPassword(password)]);
+    ctx.body = { success: true, playerId: id, playerName: username, avatar: avatar || '🐱' };
+  } catch (e) { ctx.status = 500; ctx.body = { error: e.message }; }
+});
+
+/** POST /api/login — 登录 */
+server.app.use(async (ctx, next) => {
+  if (ctx.path !== '/api/login' || ctx.method !== 'POST') return next();
+  try {
+    const { username, password } = ctx.request.body || {};
+    if (!username || !password) { ctx.status = 400; ctx.body = { error: '用户名和密码不能为空' }; return; }
+    const pwHash = hashPassword(password);
+    const rows = db.exec('SELECT id, name, avatar, wins, losses, rating FROM users WHERE name = ? AND password_hash = ? AND is_guest = 0',
+      [username, pwHash]);
+    if (!rows.length) { ctx.status = 401; ctx.body = { error: '用户名或密码错误' }; return; }
+    const r = rows[0].values[0];
+    ctx.body = { success: true, playerId: r[0], playerName: r[1], avatar: r[2], wins: r[3], losses: r[4], rating: r[5] };
+  } catch (e) { ctx.status = 500; ctx.body = { error: e.message }; }
+});
+
+/** POST /api/guest — 游客试玩 */
+server.app.use(async (ctx, next) => {
+  if (ctx.path !== '/api/guest' || ctx.method !== 'POST') return next();
+  try {
+    const { playerName, avatar } = ctx.request.body || {};
+    const id = 'g_' + randomUUID().substring(0, 10);
+    const name = playerName || '游客' + Math.random().toString(36).substring(2, 6);
+    db.run('INSERT INTO users (id, name, avatar, is_guest) VALUES (?, ?, ?, 1)', [id, name, avatar || '🐱']);
+    ctx.body = { success: true, playerId: id, playerName: name, avatar: avatar || '🐱' };
+  } catch (e) { ctx.status = 500; ctx.body = { error: e.message }; }
+});
+
+// ── 旧兼容: 匿名注册 ──
+server.app.use(async (ctx, next) => {
+  if (ctx.path === '/api/register' || ctx.path === '/api/login' || ctx.path === '/api/guest') return next();
+  await next();
 });
 
 /** GET /api/online — 在线人数 */

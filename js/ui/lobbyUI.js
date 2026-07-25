@@ -59,19 +59,117 @@ export function initLobby() {
 
   document.getElementById('btn-close-profile')?.addEventListener('click', () => hideModal('modal-profile'));
 
-  // ── V5: Avatar Selector ──
+  // ── V6: Auth 系统 ──
+  const authBtn = document.getElementById('btn-edit-profile');
+  authBtn?.addEventListener('click', () => {
+    cs();
+    // 如果已登录，显示用户信息
+    if (app.isLoggedIn) {
+      document.getElementById('auth-form').style.display = 'none';
+      document.getElementById('auth-user-info').style.display = 'block';
+      document.getElementById('auth-info-text').textContent = `✅ 已登录: ${app.playerName} (${app.isGuest ? '游客' : '正式用户'})`;
+    } else {
+      document.getElementById('auth-form').style.display = 'block';
+      document.getElementById('auth-user-info').style.display = 'none';
+    }
+    showModal('modal-auth');
+  });
+
+  document.getElementById('btn-auth-login')?.addEventListener('click', async () => {
+    const username = document.getElementById('auth-username')?.value?.trim();
+    const password = document.getElementById('auth-password')?.value?.trim();
+    if (!username || !password) { Toast.show('请输入用户名和密码', 'error'); return; }
+    try {
+      const res = await fetch(`${app.getServerOrigin()}/api/login`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      if (!res.ok) { const e = await res.json(); Toast.show(e.error, 'error'); return; }
+      const data = await res.json();
+      app.playerId = data.playerId; app.playerName = data.playerName; app.avatar = data.avatar;
+      app.isLoggedIn = true; app.isGuest = false;
+      localStorage.setItem('pokeWarPlayerId', data.playerId);
+      localStorage.setItem('pokeWarName', data.playerName);
+      localStorage.setItem('pokeWarAvatar', data.avatar);
+      updateNavPlayerId();
+      updateProfileUI();
+      hideModal('modal-auth');
+      Toast.show('登录成功! ' + data.playerName, 'success');
+    } catch (e) { Toast.show('登录失败', 'error'); }
+  });
+
+  document.getElementById('btn-auth-register')?.addEventListener('click', async () => {
+    const username = document.getElementById('auth-username')?.value?.trim();
+    const password = document.getElementById('auth-password')?.value?.trim();
+    if (!username || !password) { Toast.show('请输入用户名和密码', 'error'); return; }
+    try {
+      const res = await fetch(`${app.getServerOrigin()}/api/register`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, avatar: app.avatar }),
+      });
+      if (!res.ok) { const e = await res.json(); Toast.show(e.error, 'error'); return; }
+      const data = await res.json();
+      app.playerId = data.playerId; app.playerName = data.playerName;
+      app.isLoggedIn = true; app.isGuest = false;
+      localStorage.setItem('pokeWarPlayerId', data.playerId);
+      localStorage.setItem('pokeWarName', data.playerName);
+      updateNavPlayerId();
+      updateProfileUI();
+      hideModal('modal-auth');
+      Toast.show('注册成功! ' + data.playerName, 'success');
+    } catch (e) { Toast.show('注册失败', 'error'); }
+  });
+
+  document.getElementById('btn-auth-guest')?.addEventListener('click', async () => {
+    try {
+      const res = await fetch(`${app.getServerOrigin()}/api/guest`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerName: app.playerName, avatar: app.avatar }),
+      });
+      if (!res.ok) { Toast.show('游客登录失败', 'error'); return; }
+      const data = await res.json();
+      app.playerId = data.playerId; app.playerName = data.playerName;
+      app.isLoggedIn = true; app.isGuest = true;
+      localStorage.setItem('pokeWarPlayerId', data.playerId);
+      localStorage.setItem('pokeWarName', data.playerName);
+      updateNavPlayerId();
+      updateProfileUI();
+      hideModal('modal-auth');
+      Toast.show('游客模式 (不保存战绩)', 'success');
+    } catch (e) { Toast.show('游客登录失败', 'error'); }
+  });
+
+  document.getElementById('btn-auth-logout')?.addEventListener('click', () => {
+    app.isLoggedIn = false; app.isGuest = false;
+    app.playerName = '小猫猫';
+    updateNavPlayerId();
+    hideModal('modal-auth');
+    Toast.show('已退出登录');
+  });
+
+  document.getElementById('btn-close-auth')?.addEventListener('click', () => hideModal('modal-auth'));
+
+  // ── V6: DiceBear Avatar Selector ──
   const avatarSelector = document.getElementById('avatar-selector');
   const avatarPreview = document.getElementById('avatar-preview');
   const nameInput = document.getElementById('player-name-input');
+  const customUrlInput = document.getElementById('custom-avatar-url');
 
   // 从 localStorage 恢复
-  const savedAvatar = localStorage.getItem('pokeWarAvatar') || '🐱';
+  const savedAvatar = localStorage.getItem('pokeWarAvatar') || 'https://api.dicebear.com/7.x/micah/svg?seed=Felix';
   const savedName = localStorage.getItem('pokeWarName') || '小猫猫';
   app.avatar = savedAvatar;
   app.playerName = savedName;
   if (nameInput) nameInput.value = savedName;
-  if (avatarPreview) avatarPreview.textContent = savedAvatar;
+  if (avatarPreview) avatarPreview.src = savedAvatar;
   updateNavPlayerId();
+
+  // 恢复保存状态常量
+  app.isLoggedIn = !!localStorage.getItem('pokeWarIsLoggedIn');
+  app.isGuest = localStorage.getItem('pokeWarIsGuest') === 'true';
+  if (app.isLoggedIn && localStorage.getItem('pokeWarPlayerId')) {
+    app.playerId = localStorage.getItem('pokeWarPlayerId');
+  }
 
   // 头像点击
   avatarSelector?.addEventListener('click', (e) => {
@@ -82,8 +180,20 @@ export function initLobby() {
     const avatar = opt.dataset.avatar;
     app.avatar = avatar;
     localStorage.setItem('pokeWarAvatar', avatar);
-    if (avatarPreview) avatarPreview.textContent = avatar;
+    if (avatarPreview) avatarPreview.src = avatar;
+    if (customUrlInput) customUrlInput.value = '';
     cs();
+  });
+
+  // 自定义 URL
+  customUrlInput?.addEventListener('input', () => {
+    const url = customUrlInput.value.trim();
+    if (url && url.startsWith('http')) {
+      app.avatar = url;
+      localStorage.setItem('pokeWarAvatar', url);
+      if (avatarPreview) avatarPreview.src = url;
+      avatarSelector?.querySelectorAll('.avatar-option').forEach(o => o.classList.remove('selected'));
+    }
   });
 
   // 昵称自动保存
@@ -245,6 +355,14 @@ export function initLobby() {
 function updateNavPlayerId() {
   const el = document.getElementById('nav-player-id');
   if (el) el.textContent = app.playerId || app.playerName || '未登录';
+}
+
+/** V6: 更新 profile UI (头像预览 + 昵称输入) */
+function updateProfileUI() {
+  const preview = document.getElementById('avatar-preview');
+  const nameInput = document.getElementById('player-name-input');
+  if (preview) preview.src = app.avatar;
+  if (nameInput) nameInput.value = app.playerName;
 }
 
 async function loadOnlineCount() {

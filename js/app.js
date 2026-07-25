@@ -40,6 +40,9 @@ class AppController {
     this.avatar = '🐱';
     /** @type {string} V4: 持久化玩家 ID (localStorage) */
     this.playerId = this._loadPlayerId();
+    /** V6: 登录状态 */
+    this.isLoggedIn = false;
+    this.isGuest = false;
 
     /** 游戏完整状态 (G + ctx) */
     this.state = null;
