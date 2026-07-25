@@ -89,47 +89,31 @@ body.dark-mode {
   --accent-yellow: #FFD600;
 }
 
-/* ── 黑夜模式: 纯变量驱动 (零 invert 作弊) ── */
+/* ── 黑夜模式: CSS 滤镜反转法 (零变量覆盖, 杜绝文本吞噬) ── */
 html.dark-theme {
-  --bg-color: #111111;
-  --text-main: #FFFFFF;
-  --text-muted: #AAAAAA;
-  --glass-bg: #1A1A1A;
-  --panel-bg: #1A1A1A;
-  --card-bg: #222222;
-  --border-thick: 3px solid #FFFFFF;
-  --border-thin: 2px solid #FFFFFF;
-  --shadow-hard: 6px 6px 0px #FFFFFF;
-  --shadow-hard-sm: 4px 4px 0px #FFFFFF;
-  --text-secondary: #BBBBBB;
-  --text-color-secondary: #BBBBBB;
-  --suit-red: #ff6b6b;
-  --suit-black: #FFFFFF;
-  --card-selected-glow: 0 0 0 4px var(--primary-acid), 4px 4px 0px #FFF;
-  --color-primary: #448AFF;
-  --color-primary-hover: #6699FF;
-  --color-confirm: #69F0AE;
+  background-color: #111 !important;
+  filter: invert(1) hue-rotate(180deg);
 }
-/* 向后兼容 [data-theme=\"dark\"] */
-[data-theme="dark"], .theme-dark {
-  --bg-color: #111111;
-  --text-main: #FFFFFF;
-  --text-muted: #AAAAAA;
-  --glass-bg: #1A1A1A;
-  --panel-bg: #1A1A1A;
-  --card-bg: #222222;
-  --border-thick: 3px solid #FFFFFF;
-  --border-thin: 2px solid #FFFFFF;
-  --shadow-hard: 6px 6px 0px #FFFFFF;
-  --shadow-hard-sm: 4px 4px 0px #FFFFFF;
-  --text-secondary: #BBBBBB;
-  --text-color-secondary: #BBBBBB;
-  --suit-red: #ff6b6b;
-  --suit-black: #FFFFFF;
-  --card-selected-glow: 0 0 0 4px var(--primary-acid), 4px 4px 0px #FFF;
-  --color-primary: #448AFF;
-  --color-primary-hover: #6699FF;
-  --color-confirm: #69F0AE;
+/* ★ 二次反转: 保护图片/头像/SVG/酸性绿强调色, 防止变成负片 */
+html.dark-theme img,
+html.dark-theme .anti-invert,
+html.dark-theme .poker-card,
+html.dark-theme .character-avatar-img,
+html.dark-theme .avatar-option,
+html.dark-theme .btn-primary,
+html.dark-theme .btn-wanhua,
+html.dark-theme .btn-confirm,
+html.dark-theme .btn-danger,
+html.dark-theme .phase-pill,
+html.dark-theme .close-modal-btn,
+html.dark-theme .identity-sticker,
+html.dark-theme .hp-fill,
+html.dark-theme .shield-fill,
+html.dark-theme .phase-timer,
+html.dark-theme .tag-ace,
+html.dark-theme .tag-joker,
+html.dark-theme .suit-block {
+  filter: invert(1) hue-rotate(180deg);
 }
 
 /* ═══════════════════════════════════════
@@ -681,17 +665,30 @@ html.dark-theme .avatar-option {
 .battle-shell {
   width: 100%; height: 100%;
   display: grid;
-  grid-template-columns: 200px minmax(0, 1fr) 280px;
+  grid-template-columns: 250px minmax(0, 1fr) 300px;
   /* ★ 关键修复: 顶部 auto, 中间 1fr, 底部固定 200px (手牌不会塌陷) */
   grid-template-rows: auto 1fr 200px;
   grid-template-areas:
     "topbar  topbar  topbar"
     "left    center  right"
     "bottom  bottom  right";
-  gap: 8px;
-  padding: 8px;
+  gap: 10px;
+  padding: 10px;
   position: relative;
-  background: var(--bg-color);
+  background: #F4F4F0;
+}
+
+/* ═══ Neo-Brutalism 通用卡片: Bento 便当盒 ═══ */
+.neo-bento {
+  background: #FFFFFF;
+  border: 3px solid #000000;
+  box-shadow: 6px 6px 0px #000000;
+  border-radius: 12px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.neo-bento:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 10px 10px 0px #000000;
 }
 
 /* ── 顶部阶段条 ── */
@@ -701,10 +698,11 @@ html.dark-theme .avatar-option {
 }
 .phase-pill {
   display: inline-flex; align-items: center; gap: 14px;
-  background: var(--text-main); color: var(--primary-acid);
-  border: var(--border-thick); box-shadow: var(--shadow-hard-sm);
+  background: #000000; color: #CCFF00;
+  border: 3px solid #000000; box-shadow: 4px 4px 0px #000000;
   border-radius: 50px; padding: 8px 28px;
-  font-family: var(--font-heading); font-weight: 900; font-size: 16px;
+  font-family: 'Impact', 'Arial Black', sans-serif; font-weight: 900; font-size: 16px;
+  -webkit-text-stroke: 0;
 }
 .phase-timer {
   background: var(--danger-red); color: #FFF;
@@ -713,14 +711,13 @@ html.dark-theme .avatar-option {
   font-size: 18px;
 }
 
-/* ── 左侧: 角色 Bento (与手牌同列, 占据中间行) ── */
+/* ── 左侧: 角色 Bento ── */
 .battle-left {
   grid-area: left; align-self: start;
   overflow-y: auto;
 }
 .character-bento {
   padding: 14px; display: flex; flex-direction: column; align-items: center; gap: 8px;
-  background: var(--glass-bg);
 }
 .char-avatar-wrap {
   width: 64px; height: 64px; border-radius: 14px; overflow: hidden;
@@ -776,7 +773,6 @@ html.dark-theme .avatar-option {
 .play-zone {
   flex: 1; padding: 12px; min-height: 0;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
-  background: var(--glass-bg);
   overflow: hidden;
 }
 .pile-row {
@@ -804,7 +800,7 @@ html.dark-theme .avatar-option {
 }
 .info-log-panel {
   flex: 1; display: flex; flex-direction: column; padding: 12px; gap: 6px;
-  overflow: hidden; background: var(--glass-bg);
+  overflow: hidden;
 }
 .info-log-panel .panel-head {
   flex-shrink: 0; padding-bottom: 4px; border-bottom: var(--border-thin);
@@ -838,10 +834,6 @@ html.dark-theme .avatar-option {
   display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
   width: 100%; height: 100%;
   padding-bottom: 4px;
-  background: var(--glass-bg);
-  border: var(--border-thick);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-hard-sm);
 }
 
 /* ── 手牌区 (卡片水平排列, 不塌陷) ── */

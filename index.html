@@ -173,9 +173,9 @@
 
     <!-- 左侧: 自己角色状态 Bento -->
     <aside class="battle-left">
-      <div class="character-bento bento-glass" id="self-char">
+      <div class="character-bento neo-bento" id="self-char">
         <div class="char-avatar-wrap">
-          <img class="character-avatar-img" id="self-avatar-img" src="https://api.dicebear.com/7.x/micah/svg?seed=Player" alt="角色头像">
+          <img class="character-avatar-img anti-invert" id="self-avatar-img" src="https://api.dicebear.com/7.x/micah/svg?seed=Player" alt="角色头像">
         </div>
         <div class="character-meta">
           <div class="identity-sticker" id="identity-sticker">角色</div>
@@ -199,7 +199,7 @@
       <div class="surrounding-players" id="opponents-area"></div>
 
       <!-- 牌堆 + 弃牌堆 + 出牌区 -->
-      <div class="play-zone bento-glass" id="battlefield">
+      <div class="play-zone neo-bento" id="battlefield">
         <div class="pile-row">
           <div class="draw-pile">
             <svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="3" width="6" height="18" rx="1"/><rect x="16" y="3" width="6" height="18" rx="1"/></svg>
@@ -218,9 +218,9 @@
       </div>
     </main>
 
-    <!-- 右侧: 信息/聊天面板 -->
+    <!-- 右侧: 信息/聊天面板 (贯穿全高) -->
     <aside class="battle-right">
-      <div class="info-log-panel bento-glass" id="game-chat-panel">
+      <div class="info-log-panel neo-bento" id="game-chat-panel">
         <div class="panel-head">
           <h3>对战日志</h3>
         </div>
@@ -232,9 +232,9 @@
       </div>
     </aside>
 
-    <!-- 底部: 手牌 + 操作按钮 -->
+    <!-- 底部: 手牌 + 操作按钮 (固定 200px) -->
     <footer class="battle-bottom">
-      <div class="hand-bento" id="player-dashboard">
+      <div class="hand-bento neo-bento" id="player-dashboard">
         <div class="floating-actions">
           <button class="btn-action btn-wanhua" id="btn-wanhua" style="display:none"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> 万化</button>
           <button class="btn-action btn-confirm hidden" id="btn-confirm">出牌</button>
