@@ -427,7 +427,7 @@ server.app.use(async (ctx, next) => {
     }
 
     const token = jwt.sign({ userId: id, isGuest: 0 }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
-    ctx.body = { success: true, token, playerId: id, playerName: username, avatar: avatar || '🐱' };
+    ctx.body = { success: true, token, playerId: id, playerName: username, avatar: avatar || '🐱', wins: 0, losses: 0, rating: 1000, matches: 0, winRate: 0 };
   } catch (e) { ctx.status = 500; ctx.body = { error: e.message }; }
 });
 
@@ -463,7 +463,7 @@ server.app.use(async (ctx, next) => {
     db.run('INSERT INTO users (id, name, avatar, is_guest) VALUES (?, ?, ?, 1)', [id, name, avatar || '🐱']);
 
     const token = jwt.sign({ userId: id, isGuest: 1 }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
-    ctx.body = { success: true, token, playerId: id, playerName: name, avatar: avatar || '🐱' };
+    ctx.body = { success: true, token, playerId: id, playerName: name, avatar: avatar || '🐱', wins: 0, losses: 0, rating: 1000, matches: 0, winRate: 0 };
   } catch (e) { ctx.status = 500; ctx.body = { error: e.message }; }
 });
 

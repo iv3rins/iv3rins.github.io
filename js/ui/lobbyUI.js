@@ -222,15 +222,17 @@ export function initLobby() {
 
   // ── V7: Profile Badge + Edit Modal ──
   const savedAvatar = localStorage.getItem('pokeWarAvatar') || 'https://api.dicebear.com/7.x/micah/svg?seed=Felix';
-  const savedName = localStorage.getItem('pokeWarName') || '小猫猫';
   app.avatar = savedAvatar;
-  app.playerName = savedName;
-  updateBadgeUI();
 
+  // ★ 仅在已登录时恢复 playerName；未登录时保留 app.js 构造函数的默认值
   app.isLoggedIn = !!localStorage.getItem('pokeWarIsLoggedIn');
   app.isGuest = localStorage.getItem('pokeWarIsGuest') === 'true';
   if (app.isLoggedIn && localStorage.getItem('pokeWarPlayerId')) {
     app.playerId = localStorage.getItem('pokeWarPlayerId');
+    app.playerName = localStorage.getItem('pokeWarName') || app.playerName;  // 仅登录用户恢复
+  } else {
+    // 未登录：使用 localStorage 中的名字（如果有手动设置过），否则保留默认
+    app.playerName = localStorage.getItem('pokeWarName') || app.playerName;
   }
   // 恢复战绩
   app.wins = Number(localStorage.getItem('pokeWarWins')) || 0;
@@ -440,6 +442,9 @@ export function initLobby() {
 
   // 恢复昵称
   updateNavPlayerId();
+
+  // 初始化 Badge UI
+  updateBadgeUI();
 }
 
 // ═══════════════════════════════════════
