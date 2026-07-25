@@ -6,13 +6,17 @@
 /* ── V14: 黑夜模式 (反转色) ── */
 body.dark-mode {
   filter: invert(1) hue-rotate(180deg);
-  background-color: #111;
+  background-color: #111 !important;
 }
 body.dark-mode img,
 body.dark-mode .avatar,
 body.dark-mode .emoji-icon,
 body.dark-mode .avatar-option,
-body.dark-mode [data-lucide] {
+body.dark-mode [data-lucide],
+body.dark-mode svg.nb-icon,
+body.dark-mode svg.nb-icon-sm,
+body.dark-mode svg.nb-icon-lg,
+body.dark-mode .nb-icon {
   filter: invert(1) hue-rotate(180deg);
 }
 
@@ -426,13 +430,14 @@ html, body {
 
 /* ── V9 Waiting Room Slots ── */
 .wr-player-slot {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  padding: 12px 8px; border-radius: 10px;
-  border: 2px solid #000; background: #FFF;
-  text-align: center; min-height: 90px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 14px 10px; border-radius: 12px;
+  border: 3px solid #000; background: #FFF;
+  text-align: center; min-height: 130px;
+  transition: background 0.2s, border 0.2s;
 }
 .wr-player-slot.empty {
-  background: #F5F5F5; border-style: dashed;
+  background: #F4F4F0; border: 3px dashed #000;
   justify-content: center;
 }
 

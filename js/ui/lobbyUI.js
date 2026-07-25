@@ -92,12 +92,17 @@ export function initLobby() {
   // ── V6: Auth system (通过 Badge 点击或独立按钮触发) ──
   const openAuth = () => {
     if (app.isLoggedIn) {
-      document.getElementById('auth-form').style.display = 'none';
-      document.getElementById('auth-user-info').style.display = 'block';
-      document.getElementById('auth-info-text').innerHTML = `${ICON.check} 已登录: ${app.playerName} (${app.isGuest ? '游客' : '正式用户'})`;
+      const formEl = document.getElementById('auth-form');
+      const infoEl = document.getElementById('auth-user-info');
+      const infoText = document.getElementById('auth-info-text');
+      if (formEl) formEl.style.display = 'none';
+      if (infoEl) infoEl.style.display = 'block';
+      if (infoText) infoText.innerHTML = `${ICON.check} 已登录: ${app.playerName} (${app.isGuest ? '游客' : '正式用户'})`;
     } else {
-      document.getElementById('auth-form').style.display = 'block';
-      document.getElementById('auth-user-info').style.display = 'none';
+      const formEl = document.getElementById('auth-form');
+      const infoEl = document.getElementById('auth-user-info');
+      if (formEl) formEl.style.display = 'block';
+      if (infoEl) infoEl.style.display = 'none';
     }
     closeAllModals();
     showModal('modal-auth');
@@ -524,8 +529,8 @@ function switchToWaitingRoom(code) {
   wr.style.display = 'flex';
   if (codeEl) codeEl.textContent = code;
 
-  if (btnStart) btnStart.style.display = app.isHost ? 'inline-block' : 'none';
-  if (btnReady) btnReady.style.display = app.isHost ? 'none' : 'inline-block';
+  if (btnStart) { btnStart.style.display = app.isHost ? 'inline-block' : 'none'; }
+  if (btnReady) { btnReady.style.display = app.isHost ? 'none' : 'inline-block'; }
 
   if (btnStart) btnStart.onclick = async () => {
     try {
@@ -599,8 +604,10 @@ function startRoomPolling() {
       if (data.messages) renderWRChat(data.messages);
     } catch {
       stopRoomPolling();
-      document.getElementById('waiting-room-view').style.display = 'none';
-      document.getElementById('main-lobby-view').style.display = 'flex';
+      const wrView = document.getElementById('waiting-room-view');
+      const mainView = document.getElementById('main-lobby-view');
+      if (wrView) wrView.style.display = 'none';
+      if (mainView) mainView.style.display = 'flex';
       Toast.show('房间已解散', 'error');
     }
   }, 1000);
@@ -610,20 +617,30 @@ function renderWRPlayers(players, host) {
   const container = document.getElementById('player-slots-container');
   if (!container) return;
 
-  // ★ 定向渲染: 仅替换 #player-slots-container，不影响 #room-settings-container / #room-chat-container
+  // ★ 动态渲染: 按实际 maxPlayers 生成 slot, 上限 12
+  const maxSlots = Math.max(4, players.length, app._roomMaxPlayers || 4);
+  app._roomMaxPlayers = maxSlots; // 缓存, 后续 poll 复用
+  const cols = maxSlots <= 4 ? 2 : maxSlots <= 6 ? 3 : 4;
+  container.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
   let html = '';
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < maxSlots; i++) {
     const p = players[i];
     if (p) {
-      html += `<div class="wr-player-slot filled">
-        <img src="${esc(p.avatar)}" alt="" style="width:44px;height:44px;border-radius:10px;border:2px solid #000">
-        <span style="font-size:13px;font-weight:800">${esc(p.name)}</span>
-        ${p.id === host ? `<span style="font-size:10px;color:var(--accent-green)">${ICON.crown}房主</span>` : ''}
-        <span style="font-size:11px">${p.ready ? `${ICON.check} 已准备` : `${ICON.clock} 等待`}</span>
+      const isHost = p.id === host;
+      const isReady = p.ready;
+      const bg = isHost ? '#CCFF00' : isReady ? '#0057FF' : '#F4F4F0';
+      const textColor = (isHost || isReady) ? '#FFF' : '#000';
+      const borderStyle = (isHost || isReady) ? '3px solid #000' : '3px dashed #000';
+      html += `<div class="wr-player-slot filled" style="background:${bg};color:${textColor};border:${borderStyle};padding:14px 10px">
+        <img src="${esc(p.avatar)}" alt="" style="width:64px;height:64px;border-radius:14px;border:3px solid #000;object-fit:cover">
+        <span style="font-size:14px;font-weight:800">${esc(p.name)}</span>
+        ${isHost ? `<span style="font-size:11px;font-weight:900;background:#000;color:#CCFF00;padding:2px 8px;border-radius:4px">${ICON.crown} 房主</span>` : ''}
+        <span style="font-size:12px;font-weight:700">${isReady ? `${ICON.check} 已准备` : `${ICON.clock} 等待`}</span>
       </div>`;
     } else {
-      html += `<div class="wr-player-slot empty">
-        <span style="font-size:28px;color:var(--text-muted)">?</span>
+      html += `<div class="wr-player-slot empty" style="min-height:120px">
+        <span style="font-size:32px;color:var(--text-muted)">?</span>
         <span style="font-size:12px;color:var(--text-muted)">等待加入</span>
       </div>`;
     }
