@@ -158,33 +158,92 @@
 </div>
 
 <!-- ═══════════════════════════════════════════
-   🎮 游戏对局 (精简版 — 保留核心功能)
+   🎮 游戏对局 — 三国杀主视角战斗板
    ═══════════════════════════════════════════ -->
 <div class="page-view" id="page-game">
-  <div class="game-layout">
-    <div class="opponents-area" id="opponents-area"></div>
-    <div class="battlefield bento-glass" id="battlefield">
-      <div class="battle-info">
-        <span><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="3" width="6" height="18" rx="1"/><rect x="16" y="3" width="6" height="18" rx="1"/></svg> <b id="deck-count">--</b></span>
-        <span><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> <b id="turn-display">--</b></span>
+  <div class="battle-shell">
+
+    <!-- 顶部: 阶段 + 计时器 -->
+    <header class="battle-topbar">
+      <div class="phase-pill">
+        <span class="phase-label" id="phase-label">准备阶段</span>
+        <span class="phase-timer" id="phase-timer">--</span>
       </div>
-      <div class="battle-action-msg" id="battle-action-msg"></div>
-    </div>
-    <div class="self-char bento-glass" id="self-char">
-      <div class="char-avatar-large" id="self-avatar">🐱</div>
-      <div class="char-stats">
-        <div class="stat-row"><span>❤️</span><div class="hp-bar"><div class="hp-fill" id="self-hp-fill"></div></div><span id="self-hp-val">10/10</span></div>
-        <div class="stat-row"><span>🛡️</span><div class="shield-bar"><div class="shield-fill" id="self-shield-fill"></div></div><span id="self-shield-val">0</span></div>
+    </header>
+
+    <!-- 左侧: 自己角色状态 Bento -->
+    <aside class="battle-left">
+      <div class="character-bento bento-glass" id="self-char">
+        <div class="char-avatar-wrap">
+          <img class="character-avatar-img" id="self-avatar-img" src="https://api.dicebear.com/7.x/micah/svg?seed=Player" alt="角色头像">
+        </div>
+        <div class="character-meta">
+          <div class="identity-sticker" id="identity-sticker">角色</div>
+          <div class="hp-line">
+            <span class="hp-icon">❤️</span>
+            <span class="hp-value" id="self-hp-val">10/10</span>
+          </div>
+          <div class="shield-line">
+            <span class="shield-icon">🛡️</span>
+            <span class="shield-value" id="self-shield-val">0</span>
+          </div>
+          <div class="hp-bar"><div class="hp-fill" id="self-hp-fill"></div></div>
+          <div class="shield-bar"><div class="shield-fill" id="self-shield-fill"></div></div>
+        </div>
       </div>
-    </div>
-    <div class="player-dashboard" id="player-dashboard">
-      <div class="floating-actions">
-        <button class="btn-action btn-wanhua" id="btn-wanhua" style="display:none"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> 万化</button>
-        <button class="btn-action btn-confirm hidden" id="btn-confirm">出牌</button>
-        <button class="btn-action btn-cancel hidden" id="btn-cancel">取消</button>
+    </aside>
+
+    <!-- 中央: 战场 -->
+    <main class="battle-center">
+      <!-- 对手区: 半圆形环绕 -->
+      <div class="surrounding-players" id="opponents-area"></div>
+
+      <!-- 牌堆 + 弃牌堆 + 出牌区 -->
+      <div class="play-zone bento-glass" id="battlefield">
+        <div class="pile-row">
+          <div class="draw-pile">
+            <svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="3" width="6" height="18" rx="1"/><rect x="16" y="3" width="6" height="18" rx="1"/></svg>
+            <span>牌堆 <b id="deck-count">--</b></span>
+          </div>
+          <div class="drop-target">
+            <span>⚔️ 对战区域</span>
+            <span style="font-size:11px">回合 <b id="turn-display">--</b></span>
+          </div>
+          <div class="discard-pile">
+            <svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            <span>弃牌</span>
+          </div>
+        </div>
+        <div class="battle-action-msg" id="battle-action-msg"></div>
       </div>
-      <div class="hand-area" id="hand-area"></div>
-    </div>
+    </main>
+
+    <!-- 右侧: 信息/聊天面板 -->
+    <aside class="battle-right">
+      <div class="info-log-panel bento-glass" id="game-chat-panel">
+        <div class="panel-head">
+          <h3>对战日志</h3>
+        </div>
+        <div class="log-list" id="game-chat-messages"></div>
+        <div class="chat-input-row">
+          <input type="text" class="chat-input input-glass" id="game-chat-input" placeholder="输入消息...">
+          <button class="btn btn-small chat-send-btn" id="btn-game-chat-send">发送</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 底部: 手牌 + 操作按钮 -->
+    <footer class="battle-bottom">
+      <div class="hand-bento" id="player-dashboard">
+        <div class="floating-actions">
+          <button class="btn-action btn-wanhua" id="btn-wanhua" style="display:none"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> 万化</button>
+          <button class="btn-action btn-confirm hidden" id="btn-confirm">出牌</button>
+          <button class="btn-action btn-cancel hidden" id="btn-cancel">取消</button>
+        </div>
+        <div class="hand-area" id="hand-area"></div>
+      </div>
+    </footer>
+
     <div class="anim-layer" id="anim-layer"></div>
   </div>
 </div>
@@ -328,9 +387,15 @@
       <!-- 特殊牌型 -->
       <div class="rule-subcard">
         <h4>✨ 特殊牌型</h4>
-        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;line-height:1.8;margin-top:6px">
-          <span class="tag tag-ace">A 万化</span> <span>点数 +1，强行浸染花色，<b>无视免疫</b>！</span>
-          <span class="tag tag-joker">Joker</span> <span><b>单张复活</b>阵亡角色 · <b>双张秒杀</b>存活角色！</span>
+        <div class="special-cards-grid">
+          <div class="special-card-row">
+            <span class="tag tag-ace">A 万化</span>
+            <span class="special-card-desc">点数 +1，强行浸染花色，<b>无视免疫</b>！</span>
+          </div>
+          <div class="special-card-row">
+            <span class="tag tag-joker">Joker</span>
+            <span class="special-card-desc"><b>单张复活</b>阵亡角色 · <b>双张秒杀</b>存活角色！</span>
+          </div>
         </div>
       </div>
     </div>

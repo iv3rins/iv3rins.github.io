@@ -65,15 +65,9 @@ export function renderGameState(state) {
 function updateBattlefield(G, ctx) {
   const deckEl = document.getElementById('deck-count');
   const turnEl = document.getElementById('turn-display');
-  const curPlayerEl = document.getElementById('current-player-display');
 
   if (deckEl) deckEl.textContent = G.deck?.length ?? '--';
   if (turnEl) turnEl.textContent = G.turn ?? '--';
-  if (curPlayerEl) {
-    const pid = ctx.currentPlayer;
-    const p = G.players?.[pid];
-    curPlayerEl.textContent = p?.name || `玩家${pid}`;
-  }
 }
 
 // ═══════════════════════════════════════
@@ -133,9 +127,12 @@ function updateSelfChar(G) {
   const ac = app.getMyActiveChar();
   if (!ac) return;
 
-  // 头像
-  const avatarEl = document.getElementById('self-avatar');
-  if (avatarEl) avatarEl.textContent = p.avatar || '🐱';
+  // 头像 (new: character-avatar-img)
+  const avatarEl = document.getElementById('self-avatar-img');
+  if (avatarEl) {
+    avatarEl.src = p.avatar && p.avatar.startsWith('http') ? p.avatar
+      : `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(p.name || 'Player')}`;
+  }
 
   // HP 条
   const hpFill = document.getElementById('self-hp-fill');
@@ -151,20 +148,22 @@ function updateSelfChar(G) {
   if (shieldFill) shieldFill.style.width = `${shieldPct}%`;
   if (shieldVal) shieldVal.textContent = ac.shield || 0;
 
-  // 花色/等级/命数
-  const suitEl = document.getElementById('self-suit');
-  const rankEl = document.getElementById('self-rank');
-  const livesEl = document.getElementById('self-lives');
-
-  if (suitEl) {
-    suitEl.textContent = ac.suit;
-    suitEl.style.color = (ac.suit === '♦' || ac.suit === '♥') ? 'var(--suit-red)' : 'var(--suit-black)';
+  // 身份贴纸
+  const stickerEl = document.getElementById('identity-sticker');
+  if (stickerEl) {
+    stickerEl.textContent = `${ac.suit || '?'} ${ac.rank || '?'}`;
+    const suitColor = (ac.suit === '♦' || ac.suit === '♥') ? 'var(--suit-red)' : 'var(--suit-black)';
+    stickerEl.style.color = suitColor;
   }
-  if (rankEl) rankEl.textContent = ac.rank;
 
   // 计算剩余存活角色
   const alive = p.characters?.filter(c => !c.isDead).length || 0;
-  if (livesEl) livesEl.textContent = '❤️'.repeat(alive) || '💀';
+  // 更新到阶段条
+  const phaseLabel = document.getElementById('phase-label');
+  if (phaseLabel) {
+    const phaseNames = { SELECTING_STARTER: '选将阶段', PLAYING: '对战阶段', WAITING_FOR_JOKER: '濒死救援' };
+    phaseLabel.textContent = phaseNames[app.getPhase()] || '对战阶段';
+  }
 }
 
 // ═══════════════════════════════════════

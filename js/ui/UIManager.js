@@ -13,7 +13,6 @@ import { renderGameState } from './gameUI.js';
 import { Toast } from './toast.js';
 import { audioManager } from '../audioManager.js';
 import { skinManager } from './SkinManager.js';
-import { setTheme } from '../state.js';
 import { ICON } from './lobbyUI.js';
 
 // ═══════════════════════════════════════
@@ -55,7 +54,6 @@ export function initUI() {
   initGamePage();
   // ── 通用 ──
   initFullscreenBtn();
-  initThemeToggle();
   initTutorialModal();
 
   // ── 注册 app 状态监听 ──
@@ -465,15 +463,6 @@ function initFullscreenBtn() {
   });
   document.addEventListener('fullscreenchange', () => {
     if (btn) btn.textContent = document.fullscreenElement ? '🔳' : '🔲';
-  });
-}
-
-function initThemeToggle() {
-  const btn = document.getElementById('btn-toggle-theme');
-  btn?.addEventListener('click', () => {
-    const isDark = !document.documentElement.classList.contains('dark-theme');
-    setTheme(isDark);
-    audioManager.play('click');
   });
 }
 
