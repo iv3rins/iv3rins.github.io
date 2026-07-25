@@ -143,6 +143,26 @@ html, body {
   border-radius: var(--radius);
 }
 
+/* ── Neo-Brutalism 内联 SVG 图标 ── */
+.nb-icon {
+  width: 18px; height: 18px;
+  vertical-align: middle;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.nb-icon-sm {
+  width: 14px; height: 14px;
+  vertical-align: middle;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.nb-icon-lg {
+  width: 24px; height: 24px;
+  vertical-align: middle;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
 /* ═══════════════════════════════════════
    页面视图
    ═══════════════════════════════════════ */
@@ -829,15 +849,31 @@ html, body {
 /* ── V14: 统一红叉关闭按钮 ── */
 .close-modal-btn {
   background: #FF3B30; color: #FFF;
-  border: 2px solid #000; box-shadow: 2px 2px 0px #000;
+  border: var(--border-thick); box-shadow: 2px 2px 0px #000;
   border-radius: 50%; width: 32px; height: 32px;
   font-weight: 900; font-size: 16px; line-height: 1;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
-  position: absolute; top: -10px; right: -10px;
+  position: absolute; top: -12px; right: -12px;
   transition: transform 0.1s;
 }
 .close-modal-btn:hover { transform: scale(1.1); }
 .close-modal-btn:active { transform: scale(0.95); box-shadow: none; }
+
+/* ── Neo-Brutalism 排版类 ── */
+.neo-heading {
+  font-family: var(--font-heading);
+  -webkit-text-stroke: 1.5px #000;
+  color: var(--accent-green);
+  text-shadow: 2px 2px 0px #000;
+  letter-spacing: 1px;
+}
+.neo-body {
+  font-family: var(--font);
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--text-main);
+}
+
 .modal-box { position: relative; } /* 确保 close-btn 的 absolute 相对于 modal-box */
 
 /* 万化弹窗 */

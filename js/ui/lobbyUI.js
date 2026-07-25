@@ -11,6 +11,27 @@ import { Toast } from './toast.js';
 import { audioManager } from '../audioManager.js';
 
 // ═══════════════════════════════════════
+// Neo-Brutalism SVG 图标集
+// ═══════════════════════════════════════
+const ICON = {
+  play: '<svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+  door: '<svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+  check: '<svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  clock: '<svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  sparkle: '<svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+  trophy: '<svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 6 9 6 9z"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 18 9 18 9z"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>',
+  crown: '<svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l4-12-4 5-3-3-5 5-5-5z"/></svg>',
+  skull: '<svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M3 12a9 9 0 1 1 18 0v4a2 2 0 0 1-2 2h-1a1 1 0 0 1-1-1v-2a1 1 0 0 1 1-1h2"/></svg>',
+  star: '<svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+  search: '<svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  check_green: '<svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  cross_red: '<svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  gold: '<svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+  silver: '<svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+  bronze: '<svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+};
+
+// ═══════════════════════════════════════
 // 页面切换
 // ═══════════════════════════════════════
 
@@ -73,7 +94,7 @@ export function initLobby() {
     if (app.isLoggedIn) {
       document.getElementById('auth-form').style.display = 'none';
       document.getElementById('auth-user-info').style.display = 'block';
-      document.getElementById('auth-info-text').textContent = `✅ 已登录: ${app.playerName} (${app.isGuest ? '游客' : '正式用户'})`;
+      document.getElementById('auth-info-text').innerHTML = `${ICON.check} 已登录: ${app.playerName} (${app.isGuest ? '游客' : '正式用户'})`;
     } else {
       document.getElementById('auth-form').style.display = 'block';
       document.getElementById('auth-user-info').style.display = 'none';
@@ -242,7 +263,7 @@ export function initLobby() {
   document.getElementById('btn-create-room')?.addEventListener('click', async () => {
     cs();
     try {
-      document.getElementById('btn-create-room').textContent = '⏳ 创建中...';
+      document.getElementById('btn-create-room').innerHTML = `${ICON.clock} 创建中...`;
       const data = await app.createVirtualRoom();
       app.roomCode = data.roomCode;
       switchToWaitingRoom(data.roomCode);
@@ -251,7 +272,7 @@ export function initLobby() {
     } catch (e) {
       Toast.show('创建失败: ' + e.message, 'error');
     } finally {
-      document.getElementById('btn-create-room').textContent = '创建';
+      document.getElementById('btn-create-room').innerHTML = '创建';
     }
   });
 
@@ -279,20 +300,20 @@ export function initLobby() {
     app.playerName = document.getElementById('room-player-name')?.value?.trim() || '小猫猫';
     app.registerPlayer();
 
-    btn.textContent = '🔍 匹配中...';
+    btn.innerHTML = `${ICON.search} 匹配中...`;
     btn.classList.add('btn-matching');
 
     try {
       const result = await app.joinMatchmaking();
       btn.classList.remove('btn-matching');
-      btn.textContent = '开始匹配';
+      btn.innerHTML = '开始匹配';
       Toast.show(`匹配成功! 对手: ${result.opponent}`, 'success');
       app.matchID = result.matchID;
       showPage('waiting');
       renderWaitingLobby();
     } catch (e) {
       btn.classList.remove('btn-matching');
-      btn.textContent = '开始匹配';
+      btn.innerHTML = '开始匹配';
       Toast.show('匹配失败: ' + e.message, 'error');
     }
   });
@@ -329,9 +350,9 @@ export function initLobby() {
             <img src="${data.user.avatar}" alt="" style="width:64px;height:64px;border-radius:12px;border:2px solid #000">
             <h3>${esc(data.user.name)}</h3>
             <div style="display:flex;gap:20px;justify-content:center;margin-top:8px">
-              <span>🏆 ${data.user.wins}胜</span>
-              <span>💀 ${data.user.losses}负</span>
-              <span>⭐ ${data.user.rating}分</span>
+              <span>${ICON.trophy} ${data.user.wins}胜</span>
+              <span>${ICON.skull} ${data.user.losses}负</span>
+              <span>${ICON.star} ${data.user.rating}分</span>
             </div>
           </div>
           <p style="color:var(--text-muted);font-size:13px;margin-bottom:8px">最近 20 场:</p>
@@ -356,6 +377,18 @@ export function initLobby() {
     cs();
     closeAllModals();
     showModal('modal-updates');
+  });
+
+  // 更新公告: 悬浮红叉关闭
+  document.getElementById('btn-close-updates')?.addEventListener('click', () => {
+    hideModal('modal-updates');
+  });
+
+  // 全局: 点击遮罩层关闭弹窗
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal-overlay') && e.target.classList.contains('show')) {
+      e.target.classList.remove('show');
+    }
   });
 
   // ── 加载在线人数 ──
@@ -412,9 +445,9 @@ function renderLeaderboard(rows) {
   list.innerHTML = rows.map((r, i) => {
     let rankClass = '';
     let rankIcon = String(i + 1);
-    if (i === 0) { rankClass = 'gold'; rankIcon = '🥇'; }
-    else if (i === 1) { rankClass = 'silver'; rankIcon = '🥈'; }
-    else if (i === 2) { rankClass = 'bronze'; rankIcon = '🥉'; }
+    if (i === 0) { rankClass = 'gold'; rankIcon = ICON.gold; }
+    else if (i === 1) { rankClass = 'silver'; rankIcon = ICON.silver; }
+    else if (i === 2) { rankClass = 'bronze'; rankIcon = ICON.bronze; }
     return `<div class="leaderboard-row">
       <span class="leaderboard-rank ${rankClass}">${rankIcon}</span>
       <img src="${r.avatar}" alt="" style="width:28px;height:28px;border-radius:6px;border:2px solid #000">
@@ -483,13 +516,13 @@ function switchToWaitingRoom(code) {
     const code = codeEl?.textContent?.trim();
     if (!code || code === '----') return;
     if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(code).then(() => Toast.show('✅ 邀请码已复制!', 'success')).catch(() => {});
+      navigator.clipboard.writeText(code).then(() => Toast.show(`${ICON.check} 邀请码已复制!`, 'success')).catch(() => {});
     } else {
       const ta = document.createElement('textarea');
       ta.value = code; ta.style.position = 'fixed'; ta.style.opacity = '0';
       document.body.appendChild(ta); ta.select();
-      try { document.execCommand('copy'); Toast.show('✅ 邀请码已复制!', 'success'); }
-      catch { Toast.show('❌ 复制失败', 'error'); }
+      try { document.execCommand('copy'); Toast.show(`${ICON.check} 邀请码已复制!`, 'success'); }
+      catch { Toast.show(`${ICON.cross_red} 复制失败`, 'error'); }
       ta.remove();
     }
   };
@@ -530,8 +563,10 @@ function startRoomPolling() {
 }
 
 function renderWRPlayers(players, host) {
-  const container = document.getElementById('wr-players');
+  const container = document.getElementById('player-slots-container');
   if (!container) return;
+
+  // ★ 定向渲染: 仅替换 #player-slots-container，不影响 #room-settings-container / #room-chat-container
   let html = '';
   for (let i = 0; i < 4; i++) {
     const p = players[i];
@@ -539,8 +574,8 @@ function renderWRPlayers(players, host) {
       html += `<div class="wr-player-slot filled">
         <img src="${esc(p.avatar)}" alt="" style="width:44px;height:44px;border-radius:10px;border:2px solid #000">
         <span style="font-size:13px;font-weight:800">${esc(p.name)}</span>
-        ${p.id === host ? '<span style="font-size:10px;color:var(--accent-green)">👑房主</span>' : ''}
-        <span style="font-size:11px">${p.ready ? '✅ 已准备' : '⏳ 等待'}</span>
+        ${p.id === host ? `<span style="font-size:10px;color:var(--accent-green)">${ICON.crown}房主</span>` : ''}
+        <span style="font-size:11px">${p.ready ? `${ICON.check} 已准备` : `${ICON.clock} 等待`}</span>
       </div>`;
     } else {
       html += `<div class="wr-player-slot empty">

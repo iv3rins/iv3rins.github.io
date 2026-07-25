@@ -351,6 +351,17 @@ class AppController {
     return res.json();
   }
 
+  /** 取消匹配 */
+  async cancelMatch() {
+    const headers = { 'Content-Type': 'application/json' };
+    if (this.jwtToken) headers['Authorization'] = `Bearer ${this.jwtToken}`;
+    const res = await fetch(`${SERVER_ORIGIN}/api/matchmake/cancel`, {
+      method: 'POST', headers,
+    });
+    if (!res.ok) throw new Error((await res.json()).error || 'Cancel failed');
+    return res.json();
+  }
+
   /** 获取排行榜 */
   async fetchLeaderboard() {
     const res = await fetch(`${SERVER_ORIGIN}/api/leaderboard`);

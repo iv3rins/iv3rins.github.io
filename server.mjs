@@ -398,12 +398,23 @@ server.app.use(async (ctx, next) => {
     if (!username || !password) { ctx.status = 400; ctx.body = { error: '用户名和密码不能为空' }; return; }
     if (username.length < 2 || password.length < 4) { ctx.status = 400; ctx.body = { error: '用户名至少2字，密码至少4位' }; return; }
     const exist = db.exec('SELECT id FROM users WHERE name = ? AND is_guest = 0', [username]);
-    if (exist.length) { ctx.status = 409; ctx.body = { error: '用户名已存在' }; return; }
+    if (exist.length) { ctx.status = 409; ctx.body = { error: '用户名已存在，请更换' }; return; }
 
     const id = 'u_' + randomUUID().substring(0, 12);
     const pwdHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-    db.run('INSERT INTO users (id, name, avatar, password_hash, is_guest) VALUES (?, ?, ?, ?, 0)',
-      [id, username, avatar || '🐱', pwdHash]);
+
+    // ★ 专项捕获 UNIQUE constraint (并发竞态)
+    try {
+      db.run('INSERT INTO users (id, name, avatar, password_hash, is_guest) VALUES (?, ?, ?, ?, 0)',
+        [id, username, avatar || '🐱', pwdHash]);
+    } catch (insertErr) {
+      if (insertErr.message && insertErr.message.includes('UNIQUE constraint')) {
+        ctx.status = 400;
+        ctx.body = { error: '用户名已存在，请更换' };
+        return;
+      }
+      throw insertErr; // 非 UNIQUE 错误继续向上抛
+    }
 
     const token = jwt.sign({ userId: id, isGuest: 0 }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
     ctx.body = { success: true, token, playerId: id, playerName: username, avatar: avatar || '🐱' };
@@ -469,6 +480,25 @@ server.app.use(async (ctx, next) => {
       ensureUser(playerId, playerName || 'Unknown', avatar);
       const result = await addToQueue(playerId, playerName || 'Unknown', avatar);
       ctx.body = { success: true, ...result };
+    } catch (e) { ctx.status = 500; ctx.body = { error: e.message }; }
+  });
+});
+
+/** POST /api/matchmake/cancel — 取消匹配 (需 JWT) */
+server.app.use(async (ctx, next) => {
+  if (ctx.path !== '/api/matchmake/cancel' || ctx.method !== 'POST') return next();
+  return verifyToken(ctx, async () => {
+    try {
+      const playerId = ctx.state.user.userId;
+      const idx = matchQueue.findIndex(e => e.playerId === playerId);
+      if (idx === -1) {
+        ctx.body = { success: false, message: '不在匹配队列中' };
+        return;
+      }
+      const removed = matchQueue.splice(idx, 1)[0];
+      removed.reject(new Error('用户取消匹配'));
+      console.log(`[Match] 队列 -1 (总数 ${matchQueue.length}): ${removed.playerName} 取消`);
+      ctx.body = { success: true };
     } catch (e) { ctx.status = 500; ctx.body = { error: e.message }; }
   });
 });

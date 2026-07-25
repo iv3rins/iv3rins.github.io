@@ -12,8 +12,8 @@
 
 <!-- ═══ 横屏提示 ═══ -->
 <div id="orientation-prompt" class="orientation-prompt">
-  <div class="rotate-icon">🔄</div>
-  <div>请旋转至横屏 🐾</div>
+  <div class="rotate-icon"><svg class="nb-icon-lg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></div>
+  <div>请旋转至横屏</div>
 </div>
 
 <!-- ═══ Toast ═══ -->
@@ -50,8 +50,8 @@
     <section class="lobby-hero">
       <h1 class="hero-title">扑克战争 <span class="hero-sub">POKEWAR</span></h1>
       <div class="hero-stats">
-        <span class="hero-stat">🟢 <b id="online-count">--</b> 在线</span>
-        <span class="hero-stat">⚔️ <b id="matches-today">--</b> 场对局</span>
+        <span class="hero-stat"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="6"/></svg> <b id="online-count">--</b> 在线</span>
+        <span class="hero-stat"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="2" x2="22" y2="22"/><line x1="12" y1="6" x2="12" y2="14"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="8" x2="22" y2="8"/><line x1="16" y1="18" x2="20" y2="18"/></svg> <b id="matches-today">--</b> 场对局</span>
       </div>
     </section>
 
@@ -100,23 +100,38 @@
   <main id="waiting-room-view" style="display:none" class="lobby-layout">
     <nav class="lobby-topnav">
       <div class="nav-left"><span class="nav-logo">PokeWar</span></div>
-      <div class="nav-right"><button class="btn btn-danger btn-small" id="btn-wr-leave">🚪 离开</button></div>
+      <div class="nav-right"><button class="btn btn-danger btn-small" id="btn-wr-leave"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> 离开</button></div>
     </nav>
     <div style="display:flex;gap:16px;flex:1;padding:16px;max-width:960px;margin:0 auto;width:100%;min-height:0">
-      <!-- 左侧: 玩家列表 60% -->
+      <!-- 左侧: 玩家列表 + 房间设置 60% -->
       <div class="bento-card" style="flex:6;display:flex;flex-direction:column;padding:20px">
-        <h3 style="font-family:var(--font-heading);margin-bottom:8px">⏳ 准备室 · <b class="neo-number" id="wr-room-code">----</b>
-          <button class="btn btn-small neo-button" id="btn-copy-room-code" style="font-size:11px;padding:4px 8px;cursor:pointer">📋 复制邀请码</button>
+        <h3 style="font-family:var(--font-heading);margin-bottom:8px"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 准备室 · <b class="neo-number" id="wr-room-code">----</b>
+          <button class="btn btn-small neo-button" id="btn-copy-room-code" style="font-size:11px;padding:4px 8px;cursor:pointer"><svg class="nb-icon-sm" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 复制邀请码</button>
         </h3>
-        <div id="wr-players" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;flex:1"></div>
+        <!-- ★ 玩家座位坑位 — 独立容器，仅定向刷新 -->
+        <div id="player-slots-container" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;flex:1"></div>
+        <!-- ★ 房间设置 — 仅初始化一次 -->
+        <div id="room-settings-container" style="margin-top:12px;padding-top:12px;border-top:2px solid #000">
+          <p style="font-weight:800;font-size:13px;margin-bottom:6px">游戏模式</p>
+          <div style="display:flex;gap:8px">
+            <label class="mode-card" style="flex:1;padding:8px;border:2px solid #000;border-radius:8px;text-align:center;cursor:pointer;font-size:12px">
+              <input type="radio" name="wrGameMode" value="classic" checked style="display:none">
+              <span style="font-weight:800">⚡ 快速模式</span><br><small>1 条命</small>
+            </label>
+            <label class="mode-card" style="flex:1;padding:8px;border:2px solid #000;border-radius:8px;text-align:center;cursor:pointer;font-size:12px">
+              <input type="radio" name="wrGameMode" value="classic">
+              <span style="font-weight:800">🐾 常规模式</span><br><small>3 条命</small>
+            </label>
+          </div>
+        </div>
         <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
-          <button class="btn btn-primary" id="btn-wr-start" style="display:none">🚀 开始游戏</button>
-          <button class="btn btn-secondary" id="btn-wr-ready" style="display:none">✅ 准备</button>
+          <button class="btn btn-primary" id="btn-wr-start" style="display:none"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> 开始游戏</button>
+          <button class="btn btn-secondary" id="btn-wr-ready" style="display:none"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 准备</button>
         </div>
       </div>
       <!-- 右侧: 聊天 40% -->
-      <div class="bento-card" style="flex:4;display:flex;flex-direction:column;padding:16px">
-        <h4 style="font-family:var(--font-heading);margin-bottom:8px">💬 房间聊天</h4>
+      <div id="room-chat-container" class="bento-card" style="flex:4;display:flex;flex-direction:column;padding:16px">
+        <h4 style="font-family:var(--font-heading);margin-bottom:8px"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 房间聊天</h4>
         <div id="wr-chat-messages" style="flex:1;overflow-y:auto;background:#FFF;border:2px solid #000;border-radius:8px;padding:8px;margin-bottom:8px;font-size:13px;min-height:0"></div>
         <div style="display:flex;gap:6px">
           <input type="text" class="input-glass" id="wr-chat-input" placeholder="输入消息..." style="flex:1">
@@ -133,11 +148,11 @@
 <div class="page-view" id="page-waiting">
   <div class="waiting-container">
     <div class="waiting-main bento-glass">
-      <h2>✨ 等待玩家加入 ✨</h2>
+      <h2><svg class="nb-icon-lg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> 等待玩家加入 <svg class="nb-icon-lg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></h2>
       <div class="room-code-display">房间码: <span id="display-room-code">----</span> <button class="btn btn-small" id="btn-copy-code">复制</button></div>
       <div class="players-grid" id="players-grid"></div>
-      <button class="btn btn-primary" id="btn-start-game">🚀 开始游戏</button>
-      <button class="btn btn-danger" id="btn-leave-waiting">🚪 离开</button>
+      <button class="btn btn-primary" id="btn-start-game"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> 开始游戏</button>
+      <button class="btn btn-danger" id="btn-leave-waiting"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> 离开</button>
     </div>
   </div>
 </div>
@@ -150,8 +165,8 @@
     <div class="opponents-area" id="opponents-area"></div>
     <div class="battlefield bento-glass" id="battlefield">
       <div class="battle-info">
-        <span>🎴 <b id="deck-count">--</b></span>
-        <span>🔄 <b id="turn-display">--</b></span>
+        <span><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="3" width="6" height="18" rx="1"/><rect x="16" y="3" width="6" height="18" rx="1"/></svg> <b id="deck-count">--</b></span>
+        <span><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> <b id="turn-display">--</b></span>
       </div>
       <div class="battle-action-msg" id="battle-action-msg"></div>
     </div>
@@ -164,7 +179,7 @@
     </div>
     <div class="player-dashboard" id="player-dashboard">
       <div class="floating-actions">
-        <button class="btn-action btn-wanhua" id="btn-wanhua" style="display:none">✨ 万化</button>
+        <button class="btn-action btn-wanhua" id="btn-wanhua" style="display:none"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> 万化</button>
         <button class="btn-action btn-confirm hidden" id="btn-confirm">出牌</button>
         <button class="btn-action btn-cancel hidden" id="btn-cancel">取消</button>
       </div>
@@ -179,13 +194,13 @@
    ═══════════════════════════════════════════ -->
 <div class="page-view" id="page-result">
   <div class="result-container"><div class="result-panel bento-glass">
-    <div class="ribbon">🏆 游戏结束 🏆</div>
+    <div class="ribbon"><svg class="nb-icon-lg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 6 9 6 9z"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 18 9 18 9z"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg> 游戏结束 <svg class="nb-icon-lg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 6 9 6 9z"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 18 9 18 9z"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg></div>
     <ul class="stats-list">
-      <li><span>👑</span><span>赢家:</span><span id="stat-winner">---</span></li>
-      <li><span>⚔️</span><span>回合:</span><span id="stat-rounds">---</span></li>
+      <li><span><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l4-12-4 5-3-3-5 5-5-5z"/></svg></span><span>赢家:</span><span id="stat-winner">---</span></li>
+      <li><span><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="2" x2="22" y2="22"/><line x1="12" y1="6" x2="12" y2="14"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="8" x2="22" y2="8"/><line x1="16" y1="18" x2="20" y2="18"/></svg></span><span>回合:</span><span id="stat-rounds">---</span></li>
     </ul>
-    <button class="btn btn-primary" id="btn-restart">🔄 再来一局</button>
-    <button class="btn btn-secondary" id="btn-leave-room">🚪 退出</button>
+    <button class="btn btn-primary" id="btn-restart"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> 再来一局</button>
+    <button class="btn btn-secondary" id="btn-leave-room"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> 退出</button>
   </div></div>
 </div>
 
@@ -197,7 +212,7 @@
 <div class="modal-overlay" id="modal-auth">
   <div class="modal-box bento-glass" style="max-width:420px">
     <button class="close-modal-btn" onclick="document.getElementById('modal-auth').classList.remove('show')">✕</button>
-    <h3 style="font-family:var(--font-heading);font-size:22px">🔐 登录 / 注册</h3>
+    <h3 style="font-family:var(--font-heading);font-size:22px"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> 登录 / 注册</h3>
     <div id="auth-form" style="margin:16px 0">
       <input type="text" class="input-glass" id="auth-username" placeholder="用户名" style="margin-bottom:8px">
       <input type="password" class="input-glass" id="auth-password" placeholder="密码" style="margin-bottom:12px">
@@ -206,7 +221,7 @@
         <button class="btn btn-secondary" id="btn-auth-register" style="flex:1">注册</button>
       </div>
       <div style="text-align:center;margin-top:12px">
-        <button class="btn btn-ghost" id="btn-auth-guest">🎲 游客试玩 (不保存战绩)</button>
+        <button class="btn btn-ghost" id="btn-auth-guest"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> 游客试玩 (不保存战绩)</button>
       </div>
     </div>
     <div id="auth-user-info" style="display:none;margin:16px 0">
@@ -251,7 +266,7 @@
 <div class="modal-overlay" id="modal-leaderboard">
   <div class="modal-box bento-glass" style="max-width:480px">
     <button class="close-modal-btn" onclick="document.getElementById('modal-leaderboard').classList.remove('show')">✕</button>
-    <h3>🏆 排行榜 Top 10</h3>
+    <h3><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 6 9 6 9z"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 18 9 18 9z"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg> 排行榜 Top 10</h3>
     <div id="leaderboard-list" style="margin:16px 0;text-align:left"></div>
     <button class="btn btn-secondary" id="btn-close-leaderboard">关闭</button>
   </div>
@@ -260,7 +275,7 @@
 <!-- 万化弹窗 -->
 <div class="modal-overlay" id="wanhua-modal">
   <div class="modal-box bento-glass">
-    <h3>✨ 万能浸染 ✨</h3>
+    <h3><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> 万能浸染 <svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></h3>
     <p>选择 A 的同化花色（点数 +1）</p>
     <div id="wanhua-suit-options" class="wanhua-suit-options"></div>
     <div class="wanhua-actions">
@@ -272,17 +287,17 @@
 
 <!-- 选将 / 濒死 / 规则 / 战绩 弹窗 — 动态填充 -->
 <div class="modal-overlay" id="modal-starter">
-  <div class="modal-box bento-glass"><h3>⚔️ 选择首发角色</h3><div id="starter-options" style="display:flex;gap:15px;justify-content:center;margin:20px 0"></div></div>
+  <div class="modal-box bento-glass"><h3><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="2" x2="22" y2="22"/><line x1="12" y1="6" x2="12" y2="14"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="8" x2="22" y2="8"/><line x1="16" y1="18" x2="20" y2="18"/></svg> 选择首发角色</h3><div id="starter-options" style="display:flex;gap:15px;justify-content:center;margin:20px 0"></div></div>
 </div>
 <div class="modal-overlay" id="modal-dying">
-  <div class="modal-box bento-glass"><h3>⚠️ 濒死救援</h3><p id="dying-desc"></p><div id="dying-countdown">10</div><div id="dying-actions"></div></div>
+  <div class="modal-box bento-glass"><h3><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> 濒死救援</h3><p id="dying-desc"></p><div id="dying-countdown">10</div><div id="dying-actions"></div></div>
 </div>
 <div class="modal-overlay" id="modal-tutorial">
   <div class="modal-box bento-glass" style="max-width:620px;padding:24px">
     <button class="close-modal-btn" onclick="document.getElementById('modal-tutorial').classList.remove('show')">✕</button>
     <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <h3 style="font-family:var(--font-heading);font-size:22px;margin:0">🃏 游戏规则</h3>
+      <h3 style="font-family:var(--font-heading);font-size:22px;margin:0"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="3" width="6" height="18" rx="1"/><rect x="16" y="3" width="6" height="18" rx="1"/></svg> 游戏规则</h3>
       <button class="btn btn-small" onclick="document.getElementById('modal-tutorial').classList.remove('show')" style="font-weight:800">✕ 关闭</button>
     </div>
 
@@ -324,7 +339,7 @@
 </div>
 <div class="modal-overlay" id="modal-stats">
   <div class="modal-box bento-glass" style="max-width:480px">
-    <h3>📊 个人战绩</h3>
+    <h3><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> 个人战绩</h3>
     <div id="stats-content" style="margin:16px 0;text-align:left"></div>
     <button class="btn btn-secondary" id="btn-close-stats">关闭</button>
   </div>
@@ -332,23 +347,23 @@
 
 <!-- V14: Bento Grid 更新公告 -->
 <div class="modal-overlay" id="modal-updates">
-  <div class="modal-box bento-glass" style="max-width:520px;padding:24px">
-    <button class="close-modal-btn" onclick="document.getElementById('modal-updates').classList.remove('show')">✕</button>
-    <h3 style="font-family:var(--font-heading);font-size:20px;margin-bottom:16px">📢 更新公告</h3>
+  <div class="modal-box bento-card" style="max-width:520px;padding:24px">
+    <button class="close-modal-btn" id="btn-close-updates">✕</button>
+    <h3 class="neo-heading" style="font-size:20px;margin-bottom:16px"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg> 更新公告</h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div class="rule-subcard">
-        <h4>✨ 新增功能</h4>
-        <p>• 全屏准备室 + 实时聊天</p>
-        <p>• JWT 账号注册/登录</p>
-        <p>• DiceBear 潮牌头像</p>
-        <p>• 黑夜模式一键切换</p>
+        <h4 class="neo-body"><svg class="nb-icon-sm" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> 新增功能</h4>
+        <p class="neo-body" style="font-size:13px">• 全屏准备室 + 实时聊天</p>
+        <p class="neo-body" style="font-size:13px">• JWT 账号注册/登录</p>
+        <p class="neo-body" style="font-size:13px">• DiceBear 潮牌头像</p>
+        <p class="neo-body" style="font-size:13px">• 黑夜模式一键切换</p>
       </div>
       <div class="rule-subcard">
-        <h4>🔧 优化修复</h4>
-        <p>• HTTP 500 开房崩溃修复</p>
-        <p>• 邀请码一键复制</p>
-        <p>• 弹窗红叉快速关闭</p>
-        <p>• 头像渲染防溢出</p>
+        <h4 class="neo-body"><svg class="nb-icon-sm" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 优化修复</h4>
+        <p class="neo-body" style="font-size:13px">• HTTP 500 开房崩溃修复</p>
+        <p class="neo-body" style="font-size:13px">• 邀请码一键复制</p>
+        <p class="neo-body" style="font-size:13px">• 弹窗红叉快速关闭</p>
+        <p class="neo-body" style="font-size:13px">• 头像渲染防溢出</p>
       </div>
     </div>
   </div>
