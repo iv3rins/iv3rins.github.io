@@ -18,8 +18,8 @@
 
   /* 文字 */
   --text-primary: #1d1d1f;
-  --text-secondary: #6e6e73;
-  --text-muted: #aeaeb2;
+  --text-secondary: #555555;   /* ★ 修复: #6e6e73 在毛玻璃面板上太淡 */
+  --text-muted: #888888;       /* ★ 修复: #aeaeb2 在浅底上几乎不可见 */
   --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Microsoft YaHei', sans-serif;
 
   /* 主题色 */
@@ -31,6 +31,9 @@
   --color-hp: #ff3b30;
   --color-shield: #007aff;
   --color-wanhua: #af52de;
+
+  /* 强调色 */
+  --color-gold: #fdcb6e;   /* 方块/摸牌/奖励等高亮文本 */
 
   /* 花色颜色 — 严格遵循用户规范 */
   --suit-red: #dc2626;   /* ♦♥ */
@@ -86,9 +89,9 @@
   --glass-blur: blur(28px) saturate(140%);  /* 暗模式降低饱和避免溢出 */
 
   /* ── 文字 — 提升对比度 ── */
-  --text-primary: #e8e8ed;      /* 主文字: 接近纯白但柔和 */
-  --text-secondary: #a8a8b8;    /* 次要: 不用 #a0a0b0 (偏灰偏暗) */
-  --text-muted: #7a7a8c;        /* ★ 修复: #606070 → #7a7a8c (增亮 25%，暗底可读) */
+  --text-primary: #e8e8ed;             /* 主文字: 接近纯白但柔和 */
+  --text-secondary: rgba(255,255,255,0.72); /* ★ 修复: rgba 半透明，在毛玻璃面板上自然 */
+  --text-muted: rgba(255,255,255,0.48);     /* ★ 修复: 可见但低调 */
 
   /* ── 主题色 — iOS Dark 调色板 ── */
   --color-primary: #0a84ff;       /* iOS 暗模式蓝 */
@@ -99,6 +102,7 @@
   --color-hp: #ff453a;
   --color-shield: #0a84ff;
   --color-wanhua: #bf5af2;        /* ★ 修复: 新增万化色 (iOS 暗模式紫) */
+  --color-gold: #f9d857;           /* 暗模式金色 */
 
   /* ── 花色 — ★ 用户规范: ♦♥=red ♣♠=black ── */
   --suit-red: #ff6b6b;            /* 暗模式红: 需要比 #dc2626 亮 */
@@ -606,22 +610,42 @@ html, body {
 
 /* ═══════════════════════════════════════
    弹窗系统
+   ★ 修复: display:none → visibility+opacity
+     避免"闪现后动画"的渲染帧冲突
    ═══════════════════════════════════════ */
 .modal-overlay {
-  display: none;
+  /* ★ 始终 flex，用 visibility/opacity 控制显示 */
+  display: flex;
+  align-items: center; justify-content: center;
   position: fixed; inset: 0; z-index: 200;
   background: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(4px);
-  align-items: center; justify-content: center;
+
+  /* ★ 默认隐藏: visibility+opacity 可被 CSS transition 平滑驱动 */
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 }
-.modal-overlay.show { display: flex; }
+
+/* ★ 显示: JS 只需 classList.add('show') */
+.modal-overlay.show {
+  visibility: visible;
+  opacity: 1;
+}
 
 .modal-box {
   padding: 28px; max-width: 420px; width: 90%;
   text-align: center;
-  animation: modalIn 0.3s var(--transition-spring);
+
+  /* ★ 入场动画改为 transition（不再用 @keyframes animation） */
+  transform: scale(0.9) translateY(20px);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-@keyframes modalIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+/* ★ 父级 .show 时触发入场 */
+.modal-overlay.show .modal-box {
+  transform: scale(1) translateY(0);
+}
 
 /* 万化弹窗 */
 .wanhua-modal-content { max-width: 400px; }
