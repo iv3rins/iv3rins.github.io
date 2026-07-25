@@ -384,7 +384,7 @@ html, body {
 .suit-club { background: var(--accent-blue); color: #FFF; }
 .suit-diamond { background: var(--accent-yellow); color: #000; }
 
-/* ── V7 Neo-Numbers: 重型描边潮牌数字 ── */
+/* 数字/英文特效: V7 重型描边 (仅 Impact 字体) */
 .neo-number {
   font-family: 'Impact', 'Arial Black', sans-serif;
   font-weight: 900;
@@ -860,11 +860,13 @@ html, body {
 .close-modal-btn:active { transform: scale(0.95); box-shadow: none; }
 
 /* ── Neo-Brutalism 排版类 ── */
+/* 中文标题: 纯黑加粗, 无描边无阴影 (杜绝字体重影) */
 .neo-heading {
   font-family: var(--font-heading);
-  -webkit-text-stroke: 1.5px #000;
-  color: var(--accent-green);
-  text-shadow: 2px 2px 0px #000;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+  color: #000000;
+  font-weight: 900;
   letter-spacing: 1px;
 }
 .neo-body {

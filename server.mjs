@@ -370,12 +370,22 @@ server.app.use(async (ctx, next) => {
       [playerId]
     );
 
+    let userData = null;
+    if (user.length) {
+      const r = user[0].values[0];
+      const wins = Number(r[3]) || 0;
+      const losses = Number(r[4]) || 0;
+      const totalMatches = wins + losses;
+      userData = {
+        id: r[0], name: r[1], avatar: r[2],
+        wins, losses, rating: Number(r[5]) || 1000,
+        matches: totalMatches,
+        winRate: totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0,
+      };
+    }
+
     ctx.body = {
-      user: user.length ? {
-        id: user[0].values[0][0], name: user[0].values[0][1],
-        avatar: user[0].values[0][2], wins: user[0].values[0][3],
-        losses: user[0].values[0][4], rating: user[0].values[0][5],
-      } : null,
+      user: userData,
       history: matches.length ? matches[0].values.map(r => ({
         matchId: r[0], result: r[1], ratingChange: r[2], playedAt: r[3],
       })) : [],
@@ -433,8 +443,13 @@ server.app.use(async (ctx, next) => {
     const valid = await bcrypt.compare(password, r[3]);
     if (!valid) { ctx.status = 401; ctx.body = { error: '密码错误' }; return; }
 
+    const wins = Number(r[4]) || 0;
+    const losses = Number(r[5]) || 0;
+    const matches = wins + losses;
+    const winRate = matches > 0 ? Math.round((wins / matches) * 100) : 0;
+
     const token = jwt.sign({ userId: r[0], isGuest: 0 }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
-    ctx.body = { success: true, token, playerId: r[0], playerName: r[1], avatar: r[2], wins: r[4], losses: r[5], rating: r[6] };
+    ctx.body = { success: true, token, playerId: r[0], playerName: r[1], avatar: r[2], wins, losses, rating: Number(r[6]) || 1000, matches, winRate };
   } catch (e) { ctx.status = 500; ctx.body = { error: e.message }; }
 });
 

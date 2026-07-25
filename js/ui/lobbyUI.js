@@ -121,12 +121,22 @@ export function initLobby() {
       const data = await res.json();
       app.playerId = data.playerId; app.playerName = data.playerName; app.avatar = data.avatar;
       app.jwtToken = data.token; app.isLoggedIn = true; app.isGuest = false;
+      app.wins = data.wins || 0;
+      app.losses = data.losses || 0;
+      app.matches = data.matches || 0;
+      app.winRate = data.winRate || 0;
+      app.rating = data.rating || 1000;
       localStorage.setItem('pokeWarToken', data.token);
       localStorage.setItem('pokeWarPlayerId', data.playerId);
       localStorage.setItem('pokeWarName', data.playerName);
       localStorage.setItem('pokeWarAvatar', data.avatar);
       localStorage.setItem('pokeWarIsLoggedIn', '1');
       localStorage.setItem('pokeWarIsGuest', '0');
+      localStorage.setItem('pokeWarWins', app.wins);
+      localStorage.setItem('pokeWarLosses', app.losses);
+      localStorage.setItem('pokeWarMatches', app.matches);
+      localStorage.setItem('pokeWarWinRate', app.winRate);
+      localStorage.setItem('pokeWarRating', app.rating);
       updateNavPlayerId();
       updateProfileUI();
       hideModal('modal-auth');
@@ -147,11 +157,21 @@ export function initLobby() {
       const data = await res.json();
       app.playerId = data.playerId; app.playerName = data.playerName;
       app.jwtToken = data.token; app.isLoggedIn = true; app.isGuest = false;
+      app.wins = data.wins || 0;
+      app.losses = data.losses || 0;
+      app.matches = data.matches || 0;
+      app.winRate = data.winRate || 0;
+      app.rating = data.rating || 1000;
       localStorage.setItem('pokeWarToken', data.token);
       localStorage.setItem('pokeWarPlayerId', data.playerId);
       localStorage.setItem('pokeWarName', data.playerName);
       localStorage.setItem('pokeWarIsLoggedIn', '1');
       localStorage.setItem('pokeWarIsGuest', '0');
+      localStorage.setItem('pokeWarWins', app.wins);
+      localStorage.setItem('pokeWarLosses', app.losses);
+      localStorage.setItem('pokeWarMatches', app.matches);
+      localStorage.setItem('pokeWarWinRate', app.winRate);
+      localStorage.setItem('pokeWarRating', app.rating);
       updateNavPlayerId();
       updateProfileUI();
       hideModal('modal-auth');
@@ -184,9 +204,15 @@ export function initLobby() {
   document.getElementById('btn-auth-logout')?.addEventListener('click', () => {
     app.jwtToken = null; app.isLoggedIn = false; app.isGuest = false;
     app.playerName = '小猫猫';
+    app.wins = 0; app.losses = 0; app.matches = 0; app.winRate = 0; app.rating = 1000;
     localStorage.removeItem('pokeWarToken');
     localStorage.removeItem('pokeWarIsLoggedIn');
     localStorage.removeItem('pokeWarIsGuest');
+    localStorage.removeItem('pokeWarWins');
+    localStorage.removeItem('pokeWarLosses');
+    localStorage.removeItem('pokeWarMatches');
+    localStorage.removeItem('pokeWarWinRate');
+    localStorage.removeItem('pokeWarRating');
     updateNavPlayerId();
     hideModal('modal-auth');
     Toast.show('已退出登录');
@@ -206,6 +232,12 @@ export function initLobby() {
   if (app.isLoggedIn && localStorage.getItem('pokeWarPlayerId')) {
     app.playerId = localStorage.getItem('pokeWarPlayerId');
   }
+  // 恢复战绩
+  app.wins = Number(localStorage.getItem('pokeWarWins')) || 0;
+  app.losses = Number(localStorage.getItem('pokeWarLosses')) || 0;
+  app.matches = Number(localStorage.getItem('pokeWarMatches')) || 0;
+  app.winRate = Number(localStorage.getItem('pokeWarWinRate')) || 0;
+  app.rating = Number(localStorage.getItem('pokeWarRating')) || 1000;
 
   // ── 编辑按钮 → 打开 Profile Modal ──
   // ── V7: Profile Badge click → 打开 Profile Modal (原 auth 已迁移至 modal-profile) ──
@@ -345,14 +377,21 @@ export function initLobby() {
     try {
       const data = await app.fetchStats(app.playerId);
       if (data.user) {
+        const wins = data.user.wins || 0;
+        const losses = data.user.losses || 0;
+        const matches = data.user.matches || (wins + losses);
+        const winRate = data.user.winRate || (matches > 0 ? Math.round((wins / matches) * 100) : 0);
         content.innerHTML = `
           <div class="bento-card" style="text-align:center;margin-bottom:12px">
             <img src="${data.user.avatar}" alt="" style="width:64px;height:64px;border-radius:12px;border:2px solid #000">
             <h3>${esc(data.user.name)}</h3>
-            <div style="display:flex;gap:20px;justify-content:center;margin-top:8px">
-              <span>${ICON.trophy} ${data.user.wins}胜</span>
-              <span>${ICON.skull} ${data.user.losses}负</span>
-              <span>${ICON.star} ${data.user.rating}分</span>
+            <div style="display:flex;gap:16px;justify-content:center;margin-top:8px">
+              <span>${ICON.trophy} ${wins}胜</span>
+              <span>${ICON.skull} ${losses}负</span>
+              <span>${ICON.star} ${data.user.rating || 1000}分</span>
+            </div>
+            <div style="margin-top:6px;font-size:13px;font-weight:800;color:var(--text-muted)">
+              ${ICON.play} 总场次: ${matches} &nbsp;|&nbsp; 胜率: ${winRate}%
             </div>
           </div>
           <p style="color:var(--text-muted);font-size:13px;margin-bottom:8px">最近 20 场:</p>

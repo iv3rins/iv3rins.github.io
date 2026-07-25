@@ -102,10 +102,10 @@
       <div class="nav-left"><span class="nav-logo">PokeWar</span></div>
       <div class="nav-right"><button class="btn btn-danger btn-small" id="btn-wr-leave"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> 离开</button></div>
     </nav>
-    <div style="display:flex;gap:16px;flex:1;padding:16px;max-width:960px;margin:0 auto;width:100%;min-height:0">
+    <div style="display:flex;gap:16px;flex:1;padding:16px;max-width:960px;margin:0 auto;width:100%;min-height:0;align-items:stretch">
       <!-- 左侧: 玩家列表 + 房间设置 60% -->
       <div class="bento-card" style="flex:6;display:flex;flex-direction:column;padding:20px">
-        <h3 style="font-family:var(--font-heading);margin-bottom:8px"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 准备室 · <b class="neo-number" id="wr-room-code">----</b>
+        <h3 class="neo-heading" style="font-size:18px;margin-bottom:8px"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 准备室 · <b class="neo-number" id="wr-room-code">----</b>
           <button class="btn btn-small neo-button" id="btn-copy-room-code" style="font-size:11px;padding:4px 8px;cursor:pointer"><svg class="nb-icon-sm" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 复制邀请码</button>
         </h3>
         <!-- ★ 玩家座位坑位 — 独立容器，仅定向刷新 -->
@@ -133,9 +133,9 @@
       <div id="room-chat-container" class="bento-card" style="flex:4;display:flex;flex-direction:column;padding:16px">
         <h4 style="font-family:var(--font-heading);margin-bottom:8px"><svg class="nb-icon" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> 房间聊天</h4>
         <div id="wr-chat-messages" style="flex:1;overflow-y:auto;background:#FFF;border:2px solid #000;border-radius:8px;padding:8px;margin-bottom:8px;font-size:13px;min-height:0"></div>
-        <div style="display:flex;gap:6px">
-          <input type="text" class="input-glass" id="wr-chat-input" placeholder="输入消息..." style="flex:1">
-          <button class="btn btn-small" id="btn-wr-chat-send">发送</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" class="input-glass" id="wr-chat-input" placeholder="输入消息..." style="flex:1;height:48px;box-sizing:border-box">
+          <button class="btn btn-small" id="btn-wr-chat-send" style="height:48px;box-sizing:border-box;white-space:nowrap">发送</button>
         </div>
       </div>
     </div>
