@@ -59,6 +59,41 @@ export function initLobby() {
 
   document.getElementById('btn-close-profile')?.addEventListener('click', () => hideModal('modal-profile'));
 
+  // ── V5: Avatar Selector ──
+  const avatarSelector = document.getElementById('avatar-selector');
+  const avatarPreview = document.getElementById('avatar-preview');
+  const nameInput = document.getElementById('player-name-input');
+
+  // 从 localStorage 恢复
+  const savedAvatar = localStorage.getItem('pokeWarAvatar') || '🐱';
+  const savedName = localStorage.getItem('pokeWarName') || '小猫猫';
+  app.avatar = savedAvatar;
+  app.playerName = savedName;
+  if (nameInput) nameInput.value = savedName;
+  if (avatarPreview) avatarPreview.textContent = savedAvatar;
+  updateNavPlayerId();
+
+  // 头像点击
+  avatarSelector?.addEventListener('click', (e) => {
+    const opt = e.target.closest('.avatar-option');
+    if (!opt) return;
+    avatarSelector.querySelectorAll('.avatar-option').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected');
+    const avatar = opt.dataset.avatar;
+    app.avatar = avatar;
+    localStorage.setItem('pokeWarAvatar', avatar);
+    if (avatarPreview) avatarPreview.textContent = avatar;
+    cs();
+  });
+
+  // 昵称自动保存
+  nameInput?.addEventListener('input', () => {
+    const name = nameInput.value.trim() || '小猫猫';
+    app.playerName = name;
+    localStorage.setItem('pokeWarName', name);
+    updateNavPlayerId();
+  });
+
   // ── 创建房间 ──
   const cardCreate = document.getElementById('card-create-room');
   cardCreate?.addEventListener('click', (e) => {

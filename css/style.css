@@ -1,122 +1,109 @@
 /* ════════════════════════════════════════════════════
-   PokeWar v3.0 — Apple Bento + Puppertino 设计系统
-   三国杀主视角布局 · 毛玻璃材质 · CSS 变量驱动
+   PokeWar V5 — Neo-Brutalism 新粗野主义
+   粗黑描边 · 硬核阴影 · 荧光跳色 · 重型排版
    ════════════════════════════════════════════════════ */
 
-/* ── CSS 变量: Apple HIG Light Mode ── */
+/* ── CSS 变量: Neo-Brutalism Light ── */
 :root {
-  /* 背景 */
-  --bg-base: #f2f2f7;
-  --bg-gradient: linear-gradient(135deg, #e8e8f0 0%, #f2f2f7 50%, #e0e0ec 100%);
+  /* 基础 */
+  --bg-color: #F4F4F0;
+  --bg-pattern: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='28'/%3E%3Ccircle cx='30' cy='30' r='18'/%3E%3Ccircle cx='30' cy='30' r='8'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --text-main: #000000;
+  --text-muted: #555555;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  --font-heading: 'Impact', 'Arial Black', 'Helvetica Neue', sans-serif;
 
-  /* 毛玻璃面板 — Apple HIG Bento Panel */
-  --panel-bg: rgba(255, 255, 255, 0.75);
-  --panel-border: rgba(0, 0, 0, 0.1);
-  --glass-bg: var(--panel-bg);           /* 别名: 兼容旧引用 */
-  --glass-border: 1px solid var(--panel-border);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.07), 0 2px 8px rgba(0, 0, 0, 0.04);
-  --glass-blur: blur(25px) saturate(180%);
-  --glass-radius: 24px;
+  /* 荧光跳色 */
+  --accent-green: #CCFF00;
+  --accent-blue: #0057FF;
+  --accent-pink: #FF00E6;
+  --accent-yellow: #FFD600;
 
-  /* 文字 — Apple HIG Typography */
-  --text-color-primary: #1C1C1E;
-  --text-color-secondary: rgba(60, 60, 67, 0.6);
-  --text-primary: var(--text-color-primary);      /* 别名 */
-  --text-secondary: var(--text-color-secondary);  /* 别名 */
-  --text-muted: rgba(60, 60, 67, 0.4);
-  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  /* 粗黑描边 + 硬阴影 */
+  --border-thick: 3px solid #000000;
+  --border-thin: 2px solid #000000;
+  --shadow-hard: 6px 6px 0px #000000;
+  --shadow-hard-sm: 4px 4px 0px #000000;
+  --radius: 12px;
 
-  /* 主题色 */
-  --color-primary: #007aff;
-  --color-primary-hover: #0062cc;
-  --color-confirm: #34c759;
-  --color-cancel: #ff3b30;
-  --color-danger: #ff3b30;
-  --color-hp: #ff3b30;
-  --color-shield: #007aff;
-  --color-wanhua: #af52de;
+  /* 主题语义色 */
+  --color-primary: #0057FF;
+  --color-primary-hover: #003FCC;
+  --color-confirm: #00C853;
+  --color-cancel: #FF1744;
+  --color-danger: #FF1744;
+  --color-hp: #FF1744;
+  --color-shield: #0057FF;
+  --color-wanhua: #FF00E6;
+  --color-gold: #FFD600;
 
-  /* 强调色 */
-  --color-gold: #fdcb6e;   /* 方块/摸牌/奖励等高亮文本 */
+  /* 花色 */
+  --suit-red: #dc2626;
+  --suit-black: #000000;
 
-  /* 花色颜色 — 严格遵循用户规范 */
-  --suit-red: #dc2626;   /* ♦♥ */
-  --suit-black: #1e293b; /* ♣♠ */
+  /* 旧别名兼容 */
+  --bg-base: var(--bg-color);
+  --bg-gradient: var(--bg-color);
+  --text-primary: var(--text-main);
+  --text-secondary: #333333;
+  --text-color-primary: var(--text-main);
+  --text-color-secondary: #333333;
+  --glass-bg: #FFFFFF;
+  --glass-border: var(--border-thick);
+  --glass-shadow: var(--shadow-hard);
+  --glass-blur: none;
+  --glass-radius: var(--radius);
+  --panel-bg: #FFFFFF;
+  --panel-border: #000000;
 
   /* 按钮 */
-  --btn-radius: 14px;
+  --btn-radius: 8px;
   --btn-padding: 12px 24px;
   --btn-font-size: 15px;
 
-  /* 卡牌 */
+  /* 卡牌 (游戏内) */
   --card-width: 90px;
   --card-height: 126px;
-  --card-radius: 12px;
-  --card-bg: rgba(255, 255, 255, 0.9);
-  --card-border: 1px solid rgba(0, 0, 0, 0.08);
-  --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --card-radius: 10px;
+  --card-bg: #FFFFFF;
+  --card-border: var(--border-thin);
+  --card-shadow: var(--shadow-hard-sm);
   --card-hover-lift: -8px;
   --card-selected-lift: -28px;
-  --card-selected-glow: 0 0 0 3px rgba(255, 204, 0, 0.5), 0 0 20px rgba(255, 204, 0, 0.3);
+  --card-selected-glow: 0 0 0 4px var(--accent-green), 4px 4px 0px #000;
 
   /* 动画 */
-  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-spring: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.2s ease;
+  --transition-spring: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* ════════════════════════════════════════════════════
-   Apple HIG Dark Mode
-   ════════════════════════════════════════════════════ */
+/* ── Neo-Brutalism Dark ── */
 [data-theme="dark"],
 .theme-dark {
-  /* ── 基础背景 ── */
-  --bg-base: #0f0f1a;
-  --bg-gradient: linear-gradient(135deg, #0a0a14 0%, #0f0f1a 40%, #0d0d18 100%);
-
-  /* ── 毛玻璃面板 — Apple HIG Dark Bento Panel ── */
-  --panel-bg: rgba(28, 28, 30, 0.75);
-  --panel-border: rgba(255, 255, 255, 0.15);
-  --glass-bg: var(--panel-bg);
-  --glass-border: 1px solid var(--panel-border);
-  --glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.5),
-                  0 0 0 0.5px rgba(255, 255, 255, 0.05),
-                  0 0 40px rgba(100, 100, 255, 0.04);
-  --glass-blur: blur(28px) saturate(140%);
-
-  /* ── 文字 — Apple HIG Dark Typography ── */
-  --text-color-primary: #F2F2F7;
-  --text-color-secondary: rgba(235, 235, 245, 0.6);
-  --text-primary: var(--text-color-primary);
-  --text-secondary: var(--text-color-secondary);
-  --text-muted: rgba(235, 235, 245, 0.36);
-
-  /* ── 主题色 — iOS Dark 调色板 ── */
-  --color-primary: #0a84ff;       /* iOS 暗模式蓝 */
-  --color-primary-hover: #409cff; /* ★ 修复: 新增 hover 态 */
-  --color-confirm: #30d158;       /* iOS 暗模式绿 */
-  --color-cancel: #ff453a;        /* iOS 暗模式红 */
-  --color-danger: #ff453a;
-  --color-hp: #ff453a;
-  --color-shield: #0a84ff;
-  --color-wanhua: #bf5af2;        /* ★ 修复: 新增万化色 (iOS 暗模式紫) */
-  --color-gold: #f9d857;           /* 暗模式金色 */
-
-  /* ── 花色 — ★ 用户规范: ♦♥=red ♣♠=black ── */
-  --suit-red: #ff6b6b;            /* 暗模式红: 需要比 #dc2626 亮 */
-  /* ★ 修复: ♣♠ 在暗底上必须可见，使用 slate-400 (#94a3b8)
-           冷调深灰，视觉上保持"黑桃/梅花"的暗色调，
-           不会与红桃/方块的红色混淆 */
-  --suit-black: #94a3b8;          /* slate-400: 冷深灰，暗底清晰可读 */
-
-  /* ── 卡牌 — 半透明暗色底 + 暗模式投影 ── */
-  --card-bg: rgba(32, 32, 50, 0.88);
-  --card-border: 1px solid rgba(255, 255, 255, 0.06);
-  /* ★ 暗模式卡牌阴影: 加环境光弥散，不用大面积浅灰 */
-  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.5),
-                 0 0 0 0.5px rgba(255, 255, 255, 0.04);
-  --card-selected-glow: 0 0 0 3px rgba(255, 215, 0, 0.45),
-                        0 0 28px rgba(255, 215, 0, 0.18);
+  --bg-color: #1A1A1A;
+  --bg-pattern: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23FFFFFF' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='28'/%3E%3Ccircle cx='30' cy='30' r='18'/%3E%3Ccircle cx='30' cy='30' r='8'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  --text-main: #FFFFFF;
+  --text-muted: #999999;
+  --border-thick: 3px solid #FFFFFF;
+  --border-thin: 2px solid #FFFFFF;
+  --shadow-hard: 6px 6px 0px #FFFFFF;
+  --shadow-hard-sm: 4px 4px 0px #FFFFFF;
+  --glass-bg: #222222;
+  --panel-bg: #222222;
+  --card-bg: #2A2A2A;
+  --card-border: var(--border-thin);
+  --card-shadow: var(--shadow-hard-sm);
+  --text-primary: var(--text-main);
+  --text-secondary: #BBBBBB;
+  --text-color-primary: var(--text-main);
+  --text-color-secondary: #BBBBBB;
+  --color-primary: #448AFF;
+  --color-primary-hover: #6699FF;
+  --color-confirm: #69F0AE;
+  --suit-red: #ff6b6b;
+  --suit-black: #FFFFFF;
+  --card-selected-glow: 0 0 0 4px var(--accent-green), 4px 4px 0px #FFF;
 }
 
 /* ═══════════════════════════════════════
@@ -127,22 +114,20 @@ html, body {
   width: 100vw; height: 100vh; height: 100dvh;
   overflow: hidden;
   font-family: var(--font);
-  background: var(--bg-gradient);
-  color: var(--text-primary);
+  background-color: var(--bg-color);
+  background-image: var(--bg-pattern);
+  color: var(--text-main);
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
-  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24"><text y="22" font-size="20">🐾</text></svg>'), auto;
 }
 
-/* ── 毛玻璃通用类 ── */
+/* ── Neo-Brutalism 通用面板 ── */
 .bento-glass {
   background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: var(--glass-border);
-  border-radius: var(--glass-radius);
-  box-shadow: var(--glass-shadow);
+  border: var(--border-thick);
+  box-shadow: var(--shadow-hard);
+  border-radius: var(--radius);
 }
 
 /* ═══════════════════════════════════════
@@ -186,71 +171,69 @@ html, body {
 .btn-icon:active { transform: scale(0.95); }
 
 /* ═══════════════════════════════════════
-   按钮系统 (Puppertino)
+   按钮系统 (Neo-Brutalism)
    ═══════════════════════════════════════ */
 .btn {
   padding: var(--btn-padding);
   border-radius: var(--btn-radius);
-  border: none;
+  border: var(--border-thin);
   font-size: var(--btn-font-size);
-  font-weight: 600;
+  font-weight: 800;
   font-family: var(--font);
   cursor: pointer;
   transition: all var(--transition-normal);
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   white-space: nowrap;
+  box-shadow: var(--shadow-hard-sm);
 }
-.btn:active { transform: scale(0.96); }
+.btn:active { transform: translate(2px, 2px); box-shadow: none; }
 
 .btn-primary {
-  background: var(--color-primary);
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(0, 122, 255, 0.35);
+  background: var(--accent-green);
+  color: #000;
 }
-.btn-primary:hover { background: var(--color-primary-hover); box-shadow: 0 6px 20px rgba(0, 122, 255, 0.45); }
+.btn-primary:hover { background: #DDFF33; }
 
 .btn-secondary {
-  background: rgba(128, 128, 128, 0.15);
-  color: var(--text-primary);
-  backdrop-filter: blur(10px);
+  background: #FFF;
+  color: #000;
 }
-.btn-secondary:hover { background: rgba(128, 128, 128, 0.25); }
+.btn-secondary:hover { background: #EEE; }
 
-.btn-danger { background: var(--color-danger); color: #fff; }
-.btn-danger:hover { opacity: 0.9; }
+.btn-danger { background: var(--color-cancel); color: #FFF; border-color: var(--color-cancel); }
+.btn-danger:hover { opacity: 0.85; }
 
 .btn-ghost {
   background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  border: var(--border-thin);
+  box-shadow: none;
 }
-.btn-ghost:hover { color: var(--text-primary); border-color: var(--text-muted); }
+.btn-ghost:hover { background: var(--accent-green); color: #000; box-shadow: var(--shadow-hard-sm); }
 
 .btn-small {
-  padding: 6px 14px; font-size: 13px; border-radius: 10px;
-  background: rgba(128, 128, 128, 0.12);
-  color: var(--text-primary); border: none; cursor: pointer;
-  font-family: var(--font);
+  padding: 6px 14px; font-size: 13px; border-radius: 6px;
+  background: #FFF; color: #000; border: var(--border-thin); cursor: pointer;
+  font-family: var(--font); font-weight: 700; box-shadow: 2px 2px 0 #000;
 }
+.btn-small:active { transform: translate(1px, 1px); box-shadow: none; }
 
-/* 输入框 — 毛玻璃 */
+/* 输入框 — Neo-Brutalism */
 .input-glass {
   padding: 12px 16px;
-  border-radius: 12px;
-  border: var(--glass-border);
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
+  border-radius: 8px;
+  border: var(--border-thick);
+  background: #FFF;
   font-size: 15px;
   font-family: var(--font);
-  color: var(--text-primary);
+  color: #000;
   outline: none;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: box-shadow var(--transition-fast);
 }
 .input-glass:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+  box-shadow: 0 0 0 3px var(--accent-green), var(--shadow-hard-sm);
 }
-.input-glass::placeholder { color: var(--text-muted); }
+.input-glass::placeholder { color: #999; }
 
 /* ═══════════════════════════════════════
    🏠 大厅主页 — V4 Bento Grid
@@ -277,65 +260,106 @@ html, body {
 .nav-right { display: flex; align-items: center; gap: 10px; }
 .nav-player-id { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
 
-/* ── Hero ── */
+/* ── Hero — 巨型标题 + text-stroke ── */
 .lobby-hero {
-  text-align: center; padding: 36px 20px 28px;
+  text-align: center; padding: 40px 20px 28px;
 }
-.hero-title { font-size: 36px; font-weight: 900; color: var(--text-primary); letter-spacing: 2px; }
-.hero-sub { font-size: 20px; font-weight: 400; color: var(--text-secondary); display: block; margin-top: 4px; }
-.hero-desc { font-size: 14px; color: var(--text-muted); margin-top: 8px; }
+.hero-title {
+  font-family: var(--font-heading);
+  font-size: clamp(3rem, 8vw, 5rem);
+  font-weight: 900;
+  letter-spacing: -2px;
+  line-height: 1;
+  color: var(--accent-green);
+  -webkit-text-stroke: 2px #000;
+  text-stroke: 2px #000;
+}
+.hero-sub {
+  font-size: 1.2rem; font-weight: 800; color: var(--text-main);
+  display: block; margin-top: 2px; letter-spacing: 4px; text-transform: uppercase;
+}
+.hero-desc { font-size: 14px; color: var(--text-secondary); margin-top: 12px; }
 .hero-stats { display: flex; gap: 24px; justify-content: center; margin-top: 16px; }
-.hero-stat { font-size: 14px; color: var(--text-secondary); }
-.hero-stat b { color: var(--color-primary); font-size: 18px; }
+.hero-stat {
+  font-size: 14px; font-weight: 700;
+  background: #FFF; border: var(--border-thin);
+  padding: 6px 16px; border-radius: 20px;
+  box-shadow: var(--shadow-hard-sm);
+}
+.hero-stat b { color: var(--accent-blue); font-size: 16px; }
 
-/* ── Action Grid: 4 卡片 ── */
+/* ── Action Grid ── */
 .lobby-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
   padding: 0 20px 20px;
-  max-width: 640px; margin: 0 auto; width: 100%;
+  max-width: 680px; margin: 0 auto; width: 100%;
 }
-@media (max-width: 480px) {
-  .lobby-grid { grid-template-columns: 1fr; }
-}
+@media (max-width: 480px) { .lobby-grid { grid-template-columns: 1fr; } }
 
 .bento-card {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: var(--glass-border);
-  border-radius: var(--glass-radius);
+  background: #FFFFFF;
+  border: var(--border-thick);
+  box-shadow: var(--shadow-hard);
+  border-radius: 12px;
   padding: 24px;
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   text-align: center;
-  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  transition: transform 0.2s, box-shadow 0.2s;
   cursor: default;
 }
-.bento-card:hover { transform: translateY(-2px); box-shadow: var(--glass-shadow); }
-.bento-icon { font-size: 40px; }
-.bento-card h3 { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+.bento-card:hover { transform: translate(-2px, -2px); box-shadow: 10px 10px 0px #000; }
+.bento-icon { font-size: 44px; }
+.bento-card h3 { font-family: var(--font-heading); font-size: 20px; font-weight: 800; color: #000; }
 .bento-card p { font-size: 13px; color: var(--text-muted); }
 .bento-card .btn { margin-top: 8px; width: 100%; }
 .bento-card-bottom { width: 100%; margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
-.bento-card-bottom .input-glass { width: 100%; }
 
-/* ── Footer Buttons ── */
+/* ── Avatar Selector ── */
+.avatar-selector {
+  display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 8px 0;
+}
+.avatar-option {
+  width: 48px; height: 48px; font-size: 28px;
+  border: var(--border-thin); border-radius: 12px;
+  background: #FFF; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition-fast);
+}
+.avatar-option:hover { transform: translate(-1px, -1px); box-shadow: var(--shadow-hard-sm); }
+.avatar-option.selected { background: var(--accent-green); border-color: #000; box-shadow: var(--shadow-hard-sm); }
+
+/* ── Rule Tags ── */
+.tag {
+  display: inline-block; padding: 2px 10px; border-radius: 6px;
+  font-weight: 800; font-size: 13px; border: 2px solid #000;
+  margin: 0 2px;
+}
+.tag-spade { background: #000; color: #FFF; }
+.tag-heart { background: #FF1744; color: #FFF; }
+.tag-club { background: var(--accent-blue); color: #FFF; }
+.tag-diamond { background: var(--accent-yellow); color: #000; }
+.tag-ace { background: var(--accent-pink); color: #FFF; }
+.tag-joker { background: #8E44AD; color: #FFF; }
+
+/* ── Footer ── */
 .lobby-footer {
   display: flex; gap: 12px; justify-content: center;
   padding: 16px 20px 24px; flex-wrap: wrap;
 }
 .btn-footer {
-  padding: 14px 28px; border-radius: 16px;
-  border: none; font-size: 15px; font-weight: 700;
+  padding: 14px 28px; border-radius: 12px;
+  border: var(--border-thick); font-size: 15px; font-weight: 800;
   font-family: var(--font); cursor: pointer;
-  color: #fff; transition: transform var(--transition-fast);
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-hard-sm);
 }
-.btn-footer:hover { transform: scale(1.05); }
-.btn-footer:active { transform: scale(0.96); }
-.btn-footer-green { background: linear-gradient(135deg, #34c759, #30b350); }
-.btn-footer-gold { background: linear-gradient(135deg, #fdcb6e, #f5a623); color: #1d1d1f; }
-.btn-footer-blue { background: linear-gradient(135deg, #0a84ff, #5ea8ff); }
+.btn-footer:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0 #000; }
+.btn-footer:active { transform: translate(2px, 2px); box-shadow: none; }
+.btn-footer-green { background: var(--accent-green); color: #000; }
+.btn-footer-gold { background: var(--accent-yellow); color: #000; }
+.btn-footer-blue { background: var(--accent-blue); color: #FFF; }
 
 /* ── 匹配中动画 ── */
 .btn-matching {

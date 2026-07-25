@@ -51,7 +51,25 @@
       </div>
     </section>
 
-    <!-- Action Grid: 4 卡片 -->
+    <!-- Player Profile: Avatar + Name -->
+    <section class="lobby-profile" style="max-width:680px;margin:0 auto 16px;padding:0 20px">
+      <div class="bento-card" style="flex-direction:row;gap:16px;padding:16px 20px">
+        <div id="avatar-preview" style="font-size:48px;line-height:1">🐱</div>
+        <div style="flex:1">
+          <input type="text" class="input-glass" id="player-name-input" placeholder="输入超酷的昵称" value="小猫猫" style="margin-bottom:8px">
+          <div class="avatar-selector" id="avatar-selector">
+            <span class="avatar-option selected" data-avatar="🐱">🐱</span>
+            <span class="avatar-option" data-avatar="🐶">🐶</span>
+            <span class="avatar-option" data-avatar="🦊">🦊</span>
+            <span class="avatar-option" data-avatar="🐰">🐰</span>
+            <span class="avatar-option" data-avatar="🐯">🐯</span>
+            <span class="avatar-option" data-avatar="💀">💀</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Action Grid -->
     <section class="lobby-grid">
       <!-- 创建房间 -->
       <div class="bento-card" id="card-create-room">
@@ -209,14 +227,30 @@
   <div class="modal-box bento-glass"><h3>⚠️ 濒死救援</h3><p id="dying-desc"></p><div id="dying-countdown">10</div><div id="dying-actions"></div></div>
 </div>
 <div class="modal-overlay" id="modal-tutorial">
-  <div class="modal-box bento-glass" style="max-width:420px">
-    <h3>🎮 游戏规则</h3>
-    <div style="text-align:left;line-height:1.8;color:var(--text-primary);margin:12px 0">
-      <p>• ♠ 黑桃 <span style="color:var(--color-hp)">双倍伤害</span> · ♣ 梅花 <span style="color:var(--color-shield)">护盾</span></p>
-      <p>• ♥ 红桃 <span style="color:var(--suit-red)">吸血</span> · ♦ 方块 <span style="color:var(--color-gold)">摸牌</span></p>
-      <p>• A 万化 · Joker 复活/斩杀</p>
+  <div class="modal-box bento-glass" style="max-width:520px">
+    <h3 style="font-family:var(--font-heading);font-size:24px">🃏 游戏规则</h3>
+    <div style="text-align:left;line-height:1.9;font-size:14px;color:#000;margin:16px 0">
+
+      <p style="font-weight:800;margin-top:12px">📋 基础设定</p>
+      <p>每人 3 个角色（J/Q/K），手牌上限 <b>7 张</b>。击杀奖励摸 3 张，换将摸 5 张。</p>
+
+      <p style="font-weight:800;margin-top:12px">⚔️ 花色特效</p>
+      <p><span class="tag tag-spade">♠ 黑桃</span> 造成 <b>双倍伤害</b>（极具侵略性）</p>
+      <p><span class="tag tag-heart">♥ 红桃</span> 造成伤害时提供 <b>等额吸血</b> 回复</p>
+      <p><span class="tag tag-club">♣ 梅花</span> 打出时加 <b>护盾</b>；角色是♣则攻击 <b>穿甲</b></p>
+      <p><span class="tag tag-diamond">♦ 方块</span> 触发 <b>五谷丰登</b>，全场轮序摸牌</p>
+
+      <p style="font-weight:800;margin-top:12px">✨ 特殊牌型</p>
+      <p><span class="tag tag-ace">A 万化</span> 点数固定 +1，强行改变牌组花色，<b>无视同花色免疫</b>！</p>
+      <p><span class="tag tag-joker">Joker 王牌</span> 无视回合限制。<b>单张复活</b>阵亡角色；<b>双张秒杀</b>敌方！</p>
+
+      <p style="font-weight:800;margin-top:12px">🔁 三大摸牌法则</p>
+      <p>① ♦ 方块出牌 → 全场轮序摸牌直到满足攻击点数</p>
+      <p>② 手牌全空或仅剩 Joker → 自动补 3 张</p>
+      <p>③ 角色阵亡 → 清空手牌 → 换将摸 5 张 → 击杀者摸 3 张</p>
+
     </div>
-    <button class="btn btn-secondary" onclick="document.getElementById('modal-tutorial').classList.remove('show')">知道了</button>
+    <button class="btn btn-primary" onclick="document.getElementById('modal-tutorial').classList.remove('show')">知道了!</button>
   </div>
 </div>
 <div class="modal-overlay" id="modal-stats">
