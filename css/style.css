@@ -241,8 +241,8 @@ html, body {
 .btn-primary:hover { background: #DDFF33; }
 
 .btn-secondary {
-  background: #FFF;
-  color: #000;
+  background: var(--glass-bg);
+  color: var(--text-main);
 }
 .btn-secondary:hover { background: #EEE; }
 
@@ -259,8 +259,8 @@ html, body {
 
 .btn-small {
   padding: 6px 14px; font-size: 13px; border-radius: 6px;
-  background: #FFF; color: #000; border: var(--border-thin); cursor: pointer;
-  font-family: var(--font); font-weight: 700; box-shadow: 2px 2px 0 #000;
+  background: var(--glass-bg); color: var(--text-main); border: var(--border-thin); cursor: pointer;
+  font-family: var(--font); font-weight: 700; box-shadow: 2px 2px 0 var(--text-main);
 }
 .btn-small:active { transform: translate(1px, 1px); box-shadow: none; }
 
@@ -269,10 +269,10 @@ html, body {
   padding: 12px 16px;
   border-radius: 8px;
   border: var(--border-thick);
-  background: #FFF;
+  background: var(--glass-bg);
   font-size: 15px;
   font-family: var(--font);
-  color: #000;
+  color: var(--text-main);
   outline: none;
   max-width: 100%; box-sizing: border-box;
   word-break: break-all; overflow-wrap: break-word;
@@ -337,9 +337,10 @@ html, body {
 .hero-stats { display: flex; gap: 24px; justify-content: center; margin-top: 16px; }
 .hero-stat {
   font-size: 14px; font-weight: 700;
-  background: #FFF; border: var(--border-thin);
+  background: var(--glass-bg); border: var(--border-thin);
   padding: 6px 16px; border-radius: 20px;
   box-shadow: var(--shadow-hard-sm);
+  color: var(--text-main);
 }
 .hero-stat b { color: var(--accent-blue); font-size: 16px; }
 
@@ -355,17 +356,17 @@ html, body {
 
 /* ── 准备室面板 (无全局居中污染) ── */
 .bento-card-panel {
-  background: #FFFFFF;
+  background: var(--glass-bg);
   border: var(--border-thick);
   box-shadow: var(--shadow-hard);
   border-radius: 12px;
   transition: transform 0.2s, box-shadow 0.2s;
 }
-.bento-card-panel:hover { transform: translate(-2px, -2px); box-shadow: 10px 10px 0px #000; }
+.bento-card-panel:hover { transform: translate(-2px, -2px); box-shadow: 10px 10px 0px var(--text-main); }
 .bento-icon { font-size: 44px; }
 /* 大厅卡片 (居中布局) */
 .bento-card {
-  background: #FFFFFF;
+  background: var(--glass-bg);
   border: var(--border-thick);
   box-shadow: var(--shadow-hard);
   border-radius: 12px;
@@ -375,8 +376,8 @@ html, body {
   transition: transform 0.2s, box-shadow 0.2s;
   cursor: default;
 }
-.bento-card:hover { transform: translate(-2px, -2px); box-shadow: 10px 10px 0px #000; }
-.bento-card h3 { font-family: var(--font-heading); font-size: 20px; font-weight: 800; color: #000; }
+.bento-card:hover { transform: translate(-2px, -2px); box-shadow: 10px 10px 0px var(--text-main); }
+.bento-card h3 { font-family: var(--font-heading); font-size: 20px; font-weight: 800; color: var(--text-main); }
 .bento-card p { font-size: 13px; color: var(--text-muted); }
 .bento-card .btn { margin-top: 8px; width: 100%; }
 .bento-card-bottom { width: 100%; margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
@@ -388,7 +389,7 @@ html, body {
 .avatar-option {
   width: 44px; height: 44px;
   border: var(--border-thin); border-radius: 10px;
-  background: #FFF; cursor: pointer; object-fit: cover;
+  background: var(--glass-bg); cursor: pointer; object-fit: cover;
   transition: all var(--transition-fast);
 }
 .avatar-option:hover { transform: translate(-1px, -1px); box-shadow: var(--shadow-hard-sm); }
@@ -406,9 +407,9 @@ html.dark-theme .avatar-option {
 
 /* ── Rule Sub-cards (Bento Grid Rules) ── */
 .rule-subcard {
-  border: 2px solid #000; border-radius: 8px;
-  padding: 14px; background: #FFF;
-  font-size: 13px; line-height: 1.7; color: #000;
+  border: 2px solid var(--text-main); border-radius: 8px;
+  padding: 14px; background: var(--glass-bg);
+  font-size: 13px; line-height: 1.7; color: var(--text-main);
 }
 .rule-subcard h4 { font-family: var(--font-heading); font-size: 15px; margin-bottom: 6px; }
 
@@ -455,7 +456,7 @@ html.dark-theme .avatar-option {
 /* ── V7 Profile Badge ── */
 .profile-badge {
   display: flex; align-items: center; gap: 8px;
-  background: #FFF; border: var(--border-thin); border-radius: 12px;
+  background: var(--glass-bg); border: var(--border-thin); border-radius: 12px;
   padding: 4px 8px 4px 4px; cursor: pointer;
   transition: transform var(--transition-fast);
 }
@@ -472,12 +473,12 @@ html.dark-theme .avatar-option {
 .wr-player-slot {
   display: flex; flex-direction: column; align-items: center; gap: 6px;
   padding: 14px 10px; border-radius: 12px;
-  border: 3px solid #000; background: #FFF;
+  border: 3px solid var(--text-main); background: var(--glass-bg);
   text-align: center; min-height: 130px;
   transition: background 0.2s, border 0.2s;
 }
 .wr-player-slot.empty {
-  background: #F4F4F0; border: 3px dashed #000;
+  background: var(--bg-color); border: 3px dashed var(--text-main);
   justify-content: center;
 }
 
@@ -593,13 +594,14 @@ html.dark-theme .avatar-option {
   flex: 1 1 auto;
   overflow-y: auto;
   min-height: 200px;
-  background: #FFF;
-  border: 2px solid #000;
+  background: var(--glass-bg);
+  border: 2px solid var(--text-main);
   border-radius: 8px;
   padding: 8px;
   margin-bottom: 8px;
   font-size: 13px;
   word-break: break-word;
+  color: var(--text-main);
 }
 .chat-input-row {
   display: flex;
@@ -622,8 +624,8 @@ html.dark-theme .avatar-option {
 /* ── Invite Code Display — 高优先级视觉强化 ── */
 .room-code-display {
   font-size: 22px; font-weight: 900;
-  color: #000;
-  background: #FFF;
+  color: var(--text-main);
+  background: var(--glass-bg);
   border: var(--border-thick); border-radius: 10px;
   padding: 10px 18px; display: inline-flex; align-items: center; gap: 10px;
   box-shadow: var(--shadow-hard-sm);
@@ -674,16 +676,18 @@ html.dark-theme .avatar-option {
 
 /* ═══════════════════════════════════════
    🎮 游戏对局 — 三国杀战斗板 (battle-shell)
+   ★ 修复: 固定底行高度, 防止手牌塌陷; 全量 CSS 变量驱动
    ═══════════════════════════════════════ */
 .battle-shell {
   width: 100%; height: 100%;
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr) 280px;
-  grid-template-rows: auto 1fr auto;
+  grid-template-columns: 200px minmax(0, 1fr) 280px;
+  /* ★ 关键修复: 顶部 auto, 中间 1fr, 底部固定 200px (手牌不会塌陷) */
+  grid-template-rows: auto 1fr 200px;
   grid-template-areas:
     "topbar  topbar  topbar"
     "left    center  right"
-    "left    bottom  right";
+    "bottom  bottom  right";
   gap: 8px;
   padding: 8px;
   position: relative;
@@ -697,7 +701,7 @@ html.dark-theme .avatar-option {
 }
 .phase-pill {
   display: inline-flex; align-items: center; gap: 14px;
-  background: #000; color: var(--primary-acid);
+  background: var(--text-main); color: var(--primary-acid);
   border: var(--border-thick); box-shadow: var(--shadow-hard-sm);
   border-radius: 50px; padding: 8px 28px;
   font-family: var(--font-heading); font-weight: 900; font-size: 16px;
@@ -709,96 +713,144 @@ html.dark-theme .avatar-option {
   font-size: 18px;
 }
 
-/* ── 左侧: 角色 Bento ── */
+/* ── 左侧: 角色 Bento (与手牌同列, 占据中间行) ── */
 .battle-left {
-  grid-area: left; align-self: end;
+  grid-area: left; align-self: start;
+  overflow-y: auto;
 }
 .character-bento {
-  padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 14px; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  background: var(--glass-bg);
 }
 .char-avatar-wrap {
-  width: 72px; height: 72px; border-radius: 16px; overflow: hidden;
+  width: 64px; height: 64px; border-radius: 14px; overflow: hidden;
   border: var(--border-thick); flex-shrink: 0;
+  background: var(--card-bg);
 }
 .character-avatar-img {
   width: 100%; height: 100%; object-fit: cover;
 }
 .character-meta {
-  width: 100%; display: flex; flex-direction: column; gap: 4px; font-size: 13px;
+  width: 100%; display: flex; flex-direction: column; gap: 4px; font-size: 12px;
+  color: var(--text-main);
 }
 .identity-sticker {
   display: inline-block; background: var(--accent-pink); color: #FFF;
   font-weight: 800; font-size: 11px; padding: 2px 10px; border-radius: 4px;
-  border: 2px solid #000; text-align: center; margin-bottom: 4px;
+  border: 2px solid var(--text-main); text-align: center; margin-bottom: 4px;
 }
 .hp-line, .shield-line {
   display: flex; align-items: center; gap: 6px; font-weight: 700;
+  color: var(--text-main);
 }
 .hp-icon, .shield-icon { font-size: 16px; }
+.hp-value, .shield-value { color: var(--text-main); }
+
+/* HP / 护盾条 */
+.hp-bar, .shield-bar {
+  width: 100%; height: 6px; border-radius: 3px;
+  background: var(--card-bg);
+  overflow: hidden;
+  border: 1px solid var(--text-main);
+}
+.hp-fill {
+  height: 100%; border-radius: 3px;
+  background: var(--color-hp);
+  transition: width var(--transition-normal);
+}
+.shield-fill {
+  height: 100%; border-radius: 3px;
+  background: var(--color-shield);
+  transition: width var(--transition-normal);
+}
 
 /* ── 中央战场 ── */
 .battle-center {
-  grid-area: center; display: flex; flex-direction: column; gap: 8px;
-  min-height: 0;
+  grid-area: center; display: flex; flex-direction: column; gap: 6px;
+  min-height: 0; overflow: hidden;
 }
 .surrounding-players {
-  display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
-  min-height: 60px;
+  display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;
+  min-height: 50px; flex-shrink: 0;
 }
 .play-zone {
-  flex: 1; padding: 16px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  flex: 1; padding: 12px; min-height: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  background: var(--glass-bg);
+  overflow: hidden;
 }
 .pile-row {
-  display: flex; gap: 20px; align-items: center; justify-content: center;
-  width: 100%;
+  display: flex; gap: 12px; align-items: center; justify-content: center;
+  width: 100%; flex-wrap: wrap;
 }
 .draw-pile, .discard-pile {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
-  font-size: 13px; font-weight: 700; padding: 10px 16px;
-  border: var(--border-thick); border-radius: 8px; background: #FFF;
+  font-size: 12px; font-weight: 700; padding: 8px 12px;
+  border: var(--border-thick); border-radius: 8px;
+  background: var(--glass-bg); color: var(--text-main);
 }
 .drop-target {
-  flex: 1; min-height: 80px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-  border: 3px dashed #000; border-radius: 12px;
-  font-weight: 800; font-size: 14px;
-  background: rgba(204,255,0,0.08);
+  flex: 1; min-width: 120px; min-height: 60px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  border: 3px dashed var(--text-main); border-radius: 12px;
+  font-weight: 800; font-size: 13px;
+  color: var(--text-main);
+  background: var(--bg-color);
 }
 
-/* ── 右侧: 日志/聊天面板 ── */
+/* ── 右侧: 日志/聊天面板 (贯穿全高) ── */
 .battle-right {
-  grid-area: right; display: flex; min-height: 0;
+  grid-area: right; display: flex; min-height: 0; overflow: hidden;
 }
 .info-log-panel {
-  flex: 1; display: flex; flex-direction: column; padding: 14px; gap: 8px;
-  overflow: hidden;
+  flex: 1; display: flex; flex-direction: column; padding: 12px; gap: 6px;
+  overflow: hidden; background: var(--glass-bg);
 }
 .info-log-panel .panel-head {
-  flex-shrink: 0; padding-bottom: 6px; border-bottom: var(--border-thin);
+  flex-shrink: 0; padding-bottom: 4px; border-bottom: var(--border-thin);
 }
 .info-log-panel .panel-head h3 {
-  font-family: var(--font-heading); font-size: 15px; margin: 0;
+  font-family: var(--font-heading); font-size: 14px; margin: 0;
+  color: var(--text-main);
 }
 .log-list {
   flex: 1 1 auto; overflow-y: auto; font-size: 12px;
   display: flex; flex-direction: column; gap: 4px;
-  min-height: 100px;
+  min-height: 80px;
+  color: var(--text-main);
 }
 .log-list .chat-msg {
-  padding: 4px 8px; border-radius: 6px; background: #F5F5F5;
+  padding: 4px 8px; border-radius: 6px;
+  background: var(--bg-color); color: var(--text-main);
   word-break: break-word; font-size: 12px;
 }
 
-/* ── 底部: 手牌操作台 ── */
+/* ── 底部: 手牌操作台 (固定 200px 行高, 永不塌陷) ── */
 .battle-bottom {
-  grid-area: bottom; display: flex; justify-content: center;
+  grid-area: bottom;
+  display: flex; justify-content: center; align-items: stretch;
+  /* ★ 父级 grid 已固定 200px, 此处撑满 */
+  width: 100%; height: 100%;
+  overflow: visible;
 }
 .hand-bento {
   position: relative;
   display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
-  min-height: 160px; width: 100%;
+  width: 100%; height: 100%;
   padding-bottom: 4px;
+  background: var(--glass-bg);
+  border: var(--border-thick);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-hard-sm);
+}
+
+/* ── 手牌区 (卡片水平排列, 不塌陷) ── */
+.hand-area {
+  display: flex; justify-content: center; align-items: flex-end;
+  padding: 0 16px;
+  height: 140px;
+  width: 100%;
+  flex-shrink: 0;
 }
 
 /* ── 保留旧类名兼容 (gameUI.js 引用) ── */
@@ -1089,7 +1141,7 @@ html.dark-theme .avatar-option {
 @media (max-width: 768px) {
   .battle-shell {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto auto auto;
+    grid-template-rows: auto auto auto 180px auto;
     grid-template-areas:
       "topbar"
       "center"
@@ -1110,7 +1162,8 @@ html.dark-theme .avatar-option {
   .chat-sidebar { width: 100%; height: 200px; }
 
   .character-bento { flex-direction: column; padding: 10px; }
-  .hand-bento { min-height: 140px; }
+  .hand-bento { height: 100%; }
+  .hand-area { height: 120px; }
   .poker-card {
     --card-width: 70px; --card-height: 98px;
     margin-left: -22px;
