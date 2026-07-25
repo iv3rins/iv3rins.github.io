@@ -178,32 +178,8 @@ const server = Server({
 });
 
 // ═══════════════════════════════════════
-// 3. CORS 兜底 + JSON Body Parser + 静态文件
+// 3. 静态资源托管 (最优先 — 绝不透传给 Socket.IO)
 // ═══════════════════════════════════════
-
-server.app.use(async (ctx, next) => {
-  ctx.set('Access-Control-Allow-Origin', '*');
-  ctx.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  ctx.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  if (ctx.method === 'OPTIONS') { ctx.status = 204; return; }
-  await next();
-});
-
-// ★ JSON Body Parser: Koa 默认不解析 request body
-server.app.use(async (ctx, next) => {
-  if (['POST', 'PUT', 'PATCH'].includes(ctx.method) && ctx.is('application/json')) {
-    ctx.request.body = await new Promise((resolve) => {
-      let data = '';
-      ctx.req.on('data', chunk => data += chunk);
-      ctx.req.on('end', () => {
-        try { resolve(JSON.parse(data)); } catch { resolve({}); }
-      });
-    });
-  }
-  await next();
-});
-
-// 静态文件 MIME
 const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -212,11 +188,11 @@ const MIME = {
   '.json': 'application/json; charset=utf-8',
   '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon', '.ogg': 'audio/ogg', '.mp3': 'audio/mpeg',
+  '.wav': 'audio/wav',
 };
 
-// ★ 核心修复：静态文件拦截器 (放在最前面)
 server.app.use(async (ctx, next) => {
-  // 如果是 WebSocket 握手或 API 接口，放行给后面的中间件
+  // 放行 Socket.IO, Boardgame.io 游戏路由 与 自定义 API
   if (ctx.path.startsWith('/socket.io') || ctx.path.startsWith('/games') || ctx.path.startsWith('/api')) {
     return await next();
   }
@@ -225,19 +201,19 @@ server.app.use(async (ctx, next) => {
   if (fp === './') fp = './index.html';
   const ext = extname(fp).toLowerCase();
 
-  // 1. 文件存在，响应对应的 MIME 类型
+  // 1. 存在对应静态文件则响应，并直接 return 阻止 next()
   if (existsSync(fp) && MIME[ext]) {
     ctx.type = MIME[ext];
     ctx.body = readFileSync(fp);
-    return; // 终止响应，绝不调用 next()！
+    return;
   }
 
-  // 2. SPA 兜底：没有后缀的路由默认返回 index.html
+  // 2. SPA 路由兜底，响应 index.html 并 return
   if (!ext || !MIME[ext]) {
     if (existsSync('./index.html')) {
       ctx.type = MIME['.html'];
       ctx.body = readFileSync('./index.html');
-      return; // 终止响应，绝不调用 next()！
+      return;
     }
   }
 
@@ -245,7 +221,7 @@ server.app.use(async (ctx, next) => {
 });
 
 // ═══════════════════════════════════════
-// 4. CORS 兜底 + Body Parser
+// 4. CORS 兜底 + Body Parser (紧随静态文件之后)
 // ═══════════════════════════════════════
 
 server.app.use(async (ctx, next) => {
