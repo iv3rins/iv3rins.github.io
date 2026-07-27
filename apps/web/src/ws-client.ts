@@ -1,5 +1,6 @@
 import type { ClientMessage, ServerMessage } from '@pokewar/protocol';
 import type { Store } from './store.ts';
+import { createId } from './id.ts';
 
 const HEARTBEAT_MS = 15_000;
 const MAX_RECONNECT_ATTEMPTS = 5;
@@ -36,7 +37,7 @@ export class WSClient {
       if (token) {
         this.send({
           type: 'resume_session',
-          requestId: crypto.randomUUID(),
+          requestId: createId(),
           payload: { reconnectToken: token },
         });
       }
@@ -86,7 +87,7 @@ export class WSClient {
     this.#stopHeartbeat();
     this.#heartbeat = window.setInterval(() => {
       if (this.#socket?.readyState !== WebSocket.OPEN) return;
-      this.send({ type: 'PING', requestId: crypto.randomUUID() });
+      this.send({ type: 'PING', requestId: createId() });
     }, HEARTBEAT_MS);
   }
 

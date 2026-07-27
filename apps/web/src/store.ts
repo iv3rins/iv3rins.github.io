@@ -1,4 +1,5 @@
 ﻿import type { AppState } from './types.ts';
+import { createId } from './id.ts';
 
 type Listener = (state: AppState) => void;
 
@@ -17,7 +18,7 @@ const initialState: AppState = {
   currentUser: null,
   modalView: null,
   activePage: 'home',
-  guestName: `访客#${crypto.randomUUID().slice(0, 6).toUpperCase()}`,
+  guestName: `访客#${createId().slice(0, 6).toUpperCase()}`,
   multiplayerOpen: false,
   reconnecting: false,
   wanhuaPending: null,
@@ -71,7 +72,7 @@ export function authRegister(username: string, password: string): StoredUser | s
     return '用户名已存在';
   }
   const user: StoredUser = {
-    id: crypto.randomUUID(), username, passwordHash: btoa(password),
+    id: createId(), username, passwordHash: btoa(password),
     eloScore: 1000, wins: 0, losses: 0, botWins: 0,
     cosmeticFrameId: 'frame-default', cosmeticTitleId: 'title-none',
   };

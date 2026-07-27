@@ -1,4 +1,4 @@
-﻿import './style.css';
+import './style.css';
 import type { ClientMessage, ServerMessage } from '@pokewar/protocol';
 import { requiredElement } from './dom.ts';
 import { render, toast, triggerAttackAnimation, triggerCardPlayAnim, triggerJokerRescueAnim, triggerCardPlayFlightAnim } from './render.ts';
@@ -8,6 +8,7 @@ import { LocalGameManager, LOCAL_HUMAN_ID } from './local-game.ts';
 import type { HumanAction } from './local-game.ts';
 import { audio } from './audio.ts';
 import { deriveWanhuaSuit } from './wanhua-utils.ts';
+import { createId } from './id.ts';
 
 const store = new Store();
 let client: WSClient;
@@ -34,7 +35,7 @@ function bindEvents(): void {
   requiredElement<HTMLFormElement>('#create-form').addEventListener('submit', (event) => {
     event.preventDefault();
     const name = playerName();
-    send({ type: 'create_room', requestId: crypto.randomUUID(), payload: { playerName: name } });
+    send({ type: 'create_room', requestId: createId(), payload: { playerName: name } });
   });
 
   requiredElement<HTMLFormElement>('#join-form').addEventListener('submit', (event) => {
@@ -42,7 +43,7 @@ function bindEvents(): void {
     const code = requiredElement<HTMLInputElement>('#join-code').value.trim().toUpperCase();
     if (code.length !== 6) return toast('请填写六位房间码', 'danger');
     const name = playerName();
-    send({ type: 'join_room', requestId: crypto.randomUUID(), payload: { playerName: name, roomCode: code } });
+    send({ type: 'join_room', requestId: createId(), payload: { playerName: name, roomCode: code } });
   });
 
   requiredElement<HTMLFormElement>('#chat-form').addEventListener('submit', (event) => {
@@ -51,7 +52,7 @@ function bindEvents(): void {
     const text = input.value.trim();
     if (!text) return;
     if (store.state.gameMode === 'local') { input.value = ''; return; }
-    send({ type: 'chat', requestId: crypto.randomUUID(), payload: { text } });
+    send({ type: 'chat', requestId: createId(), payload: { text } });
     input.value = '';
   });
 
@@ -88,7 +89,7 @@ function bindEvents(): void {
     const text = input.value.trim();
     if (!text) return;
     if (store.state.gameMode === 'local') { input.value = ''; return; }
-    send({ type: 'chat', requestId: crypto.randomUUID(), payload: { text } });
+    send({ type: 'chat', requestId: createId(), payload: { text } });
     input.value = '';
   });
 
@@ -228,17 +229,17 @@ function handleAction(action: string, value?: string): void {
     case 'go-bot-lobby': store.set({ activePage: 'bot-lobby', multiplayerOpen: false }); audio.play('select'); break;
     case 'start-bot-game': startBotGame(); break;
     case 'toggle-ready':
-      send({ type: 'toggle_ready', requestId: crypto.randomUUID() });
+      send({ type: 'toggle_ready', requestId: createId() });
       audio.play('ready');
       break;
     case 'start-game': {
       const maxLivesEl = document.querySelector<HTMLSelectElement>('#max-lives');
       const maxLives = maxLivesEl ? parseInt(maxLivesEl.value, 10) : 3;
-      send({ type: 'start_game', requestId: crypto.randomUUID(), payload: { maxLives } });
+      send({ type: 'start_game', requestId: createId(), payload: { maxLives } });
       break;
     }
     case 'quick-match':
-      send({ type: 'quick_match', requestId: crypto.randomUUID(), payload: { playerName: playerName() } });
+      send({ type: 'quick_match', requestId: createId(), payload: { playerName: playerName() } });
       break;
     case 'select-starter':
       triggerJokerRescueAnim('self-panel', null);
@@ -408,7 +409,7 @@ function handleGameAction(action: HumanAction): void {
                   ? { ...b, declaredSuit: action.declaredSuit }
                   : b;
             })();
-    send({ type: 'player_action', requestId: crypto.randomUUID(), payload });
+    send({ type: 'player_action', requestId: createId(), payload });
   }
 }
 

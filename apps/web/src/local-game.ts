@@ -10,6 +10,7 @@ import {
   type Suit,
 } from '@pokewar/domain';
 import { botChoosePlay, botSelectStarter } from './bot.ts';
+import { createId } from './id.ts';
 
 export const LOCAL_HUMAN_ID = 'local-human';
 export const LOCAL_BOT_ID = 'local-bot-1';
@@ -52,9 +53,9 @@ export class LocalGameManager {
 
   constructor(humanName: string, maxLives: number, onEvent: (e: LocalEvent) => void) {
     this.#onEvent = onEvent;
-    const deps = { now: Date.now, random: Math.random, createId: () => crypto.randomUUID() };
+    const deps = { now: Date.now, random: Math.random, createId: () => createId() };
     this.#state = createGameState(
-      crypto.randomUUID(),
+      createId(),
       [
         { id: LOCAL_HUMAN_ID, name: humanName },
         ...BOT_IDS.map((id) => ({ id, name: BOT_NAMES[id] })),
