@@ -1,6 +1,50 @@
-vendor/
-*.db
-*.db-journal
-*.db-shm
-*.db-wal
-pokeWar.db
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.vite/
+*.tsbuildinfo
+
+# Test output
+coverage/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Agent and local tooling artifacts
+.codex/
+.hermes/
+.agents/
+
+# Temporary files
+.tmp/
+tmp/
+.temp/
+temp/
+*.tmp
+*.bak

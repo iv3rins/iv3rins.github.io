@@ -1,0 +1,20 @@
+{
+  "name": "@pokewar/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "preview": "vite preview",
+    "test": "node --experimental-strip-types --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@pokewar/protocol": "workspace:*",
+    "@pokewar/domain": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "7.2.2"
+  }
+}

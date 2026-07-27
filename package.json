@@ -1,31 +1,35 @@
 {
-  "name": "kingdomwar",
-  "version": "2.0.0",
+  "name": "pokewar-framework",
+  "version": "0.1.0",
+  "private": true,
   "type": "module",
-  "description": "PokeWar — WebSocket 权威服务器架构卡牌对战游戏",
-  "main": "server.mjs",
+  "packageManager": "pnpm@10.15.0",
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=10.0.0"
+  },
   "scripts": {
-    "start": "node server.mjs",
-    "test": "node _verify.mjs"
+    "dev": "pnpm --parallel --filter @pokewar/server --filter @pokewar/web dev",
+    "build": "pnpm -r build",
+    "test": "node --experimental-strip-types --test packages/domain/test/*.test.ts packages/application/test/*.test.ts",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "verify:architecture": "node scripts/verify-architecture.mjs",
+    "verify:markdown": "node scripts/check-markdown.mjs",
+    "verify": "pnpm verify:architecture && pnpm verify:markdown && pnpm typecheck && pnpm test && pnpm build",
+    "start": "node apps/server/dist/index.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/iv3rins/iv3rins.github.io.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/iv3rins/iv3rins.github.io/issues"
-  },
-  "homepage": "https://github.com/iv3rins/iv3rins.github.io#readme",
-  "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "boardgame.io": "^0.50.2",
-    "express": "^5.2.1",
-    "jsonwebtoken": "^9.0.3",
-    "matter-js": "^0.20.0",
-    "sql.js": "^1.14.1",
-    "ws": "^8.21.1"
+  "devDependencies": {
+    "@eslint/js": "9.39.1",
+    "@types/node": "24.10.1",
+    "eslint": "9.39.1",
+    "eslint-import-resolver-typescript": "4.4.4",
+    "eslint-plugin-import-x": "4.16.1",
+    "globals": "16.5.0",
+    "prettier": "3.6.2",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.48.0"
   }
 }

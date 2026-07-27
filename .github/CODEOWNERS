@@ -1,0 +1,4 @@
+/references/ @project-owner
+/packages/domain/ @project-owner
+/docs/ADR/ @project-owner
+/infra/ @project-owner

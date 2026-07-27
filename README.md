@@ -1,45 +1,48 @@
-# 🐾 可爱大乱斗 — P2P 卡牌对战
+# PokeWar Framework
 
-基于 WebRTC (PeerJS) 的无后端多人回合制卡牌游戏。
+面向 PokeWar 的高解耦 TypeScript 单体仓库骨架，目标是先获得**可验证的正确性**，再扩展功能。默认运行方式是“权威 WebSocket 服务器 + 纯函数规则域 + Vite 轻量前端”；`boardgame.io` 被隔离为可选适配器，避免旧项目中 CDN、模块导入链和初始化时序造成全站按钮失效。
 
-## 快速部署到 GitHub Pages
+## 快速开始
 
-### 方式一：Web 上传
-1. 在 GitHub 创建一个新仓库（如 `cute-brawl`）
-2. 将本目录下这 5 个文件上传到仓库根目录：
-   - `index.html`
-   - `core.js`
-   - `p2pManager.js`
-   - `app.js`
-   - `README.md`（可选）
-3. 进入仓库 **Settings → Pages**，Source 选 `main` 分支，根目录 `/`，点 Save
-4. 等待 1-2 分钟，访问 `https://你的用户名.github.io/仓库名/`
-
-### 方式二：命令行
 ```bash
-git init
-git add index.html core.js p2pManager.js app.js README.md
-git commit -m "init: 可爱大乱斗"
-git remote add origin https://github.com/你的用户名/你的仓库名.git
-git push -u origin main
-# 然后去 Settings → Pages 开启
+corepack enable
+pnpm install
+cp .env.example .env
+pnpm verify
+pnpm dev
 ```
 
-## 玩法
+- Web：`http://localhost:5173`
+- API：`http://localhost:8080/health`
+- WebSocket：`ws://localhost:8080/ws`
 
-| 角色 | 操作 |
-|---|---|
-| **房主** | 点「创建房间」→ 把 4 位邀请码发给朋友 |
-| **客户端** | 输入邀请码 → 点「加入」 |
+## 核心边界
 
-- 选中手牌 → 选中对手 → 点「攻击」
-- 同花色出 1/3/5 张牌（不计 A）
-- ♠ 双倍伤害 · ♥ 吸血 · ♦ 群体摸牌 · ♣ 加护盾
-- Joker 单张复活 / 两张斩杀
-- 30 秒倒计时，超时自动随机出牌
+```text
+apps/web ───────┐
+                ├──> packages/protocol
+apps/server ────┤
+      │         └──> packages/application ──> packages/domain
+      └────────────> packages/persistence
 
-## 技术栈
+packages/domain：纯规则，无 IO、无框架、无随机全局状态
+packages/application：房间、权限、用例编排
+packages/protocol：网络消息 Schema 与类型
+packages/persistence：比赛记录持久化适配器
+apps/server：HTTP/WS、限流、重连、广播、定时器
+apps/web：事件代理、状态投影、Neo-Brutalism UI
+```
 
-- **网络**: PeerJS (WebRTC) — 公开信令服务器，无需后端
-- **逻辑**: Host-Client 权威模型，房主计算 + 广播
-- **UI**: 纯 HTML/CSS/JS 单页面，零依赖框架
+## 规则裁决
+
+- 玩家人数严格为 2–12 人。
+- 每多4人就多40 张 A–10 普通牌 + 2 张 Joker。
+- 红桃命中同花色免疫时不造成伤害，也不吸血。
+- 回合开始不自动摸牌。
+- 暗色模式使用 CSS 变量，不使用整页反色滤镜。
+
+详细冲突记录见 `docs/SOURCE_DECISIONS.md`。
+
+## 生产部署
+
+见 `docs/DEPLOY_DEBIAN12.md`。默认按单机、单进程、内存房间状态设计；比赛结果写入 SQLite，热路径不访问数据库。
