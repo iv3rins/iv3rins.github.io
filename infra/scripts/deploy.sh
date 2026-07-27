@@ -2,12 +2,14 @@
 # =============================================================================
 # PokeWar 服务器一键部署脚本（当前目录版）
 # 适用：Debian 12 / Ubuntu 22.04+，Node.js 24+ 已安装
-# 用法：在项目根目录下执行 bash deploy.sh
+# 用法：在项目根目录下执行 bash infra/scripts/deploy.sh
 # =============================================================================
 set -euo pipefail
 
-# 动态获取当前脚本所在目录的绝对路径作为部署目录
-DEPLOY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# ✅ 修复1: 从脚本位置向上推导项目根目录（infra/scripts → 项目根）
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DEPLOY_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
 DATA_DIR="/var/lib/pokewar"
 LOG_DIR="/var/log/pokewar"
 SERVER_IP="64.90.30.38"
@@ -15,6 +17,34 @@ SERVER_IP="64.90.30.38"
 echo "====== [1/6] 准备目录 ======"
 echo "📁 部署目录: $DEPLOY_DIR"
 mkdir -p "$DATA_DIR" "$LOG_DIR"
+
+# ✅ 修复2: 自动探测 Node.js / pnpm 路径
+load_node_env() {
+  # 尝试加载 nvm
+  export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+  [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" || true
+  # 尝试加载 fnm
+  eval "$(fnm env 2>/dev/null)" || true
+  # 常见 Node.js 安装路径兜底
+  for p in /usr/local/bin /opt/nodejs/bin /root/.local/share/fnm/aliases/default/bin; do
+    [ -d "$p" ] && export PATH="$p:$PATH"
+  done
+}
+
+load_node_env
+
+if ! command -v node &>/dev/null; then
+  echo "❌ 未检测到 Node.js，请先安装 Node.js 24+"
+  exit 1
+fi
+echo "✅ Node.js $(node -v) | npm $(npm -v)"
+
+# 确保 corepack + pnpm 可用
+corepack enable 2>/dev/null || npm install -g corepack
+if ! command -v pnpm &>/dev/null; then
+  corepack prepare pnpm@latest --activate 2>/dev/null || npm install -g pnpm
+fi
+echo "✅ pnpm $(pnpm -v)"
 
 echo "====== [2/6] 写入环境变量 ======"
 cat > "$DEPLOY_DIR/.env" << 'EOF'
@@ -31,7 +61,6 @@ echo "✅ .env 已写入"
 
 echo "====== [3/6] 安装依赖 ======"
 cd "$DEPLOY_DIR"
-corepack enable || true
 pnpm install --frozen-lockfile
 
 echo "====== [4/6] 构建服务端 ======"
